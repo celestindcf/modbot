@@ -11,7 +11,7 @@ const path = require('path');
 const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN';
 const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_CLIENT_ID';
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
-const PANEL_URL = process.env.PANEL_URL || 'http://localhost:3000';
+const PANEL_URL = process.env.PANEL_URL || 'https://modbot-production-ad40.up.railway.app/?guild=${guildId}';
 const PORT = process.env.PORT || 3000;
 
 // ─── Database ─────────────────────────────────────────────────────────────────

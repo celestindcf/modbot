@@ -8,10 +8,10 @@ const fs = require('fs');
 const path = require('path');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN';
-const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_CLIENT_ID';
-const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
-const PANEL_URL = process.env.PANEL_URL || 'https://modbot-production-ad40.up.railway.app/?guild=${guildId}';
+const BOT_TOKEN = process.env.BOT_TOKEN || 'MTQ4NjEzNTI3NjUyNjEwODg1NA.G5MAoS.52LU2364FK9JMlwayl1_-A2ho8-ZoPlMAbNQLM';
+const CLIENT_ID = process.env.CLIENT_ID || '1486135276526108854';
+const JWT_SECRET = process.env.JWT_SECRET || 'k25IOlNEx5IyAvBrnK_txuZrhXNcUi5t';
+const PANEL_URL = process.env.PANEL_URL || 'https://modbot-production-ad40.up.railway.app';
 const PORT = process.env.PORT || 3000;
 
 // ─── Database ─────────────────────────────────────────────────────────────────

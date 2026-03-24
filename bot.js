@@ -8,8 +8,8 @@ const fs = require('fs');
 const path = require('path');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const BOT_TOKEN = process.env.BOT_TOKEN || 'MTQ4NjEzNTI3NjUyNjEwODg1NA.G5MAoS.52LU2364FK9JMlwayl1_-A2ho8-ZoPlMAbNQLM';
-const CLIENT_ID = process.env.CLIENT_ID || '1486135276526108854';
+const BOT_TOKEN = process.env.BOT_TOKEN || 'process.env.BOT_TOKEN';
+const CLIENT_ID = process.env.CLIENT_ID || 'process.env.CLIENT_ID';
 const JWT_SECRET = process.env.JWT_SECRET || 'k25IOlNEx5IyAvBrnK_txuZrhXNcUi5t';
 const PANEL_URL = process.env.PANEL_URL || 'https://modbot-production-ad40.up.railway.app';
 const PORT = process.env.PORT || 3000;
@@ -674,6 +674,38 @@ app.delete('/api/cases/:id', authMiddleware, (req, res) => {
   cases[guildId][idx].active = false;
   saveDB('mod_cases', cases);
   res.json({ success: true });
+});
+// AJOUTER CECI DANS LE FICHIER DU BOT (index.js)
+app.post('/api/actions/execute', authMiddleware, async (req, res) => {
+    const { guildId, adminLevel } = req.user;
+    const { targetId, type, reason, duration } = req.body;
+
+    // 1. Vérification des perms (Niveau 2 minimum pour agir)
+    if (adminLevel < 2) return res.status(403).json({ error: 'Permission insuffisante' });
+
+    try {
+        const guild = client.guilds.cache.get(guildId);
+        const member = await guild.members.fetch(targetId).catch(() => null);
+        if (!member && type !== 'unban') return res.status(404).json({ error: 'Membre introuvable sur le serveur' });
+
+        let sanction;
+        // 2. Exécution de l'action sur Discord
+        if (type === 'warn') {
+            sanction = await addSanction(guildId, targetId, member.user.tag, req.user.id, 'warn', reason);
+            await checkAutoSanctions(guild, member);
+        } else if (type === 'kick' && adminLevel >= 2) {
+            await member.kick(reason);
+            sanction = await addSanction(guildId, targetId, member.user.tag, req.user.id, 'kick', reason);
+        } else if (type === 'ban' && adminLevel >= 3) {
+            await member.ban({ reason });
+            sanction = await addSanction(guildId, targetId, member.user.tag, req.user.id, 'ban', reason);
+        }
+
+        if (sanction) await logAction(guild, sanction);
+        res.json({ success: true, sanction });
+    } catch (err) {
+        res.status(500).json({ error: 'Erreur lors de la sanction : ' + err.message });
+    }
 });
 
 // Staff

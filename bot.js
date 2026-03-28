@@ -990,6 +990,32 @@ app.get('/api/guild/:guildId', (req, res) => {
   res.json({ id: guild.id, name: guild.name, icon: guild.iconURL(), memberCount: guild.memberCount });
 });
 
+// ─── Envoyer identifiants en MP ───────────────────────────────────────────────
+app.post('/api/send-credentials', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' });
+  const { userId, username, password, level, guildId, panelUrl } = req.body;
+  const ADMIN_LEVELS_NAMES = { 1: 'Modérateur', 2: 'Senior Mod', 3: 'Admin', 4: 'Super Admin' };
+  try {
+    const user = await client.users.fetch(userId);
+    const embed = new EmbedBuilder()
+      .setTitle('🛡️ Accès au Panel de Modération')
+      .setColor(0x5865F2)
+      .setDescription('Un accès au panel de modération a été créé pour vous.')
+      .addFields(
+        { name: '👤 Nom d\'utilisateur', value: `\`${username}\``, inline: true },
+        { name: '🔑 Mot de passe', value: `\`${password}\``, inline: true },
+        { name: '🏅 Niveau', value: `${level} — ${ADMIN_LEVELS_NAMES[level] || 'Staff'}`, inline: true },
+        { name: '🔗 Lien du panel', value: `${panelUrl}/?guild=${guildId}` }
+      )
+      .setFooter({ text: '⚠️ Ne partagez jamais vos identifiants.' })
+      .setTimestamp();
+    await user.send({ embeds: [embed] });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(400).json({ error: 'Impossible d\'envoyer le MP (DMs fermés ?)' });
+  }
+});
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 async function start() {
   await connectDB();

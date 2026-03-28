@@ -9,14 +9,14 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#080b12;--surface:#0e1219;--surface2:#141a24;--border:#1e2535;
-  --red:#ff4757;--yellow:#ffd32a;--green:#2ed573;--blue:#5352ed;--purple:#a29bfe;--pink:#fd79a8;
+  --red:#ff4757;--yellow:#ffd32a;--green:#2ed573;--blue:#5352ed;--purple:#a29bfe;--pink:#fd79a8;--orange:#ff9f43;
   --text:#e2e8f0;--muted:#4a5568;
   --font-head:'Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 20% 0%,rgba(83,82,237,0.06) 0%,transparent 60%),radial-gradient(ellipse 40% 30% at 80% 100%,rgba(255,71,87,0.04) 0%,transparent 60%);pointer-events:none;z-index:0}
 
-/* AUTH */
+/* ── AUTH ── */
 #auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;z-index:1}
 .auth-wrap{width:420px}
 .auth-brand{text-align:center;margin-bottom:32px}
@@ -39,7 +39,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-auth:hover{opacity:.85}
 .auth-err{display:none;padding:10px 14px;background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);border-radius:6px;color:var(--red);font-size:12px;margin-bottom:14px}
 
-/* LAYOUT */
+/* ── PUBLIC FICHE ── */
+#public-fiche{display:none;min-height:100vh;padding:40px 20px;position:relative;z-index:1;max-width:700px;margin:0 auto}
+.public-brand{text-align:center;margin-bottom:28px}
+.public-brand h1{font-family:var(--font-head);font-size:28px;font-weight:900}
+.public-brand h1 span{color:var(--red)}
+
+/* ── LAYOUT ── */
 #app{display:none;min-height:100vh;position:relative;z-index:1}
 .sidebar{position:fixed;left:0;top:0;bottom:0;width:230px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
 .sidebar-top{padding:20px;border-bottom:1px solid var(--border)}
@@ -66,7 +72,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ph-title{font-family:var(--font-head);font-size:24px;font-weight:900;letter-spacing:-.5px}
 .ph-title small{font-size:11px;color:var(--muted);font-weight:400;letter-spacing:0;display:block;margin-top:3px;font-family:var(--font-mono)}
 
-/* STATS */
+/* ── STATS ── */
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px;position:relative;overflow:hidden}
 .stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
@@ -78,20 +84,20 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stat-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .stat-val{font-family:var(--font-head);font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1}
 
-/* CARDS */
+/* ── CARDS ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:18px;overflow:hidden}
 .card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .card-title{font-family:var(--font-head);font-size:14px;font-weight:700}
 .card-body{padding:18px}
 
-/* TABLE */
+/* ── TABLE ── */
 .dt{width:100%;border-collapse:collapse}
 .dt th{text-align:left;padding:9px 14px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
 .dt td{padding:12px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
 .dt tr:last-child td{border-bottom:none}
 .dt tr:hover td{background:rgba(255,255,255,.015)}
 
-/* BADGES */
+/* ── BADGES ── */
 .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;font-family:var(--font-head)}
 .b-warn{background:rgba(255,211,42,.12);color:var(--yellow)}
 .b-mute{background:rgba(253,121,168,.12);color:var(--pink)}
@@ -102,28 +108,31 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .b-green{background:rgba(46,213,115,.12);color:var(--green)}
 .b-red{background:rgba(255,71,87,.12);color:var(--red)}
 .b-yellow{background:rgba(255,211,42,.12);color:var(--yellow)}
+.b-orange{background:rgba(255,159,67,.12);color:var(--orange)}
 
-/* BUTTONS */
+/* ── BUTTONS ── */
 .btn{padding:7px 14px;border-radius:6px;cursor:pointer;font-family:var(--font-mono);font-size:11px;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
 .btn-red{background:var(--red);color:white}.btn-red:hover{opacity:.85}
 .btn-ghost{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{background:rgba(255,255,255,.08)}
 .btn-danger{background:rgba(255,71,87,.1);color:var(--red);border:1px solid rgba(255,71,87,.3)}.btn-danger:hover{background:rgba(255,71,87,.2)}
 .btn-blue{background:rgba(83,82,237,.2);color:var(--purple);border:1px solid rgba(83,82,237,.3)}
+.btn-green{background:rgba(46,213,115,.2);color:var(--green);border:1px solid rgba(46,213,115,.3)}
+.btn-orange{background:rgba(255,159,67,.2);color:var(--orange);border:1px solid rgba(255,159,67,.3)}
 
-/* SEARCH */
+/* ── SEARCH ── */
 .search-bar{display:flex;gap:10px;margin-bottom:18px}
 .search-bar input{flex:1;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none}
 .search-bar input:focus{border-color:var(--blue)}
 .search-bar select{padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none}
 
-/* USER CARD */
+/* ── USER CARD ── */
 .user-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start}
 .user-card-av{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;font-family:var(--font-head);flex-shrink:0}
 .user-card-info{flex:1}
 .user-card-name{font-family:var(--font-head);font-weight:700;font-size:15px;margin-bottom:6px}
 .user-card-stats{display:flex;gap:8px;flex-wrap:wrap}
 
-/* FICHE PAGE */
+/* ── FICHE ── */
 .fiche-header{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;margin-bottom:18px;display:flex;gap:20px;align-items:center}
 .fiche-av{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:28px;font-family:var(--font-head);flex-shrink:0}
 .fiche-counts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
@@ -131,10 +140,25 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fiche-count-val{font-family:var(--font-head);font-size:28px;font-weight:900;line-height:1;margin-bottom:4px}
 .fiche-count-label{font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 
-/* MODAL */
+/* ── XP BAR ── */
+.xp-bar-wrap{background:var(--surface2);height:8px;border-radius:4px;overflow:hidden;margin-top:6px}
+.xp-bar{height:100%;background:linear-gradient(90deg,var(--yellow),var(--orange));border-radius:4px;transition:width .5s}
+.xp-rank-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;display:flex;align-items:center;gap:16px;margin-bottom:10px}
+.xp-rank-pos{font-family:var(--font-head);font-size:22px;font-weight:900;width:36px;text-align:center}
+.xp-rank-info{flex:1}
+.xp-rank-name{font-family:var(--font-head);font-weight:700;font-size:14px}
+.xp-rank-level{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── TICKET CARD ── */
+.ticket-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ticket-info{flex:1}
+.ticket-num{font-family:var(--font-head);font-weight:700;font-size:14px}
+.ticket-meta{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ── MODAL ── */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(4px)}
 .modal-ov.open{opacity:1;pointer-events:all}
-.modal{width:480px;max-height:80vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;transform:translateY(16px);transition:transform .2s;position:relative}
+.modal{width:480px;max-height:85vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;transform:translateY(16px);transition:transform .2s;position:relative}
 .modal-ov.open .modal{transform:translateY(0)}
 .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),var(--purple))}
 .modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
@@ -148,25 +172,36 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--blue)}
 .form-field select option{background:var(--surface2)}
 
-/* TOAST */
+/* ── CREDENTIALS BOX ── */
+.cred-box{background:rgba(46,213,115,.05);border:1px solid rgba(46,213,115,.3);border-radius:8px;padding:20px;margin-top:16px}
+.cred-box h3{font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--green);margin-bottom:12px}
+.cred-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:8px}
+.cred-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.cred-val{font-family:var(--font-head);font-weight:700;font-size:14px;color:var(--text)}
+.cred-warn{font-size:11px;color:var(--yellow);margin-top:10px;padding:8px 12px;background:rgba(255,211,42,.05);border:1px solid rgba(255,211,42,.2);border-radius:6px}
+
+/* ── TOAST ── */
 .toasts{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:7px}
-.toast{padding:11px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:12px;max-width:280px;display:flex;align-items:center;gap:8px;animation:tIn .3s ease}
+.toast{padding:11px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:12px;max-width:300px;display:flex;align-items:center;gap:8px;animation:tIn .3s ease}
 .toast.success{border-left:3px solid var(--green)}
 .toast.error{border-left:3px solid var(--red)}
+.toast.info{border-left:3px solid var(--blue)}
 @keyframes tIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
 
-/* LEVEL COLORS */
 .lvl-1{color:#57F287}.lvl-2{color:var(--yellow)}.lvl-3{color:var(--red)}.lvl-4{color:var(--purple)}
-
 .empty{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty-ico{font-size:40px;margin-bottom:10px;opacity:.4}
 .empty-title{font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+
+/* ── GRID 2 ── */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 
 @media(max-width:900px){
   .sidebar{width:54px}
   .sidebar .nav-item span,.sidebar-top h1,.sidebar-guild,.user-inf,.btn-logout,.nav-label{display:none}
   .main{margin-left:54px;padding:16px}
   .stats{grid-template-columns:repeat(2,1fr)}
+  .grid2{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -203,6 +238,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- FICHE PUBLIQUE -->
+<div id="public-fiche">
+  <div class="public-brand"><h1>Mod<span>Bot</span></h1><p style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Ma fiche de sanctions</p></div>
+  <div id="public-fiche-content"></div>
+</div>
+
 <!-- APP -->
 <div id="app">
   <nav class="sidebar">
@@ -212,12 +253,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     </div>
     <div class="sidebar-nav">
       <div class="nav-label">Navigation</div>
-      <a class="nav-item active" onclick="showPage('dashboard')"><span class="ico">📊</span><span>Dashboard</span></a>
-      <a class="nav-item" onclick="showPage('cases')"><span class="ico">📋</span><span>Sanctions</span></a>
-      <a class="nav-item" onclick="showPage('members')"><span class="ico">👤</span><span>Membres</span></a>
+      <a class="nav-item active" onclick="showPage('dashboard',this)"><span class="ico">📊</span><span>Dashboard</span></a>
+      <a class="nav-item" onclick="showPage('cases',this)"><span class="ico">📋</span><span>Sanctions</span></a>
+      <a class="nav-item" onclick="showPage('members',this)"><span class="ico">👤</span><span>Membres</span></a>
+      <a class="nav-item" onclick="showPage('tickets',this)"><span class="ico">🎫</span><span>Tickets</span></a>
+      <a class="nav-item" onclick="showPage('xp',this)"><span class="ico">⭐</span><span>Classement XP</span></a>
       <div class="nav-label">Admin</div>
-      <a class="nav-item" id="nav-staff" onclick="showPage('staff')"><span class="ico">🛡️</span><span>Staff</span></a>
-      <a class="nav-item" id="nav-users" onclick="showPage('users')"><span class="ico">👥</span><span>Comptes</span></a>
+      <a class="nav-item" id="nav-staff" onclick="showPage('staff',this)"><span class="ico">🛡️</span><span>Staff</span></a>
+      <a class="nav-item" id="nav-users" onclick="showPage('users',this)"><span class="ico">👥</span><span>Comptes</span></a>
+      <a class="nav-item" id="nav-addadmin" onclick="showPage('addadmin',this)"><span class="ico">➕</span><span>Ajouter Admin</span></a>
     </div>
     <div class="sidebar-foot">
       <div class="user-row">
@@ -232,10 +276,11 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </nav>
 
   <main class="main">
+
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="ph">
-        <div class="ph-title">Dashboard <small>Vue d'ensemble des sanctions</small></div>
+        <div class="ph-title">Dashboard <small>Vue d'ensemble</small></div>
       </div>
       <div class="stats">
         <div class="stat"><div class="stat-label">Avertissements</div><div class="stat-val" id="s-warns">0</div></div>
@@ -244,14 +289,26 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <div class="stat"><div class="stat-label">Bans</div><div class="stat-val" id="s-bans">0</div></div>
         <div class="stat"><div class="stat-label">Total</div><div class="stat-val" id="s-total">0</div></div>
       </div>
-      <div class="card">
-        <div class="card-head"><div class="card-title">🕐 Dernières sanctions</div></div>
-        <table class="dt"><thead><tr><th>Type</th><th>Membre</th><th>Raison</th><th>Modérateur</th><th>Date</th></tr></thead>
-        <tbody id="recent-cases"></tbody></table>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><div class="card-title">🕐 Dernières sanctions</div></div>
+          <table class="dt"><thead><tr><th>Type</th><th>Membre</th><th>Raison</th><th>Date</th></tr></thead>
+          <tbody id="recent-cases"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">🏆 Top modérateurs</div></div>
+          <div class="card-body" id="top-mods"></div>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-head"><div class="card-title">🏆 Top modérateurs</div></div>
-        <div class="card-body" id="top-mods"></div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><div class="card-title">🎫 Tickets récents</div></div>
+          <div class="card-body" id="dash-tickets"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">⭐ Top XP</div></div>
+          <div class="card-body" id="dash-xp"></div>
+        </div>
       </div>
     </div>
 
@@ -259,6 +316,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
     <div class="page" id="page-cases">
       <div class="ph">
         <div class="ph-title">Sanctions <small>Historique complet</small></div>
+        <button class="btn btn-red" onclick="openModal('modal-sanction')">+ Sanctionner</button>
       </div>
       <div class="search-bar">
         <input type="text" id="search-cases" placeholder="Rechercher par membre, raison..." oninput="filterCases()">
@@ -289,6 +347,29 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div id="members-list"></div>
     </div>
 
+    <!-- TICKETS -->
+    <div class="page" id="page-tickets">
+      <div class="ph">
+        <div class="ph-title">Tickets <small>Support membres</small></div>
+        <div style="display:flex;gap:8px">
+          <select id="ticket-filter" onchange="renderTickets()" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none">
+            <option value="">Tous</option>
+            <option value="open">Ouverts</option>
+            <option value="closed">Fermés</option>
+          </select>
+        </div>
+      </div>
+      <div id="tickets-list"></div>
+    </div>
+
+    <!-- XP -->
+    <div class="page" id="page-xp">
+      <div class="ph">
+        <div class="ph-title">Classement XP <small>Top membres du serveur</small></div>
+      </div>
+      <div id="xp-list"></div>
+    </div>
+
     <!-- STAFF -->
     <div class="page" id="page-staff">
       <div class="ph">
@@ -310,12 +391,50 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
         <tbody id="users-table"></tbody></table>
       </div>
     </div>
+
+    <!-- AJOUTER ADMIN -->
+    <div class="page" id="page-addadmin">
+      <div class="ph">
+        <div class="ph-title">Ajouter un Admin <small>Créer un accès au panel</small></div>
+      </div>
+      <div class="card" style="max-width:520px">
+        <div class="card-head"><div class="card-title">➕ Nouveau compte staff</div></div>
+        <div class="card-body">
+          <div class="form-field">
+            <label>Nom d'utilisateur</label>
+            <input type="text" id="na-user" placeholder="pseudo du staff">
+          </div>
+          <div class="form-field">
+            <label>Mot de passe (laisser vide = généré automatiquement)</label>
+            <input type="text" id="na-pass" placeholder="Laisser vide pour générer">
+          </div>
+          <div class="form-field">
+            <label>Niveau admin</label>
+            <select id="na-level">
+              <option value="1">Niveau 1 — Modérateur (warn, mute)</option>
+              <option value="2">Niveau 2 — Senior Mod (warn, mute, kick)</option>
+              <option value="3">Niveau 3 — Admin (tout sauf gestion staff)</option>
+              <option value="4">Niveau 4 — Super Admin (tous les droits)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>ID Discord du membre (pour lui envoyer ses identifiants en MP)</label>
+            <input type="text" id="na-discord-id" placeholder="Ex: 123456789012345678">
+          </div>
+          <button class="btn btn-green" style="width:100%;justify-content:center;padding:12px;font-size:13px;font-weight:700" onclick="creerAdmin()">
+            ✅ Créer le compte & envoyer en MP
+          </button>
+          <div id="cred-result" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
 <!-- Modal: Fiche membre -->
 <div class="modal-ov" id="modal-fiche">
-  <div class="modal" style="width:600px">
+  <div class="modal" style="width:620px">
     <div class="modal-head"><div class="modal-title">📋 Fiche membre</div><button class="modal-x" onclick="closeModal('modal-fiche')">×</button></div>
     <div class="modal-body" id="fiche-content"></div>
   </div>
@@ -353,20 +472,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 </div>
 
-<!-- Bouton flottant -->
-<button class="btn btn-red" id="btn-sanctionner" style="display:none;position:fixed;bottom:30px;right:30px;border-radius:50px;padding:15px 25px;z-index:99;box-shadow:0 8px 15px rgba(255,71,87,0.3)" onclick="openModal('modal-sanction')">
-  + Sanctionner
-</button>
-
 <div class="toasts" id="toasts"></div>
 
 <script>
 let token = localStorage.getItem('mb_token');
 let currentUser = JSON.parse(localStorage.getItem('mb_user') || 'null');
 let guildId = new URLSearchParams(location.search).get('guild') || '';
+let targetUserId = new URLSearchParams(location.search).get('user') || '';
 let guildData = null;
 let allCases = [];
-let allMembers = {};
+let allTickets = [];
+let allXP = [];
+const API = '';
+
 const ADMIN_LEVELS = {
   1:{name:'Modérateur',color:'lvl-1',perms:'warn, mute'},
   2:{name:'Senior Mod',color:'lvl-2',perms:'warn, mute, kick'},
@@ -375,18 +493,85 @@ const ADMIN_LEVELS = {
 };
 const TYPE_BADGES = {warn:'b-warn',mute:'b-mute',kick:'b-kick',ban:'b-ban',unban:'b-unban',unmute:'b-unmute'};
 const TYPE_ICONS = {warn:'⚠️',mute:'🔇',kick:'👢',ban:'🔨',unban:'✅',unmute:'🔊'};
-const API = '';
 
+// ── Génération mot de passe ──
+function genPassword(len=12) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
+  return Array.from({length:len}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+}
+
+// ── Init ──
 async function init() {
+  // Fiche publique
+  const path = location.pathname;
+  if (path.includes('/fiche') || (targetUserId && !token)) {
+    showPublicFiche();
+    return;
+  }
+
   if (guildId) {
     try {
       const r = await fetch(`${API}/api/guild/${guildId}`);
-      if (r.ok) { guildData = await r.json(); document.getElementById('guild-name').textContent = guildData.name; document.getElementById('sb-guild').textContent = guildData.name; document.title = `ModBot — ${guildData.name}`; }
+      if (r.ok) {
+        guildData = await r.json();
+        document.getElementById('guild-name').textContent = guildData.name;
+        document.getElementById('sb-guild').textContent = guildData.name;
+        document.title = `ModBot — ${guildData.name}`;
+      }
     } catch {}
   }
   if (token && currentUser) showApp();
 }
 
+// ── Fiche publique ──
+async function showPublicFiche() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('public-fiche').style.display = 'block';
+
+  const gid = new URLSearchParams(location.search).get('guild') || guildId;
+  const uid = new URLSearchParams(location.search).get('user') || targetUserId;
+
+  if (!gid || !uid) {
+    document.getElementById('public-fiche-content').innerHTML = '<div class="empty"><div class="empty-ico">❌</div><div class="empty-title">Lien invalide</div></div>';
+    return;
+  }
+
+  const r = await fetch(`${API}/api/public/fiche/${gid}/${uid}`);
+  if (!r.ok) { document.getElementById('public-fiche-content').innerHTML = '<div class="empty"><div class="empty-ico">❌</div><div class="empty-title">Fiche introuvable</div></div>'; return; }
+  const data = await r.json();
+
+  const counts = data.counts;
+  document.getElementById('public-fiche-content').innerHTML = `
+    <div class="fiche-header">
+      <div class="fiche-av">?</div>
+      <div>
+        <div style="font-family:var(--font-head);font-size:20px;font-weight:900">Mon dossier</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">ID: ${uid}</div>
+        <div style="font-size:11px;color:var(--muted)">${data.cases.length} sanction(s)</div>
+      </div>
+    </div>
+    <div class="fiche-counts">
+      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--yellow)">${counts.warn}</div><div class="fiche-count-label">Warns</div></div>
+      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--pink)">${counts.mute}</div><div class="fiche-count-label">Mutes</div></div>
+      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--red)">${counts.kick}</div><div class="fiche-count-label">Kicks</div></div>
+      <div class="fiche-count"><div class="fiche-count-val" style="color:#999">${counts.ban}</div><div class="fiche-count-label">Bans</div></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">📜 Historique</div></div>
+      <div class="card-body">
+        ${data.cases.map(c => `
+          <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start">
+            <span class="badge ${TYPE_BADGES[c.type]||''}" style="min-width:70px;justify-content:center">${TYPE_ICONS[c.type]||''} ${c.type}</span>
+            <div style="flex:1">
+              <div style="font-size:12px">${c.reason}</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:3px">${new Date(c.createdAt).toLocaleDateString('fr-FR')} · #${c.caseNumber}</div>
+            </div>
+          </div>`).join('') || '<div style="text-align:center;padding:20px;color:var(--muted)">Aucune sanction 🎉</div>'}
+      </div>
+    </div>`;
+}
+
+// ── Auth ──
 function switchTab(t) {
   document.getElementById('login-form').style.display = t==='login'?'block':'none';
   document.getElementById('register-form').style.display = t==='register'?'block':'none';
@@ -432,8 +617,18 @@ function showApp() {
   document.getElementById('user-name').textContent = currentUser.username;
   document.getElementById('user-av').textContent = currentUser.username[0].toUpperCase();
   document.getElementById('user-lvl').innerHTML = `<span class="${ADMIN_LEVELS[lvl].color}">${ADMIN_LEVELS[lvl].name}</span>`;
-  if (lvl < 3) { document.getElementById('nav-staff').style.display='none'; document.getElementById('nav-users').style.display='none'; }
-  document.getElementById('btn-sanctionner').style.display = 'flex';
+
+  // Masquer les pages admin si niveau insuffisant
+  if (lvl < 3) {
+    document.getElementById('nav-staff').style.display='none';
+    document.getElementById('nav-users').style.display='none';
+    document.getElementById('nav-addadmin').style.display='none';
+  }
+  // Seuls les possesseurs/admin Discord (niveau 4) peuvent créer des admins
+  if (lvl < 4) {
+    document.getElementById('nav-addadmin').style.display='none';
+  }
+
   loadAll();
 }
 
@@ -445,9 +640,13 @@ async function apiGet(p) {
 
 async function loadAll() {
   allCases = await apiGet('/api/cases');
+  allTickets = await apiGet('/api/tickets');
+  allXP = await apiGet('/api/xp');
   renderDashboard();
   renderCases();
   renderMembers();
+  renderTickets();
+  renderXP();
   if (currentUser.adminLevel >= 3) { renderStaff(); renderUsers(); }
 }
 
@@ -461,15 +660,13 @@ function renderDashboard() {
   document.getElementById('s-bans').textContent = counts.ban;
   document.getElementById('s-total').textContent = allCases.length;
 
-  const recent = [...allCases].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,10);
-  const tbody = document.getElementById('recent-cases');
-  tbody.innerHTML = recent.map(c => `<tr>
+  const recent = [...allCases].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8);
+  document.getElementById('recent-cases').innerHTML = recent.map(c => `<tr>
     <td><span class="badge ${TYPE_BADGES[c.type]||''}">${TYPE_ICONS[c.type]||''} ${c.type}</span></td>
     <td style="font-family:var(--font-head);font-weight:700">${c.targetTag}</td>
-    <td style="color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.reason}</td>
-    <td><@${c.modId}></td>
-    <td style="color:var(--muted)">${new Date(c.createdAt).toLocaleDateString('fr-FR')}</td>
-  </tr>`).join('') || '<tr><td colspan="5"><div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune sanction</div></div></td></tr>';
+    <td style="color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.reason}</td>
+    <td style="color:var(--muted);font-size:11px">${new Date(c.createdAt).toLocaleDateString('fr-FR')}</td>
+  </tr>`).join('') || '<tr><td colspan="4"><div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune sanction</div></div></td></tr>';
 
   // Top mods
   const modCounts = {};
@@ -479,24 +676,41 @@ function renderDashboard() {
   document.getElementById('top-mods').innerHTML = topMods.length ? topMods.map(([id,count],i) => `
     <div style="margin-bottom:14px">
       <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:12px">${['🥇','🥈','🥉'][i]||`#${i+1}`} <strong><@${id}></strong></span>
+        <span style="font-size:12px">${['🥇','🥈','🥉'][i]||`#${i+1}`} <strong>&lt;@${id}&gt;</strong></span>
         <span style="color:var(--purple);font-weight:700;font-family:var(--font-head)">${count}</span>
       </div>
       <div style="background:var(--surface2);height:5px;border-radius:3px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,var(--red),var(--purple));width:${Math.round(count/max*100)}%;border-radius:3px"></div></div>
     </div>`).join('') : '<div class="empty"><div class="empty-ico">🏆</div><div class="empty-title">Aucune donnée</div></div>';
+
+  // Dash tickets
+  const recentTickets = [...allTickets].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,4);
+  document.getElementById('dash-tickets').innerHTML = recentTickets.length ? recentTickets.map(t => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <span style="font-family:var(--font-head);font-weight:700">Ticket #${String(t.number).padStart(4,'0')}</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:8px">${t.userTag||t.userId}</span>
+      </div>
+      <span class="badge ${t.status==='open'?'b-green':'b-red'}">${t.status==='open'?'Ouvert':'Fermé'}</span>
+    </div>`).join('') : '<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun ticket</div></div>';
+
+  // Dash XP
+  document.getElementById('dash-xp').innerHTML = allXP.slice(0,5).length ? allXP.slice(0,5).map((u,i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-family:var(--font-head);font-weight:900;font-size:16px;width:28px;text-align:center">${['🥇','🥈','🥉'][i]||`#${i+1}`}</span>
+      <div style="flex:1"><div style="font-family:var(--font-head);font-weight:700;font-size:13px">${u.username}</div><div style="font-size:10px;color:var(--muted)">Niv. ${u.level||0} · ${u.xp} XP</div></div>
+    </div>`).join('') : '<div class="empty"><div class="empty-ico">⭐</div><div class="empty-title">Aucune donnée XP</div></div>';
 }
 
 // ── Cases ──
 function renderCases(list) {
   const data = list || allCases;
   const sorted = [...data].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
-  const tbody = document.getElementById('all-cases');
-  tbody.innerHTML = sorted.map(c => `<tr>
+  document.getElementById('all-cases').innerHTML = sorted.map(c => `<tr>
     <td style="color:var(--muted)">#${c.caseNumber}</td>
     <td><span class="badge ${TYPE_BADGES[c.type]||''}">${TYPE_ICONS[c.type]||''} ${c.type}</span></td>
     <td style="font-family:var(--font-head);font-weight:700">${c.targetTag}</td>
     <td style="color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.reason}">${c.reason}</td>
-    <td style="font-size:11px;color:var(--muted)"><@${c.modId}></td>
+    <td style="font-size:11px;color:var(--muted)">&lt;@${c.modId}&gt;</td>
     <td style="font-size:11px;color:var(--muted)">${new Date(c.createdAt).toLocaleDateString('fr-FR')}</td>
     <td>
       <button class="btn btn-ghost" onclick="showFiche('${c.targetId}','${c.targetTag}')" style="padding:4px 8px;font-size:10px">Fiche</button>
@@ -510,7 +724,7 @@ function filterCases() {
   const type = document.getElementById('filter-type').value;
   let filtered = allCases;
   if (type) filtered = filtered.filter(c => c.type === type);
-  if (search) filtered = filtered.filter(c => c.targetTag.toLowerCase().includes(search) || c.reason.toLowerCase().includes(search) || c.targetId.includes(search));
+  if (search) filtered = filtered.filter(c => (c.targetTag||'').toLowerCase().includes(search) || (c.reason||'').toLowerCase().includes(search) || c.targetId.includes(search));
   renderCases(filtered);
 }
 
@@ -530,19 +744,16 @@ function renderMembers(filter) {
     memberMap[c.targetId].cases.push(c);
   });
   let members = Object.values(memberMap);
-  if (filter) members = members.filter(m => m.tag.toLowerCase().includes(filter.toLowerCase()) || m.id.includes(filter));
+  if (filter) members = members.filter(m => (m.tag||'').toLowerCase().includes(filter.toLowerCase()) || m.id.includes(filter));
   members.sort((a,b) => b.cases.length - a.cases.length);
 
   const container = document.getElementById('members-list');
-  if (!members.length) {
-    container.innerHTML = '<div class="empty"><div class="empty-ico">👤</div><div class="empty-title">Aucun membre avec des sanctions</div></div>';
-    return;
-  }
+  if (!members.length) { container.innerHTML = '<div class="empty"><div class="empty-ico">👤</div><div class="empty-title">Aucun membre avec des sanctions</div></div>'; return; }
   container.innerHTML = members.map(m => {
     const counts = {warn:0,mute:0,kick:0,ban:0};
     m.cases.forEach(c => { if (counts[c.type]!==undefined) counts[c.type]++; });
     return `<div class="user-card">
-      <div class="user-card-av">${m.tag[0]?.toUpperCase()||'?'}</div>
+      <div class="user-card-av">${(m.tag||'?')[0]?.toUpperCase()}</div>
       <div class="user-card-info">
         <div class="user-card-name">${m.tag} <span style="font-size:11px;color:var(--muted);font-weight:400">(${m.id})</span></div>
         <div class="user-card-stats">
@@ -553,28 +764,29 @@ function renderMembers(filter) {
           <span class="badge b-blue">${m.cases.length} total</span>
         </div>
       </div>
-      <button class="btn btn-ghost" onclick="showFiche('${m.id}','${m.tag}')">📋 Fiche</button>
+      <div style="display:flex;gap:8px;flex-direction:column;align-items:flex-end">
+        <button class="btn btn-ghost" onclick="showFiche('${m.id}','${m.tag}')">📋 Fiche</button>
+        <a class="btn btn-blue" href="${location.origin}/fiche?guild=${guildId}&user=${m.id}" target="_blank" style="font-size:10px;padding:4px 10px">🔗 Lien public</a>
+      </div>
     </div>`;
   }).join('');
 }
 
-function filterMembers() {
-  renderMembers(document.getElementById('search-members').value);
-}
+function filterMembers() { renderMembers(document.getElementById('search-members').value); }
 
 async function showFiche(userId, userTag) {
   const userCases = allCases.filter(c => c.targetId === userId).sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
   const counts = {warn:0,mute:0,kick:0,ban:0};
   userCases.forEach(c => { if (counts[c.type]!==undefined) counts[c.type]++; });
 
-  const content = document.getElementById('fiche-content');
-  content.innerHTML = `
+  document.getElementById('fiche-content').innerHTML = `
     <div class="fiche-header">
-      <div class="fiche-av">${userTag[0]?.toUpperCase()||'?'}</div>
+      <div class="fiche-av">${(userTag||'?')[0]?.toUpperCase()}</div>
       <div>
         <div style="font-family:var(--font-head);font-size:20px;font-weight:900">${userTag}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:4px">ID: ${userId}</div>
-        <div style="font-size:11px;color:var(--muted)">${userCases.length} sanction(s) au total</div>
+        <div style="font-size:11px;color:var(--muted)">${userCases.length} sanction(s)</div>
+        <a href="${location.origin}/fiche?guild=${guildId}&user=${userId}" target="_blank" class="btn btn-blue" style="margin-top:8px;font-size:10px;padding:4px 10px">🔗 Fiche publique</a>
       </div>
     </div>
     <div class="fiche-counts">
@@ -583,16 +795,16 @@ async function showFiche(userId, userTag) {
       <div class="fiche-count"><div class="fiche-count-val" style="color:var(--red)">${counts.kick}</div><div class="fiche-count-label">Kicks</div></div>
       <div class="fiche-count"><div class="fiche-count-val" style="color:#999">${counts.ban}</div><div class="fiche-count-label">Bans</div></div>
     </div>
-    <div style="margin-top:4px">
+    <div>
       ${userCases.map(c => `
         <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start">
           <span class="badge ${TYPE_BADGES[c.type]||''}" style="min-width:70px;justify-content:center">${TYPE_ICONS[c.type]||''} ${c.type}</span>
           <div style="flex:1">
             <div style="font-size:12px">${c.reason}</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">Par <@${c.modId}> · ${new Date(c.createdAt).toLocaleDateString('fr-FR')} · #${c.caseNumber}</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:3px">Par &lt;@${c.modId}&gt; · ${new Date(c.createdAt).toLocaleDateString('fr-FR')} · #${c.caseNumber}</div>
           </div>
           ${currentUser.adminLevel >= 2 ? `<button class="btn btn-danger" onclick="deleteCaseFromFiche('${c.id}')" style="padding:3px 8px;font-size:10px">🗑️</button>` : ''}
-        </div>`).join('') || '<div style="padding:20px;text-align:center;color:var(--muted)">Aucune sanction</div>'}
+        </div>`).join('') || '<div style="padding:20px;text-align:center;color:var(--muted)">Aucune sanction 🎉</div>'}
     </div>`;
   openModal('modal-fiche');
 }
@@ -601,21 +813,64 @@ async function deleteCaseFromFiche(id) {
   if (!confirm('Supprimer ?')) return;
   await fetch(`${API}/api/cases/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
   allCases = allCases.filter(c => c.id !== id);
-  const modal = document.getElementById('fiche-content');
-  const row = modal.querySelector(`[onclick*="${id}"]`)?.closest('div[style*="border-bottom"]');
-  if (row) row.remove();
   renderDashboard(); renderCases(); renderMembers();
   toast('Sanction supprimée','success');
+  closeModal('modal-fiche');
+}
+
+// ── Tickets ──
+function renderTickets() {
+  const filter = document.getElementById('ticket-filter')?.value || '';
+  let data = [...allTickets].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  if (filter) data = data.filter(t => t.status === filter);
+
+  const container = document.getElementById('tickets-list');
+  if (!data.length) { container.innerHTML = '<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun ticket</div></div>'; return; }
+  container.innerHTML = data.map(t => `
+    <div class="ticket-card">
+      <div class="ticket-info">
+        <div class="ticket-num">🎫 Ticket #${String(t.number).padStart(4,'0')}</div>
+        <div class="ticket-meta">Ouvert par ${t.userTag||t.userId} · ${new Date(t.createdAt).toLocaleDateString('fr-FR')}${t.closedAt ? ` · Fermé le ${new Date(t.closedAt).toLocaleDateString('fr-FR')}` : ''}</div>
+      </div>
+      <span class="badge ${t.status==='open'?'b-green':'b-red'}">${t.status==='open'?'✅ Ouvert':'🔒 Fermé'}</span>
+    </div>`).join('');
+}
+
+// ── XP ──
+function getXPForLevel(level) { return 100 * level * level; }
+function getLevelFromXP(xp) { let l=0; while(xp>=getXPForLevel(l+1)) l++; return l; }
+
+function renderXP() {
+  const container = document.getElementById('xp-list');
+  if (!allXP.length) { container.innerHTML = '<div class="empty"><div class="empty-ico">⭐</div><div class="empty-title">Aucune donnée XP</div></div>'; return; }
+  const medals = ['🥇','🥈','🥉'];
+  container.innerHTML = allXP.map((u,i) => {
+    const level = u.level || getLevelFromXP(u.xp);
+    const currentLevelXP = getXPForLevel(level);
+    const nextLevelXP = getXPForLevel(level+1);
+    const progress = Math.min(100, Math.round(((u.xp-currentLevelXP)/(nextLevelXP-currentLevelXP))*100));
+    return `<div class="xp-rank-card">
+      <div class="xp-rank-pos">${medals[i]||`#${i+1}`}</div>
+      <div class="xp-rank-info">
+        <div class="xp-rank-name">${u.username}</div>
+        <div class="xp-rank-level">Niveau ${level} · ${u.xp} XP total</div>
+        <div class="xp-bar-wrap"><div class="xp-bar" style="width:${progress}%"></div></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--font-head);font-weight:900;font-size:20px;color:var(--yellow)">${level}</div>
+        <div style="font-size:10px;color:var(--muted)">niveau</div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ── Staff ──
 async function renderStaff() {
   const staff = await apiGet('/api/staff');
-  const tbody = document.getElementById('staff-table');
-  tbody.innerHTML = staff.length ? staff.sort((a,b)=>b.niveau-a.niveau).map(s => {
+  document.getElementById('staff-table').innerHTML = staff.length ? staff.sort((a,b)=>b.niveau-a.niveau).map(s => {
     const lvl = ADMIN_LEVELS[s.niveau]||ADMIN_LEVELS[1];
     return `<tr>
-      <td style="font-family:var(--font-head);font-weight:700"><@${s.userId}> <span style="font-size:10px;color:var(--muted)">(${s.tag||s.userId})</span></td>
+      <td style="font-family:var(--font-head);font-weight:700">&lt;@${s.userId}&gt; <span style="font-size:10px;color:var(--muted)">(${s.tag||s.userId})</span></td>
       <td><span class="${lvl.color}" style="font-family:var(--font-head);font-weight:700">Niv.${s.niveau} — ${lvl.name}</span></td>
       <td style="font-size:11px;color:var(--muted)">${lvl.perms}</td>
       <td style="font-size:11px;color:var(--muted)">${new Date(s.addedAt).toLocaleDateString('fr-FR')}</td>
@@ -637,8 +892,7 @@ async function updateStaffLevel(userId, niveau) {
 // ── Users ──
 async function renderUsers() {
   const users = await apiGet('/api/users');
-  const tbody = document.getElementById('users-table');
-  tbody.innerHTML = users.map(u => {
+  document.getElementById('users-table').innerHTML = users.map(u => {
     const lvl = ADMIN_LEVELS[u.adminLevel]||ADMIN_LEVELS[1];
     return `<tr>
       <td>
@@ -651,7 +905,7 @@ async function renderUsers() {
       <td><span class="${lvl.color}" style="font-family:var(--font-head);font-weight:700">Niv.${u.adminLevel} — ${lvl.name}</span></td>
       <td style="font-size:11px;color:var(--muted)">${new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
       <td>
-        ${u.id!==currentUser.id?`
+        ${u.id!==currentUser.id ? `
           <select onchange="updateUserLevel('${u.id}',this.value)" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:11px;outline:none">
             ${[1,2,3,4].map(n=>`<option value="${n}" ${u.adminLevel===n?'selected':''}>${n} — ${ADMIN_LEVELS[n].name}</option>`).join('')}
           </select>` : '<span style="font-size:11px;color:var(--muted)">Vous</span>'}
@@ -666,12 +920,108 @@ async function updateUserLevel(id, level) {
   renderUsers();
 }
 
+// ── Créer Admin (Super Admin uniquement) ──
+async function creerAdmin() {
+  if (currentUser.adminLevel < 4) {
+    toast('❌ Seuls les Super Admins peuvent créer des comptes staff.', 'error');
+    return;
+  }
+
+  const username = document.getElementById('na-user').value.trim();
+  const passwordInput = document.getElementById('na-pass').value.trim();
+  const level = parseInt(document.getElementById('na-level').value);
+  const discordId = document.getElementById('na-discord-id').value.trim();
+
+  if (!username) return toast('Entrez un nom d\'utilisateur', 'error');
+
+  // Générer mot de passe si vide
+  const password = passwordInput || genPassword();
+
+  // Créer le compte via l'API
+  const r = await fetch(`${API}/api/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password, guildId })
+  });
+  const data = await r.json();
+  if (!r.ok) return toast(data.error || 'Erreur lors de la création', 'error');
+
+  // Mettre à jour le niveau admin
+  if (level > 1) {
+    await fetch(`${API}/api/users/${data.user.id}/level`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ adminLevel: level })
+    });
+  }
+
+  // Envoyer les identifiants en MP via Discord si ID fourni
+  if (discordId) {
+    await fetch(`${API}/api/send-credentials`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ userId: discordId, username, password, level, guildId, panelUrl: location.origin })
+    });
+  }
+
+  // Afficher les identifiants
+  document.getElementById('cred-result').style.display = 'block';
+  document.getElementById('cred-result').innerHTML = `
+    <div class="cred-box">
+      <h3>✅ Compte créé avec succès !</h3>
+      <div class="cred-row">
+        <div>
+          <div class="cred-label">Nom d'utilisateur</div>
+          <div class="cred-val">${username}</div>
+        </div>
+        <button class="btn btn-ghost" onclick="copyText('${username}')" style="font-size:10px">Copier</button>
+      </div>
+      <div class="cred-row">
+        <div>
+          <div class="cred-label">Mot de passe</div>
+          <div class="cred-val">${password}</div>
+        </div>
+        <button class="btn btn-ghost" onclick="copyText('${password}')" style="font-size:10px">Copier</button>
+      </div>
+      <div class="cred-row">
+        <div>
+          <div class="cred-label">Niveau</div>
+          <div class="cred-val">${level} — ${ADMIN_LEVELS[level].name}</div>
+        </div>
+      </div>
+      <div class="cred-row">
+        <div>
+          <div class="cred-label">Lien du panel</div>
+          <div class="cred-val" style="font-size:12px">${location.origin}/?guild=${guildId}</div>
+        </div>
+        <button class="btn btn-ghost" onclick="copyText('${location.origin}/?guild=${guildId}')" style="font-size:10px">Copier</button>
+      </div>
+      <div class="cred-warn">⚠️ Transmettez ces identifiants de manière sécurisée.${discordId ? ' Un MP Discord a été envoyé au membre.' : ''}</div>
+    </div>`;
+
+  // Reset form
+  document.getElementById('na-user').value = '';
+  document.getElementById('na-pass').value = '';
+  document.getElementById('na-discord-id').value = '';
+
+  toast('✅ Compte créé !', 'success');
+  if (currentUser.adminLevel >= 3) renderUsers();
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => toast('Copié !', 'info'));
+}
+
 // ── Navigation ──
-function showPage(name) {
+function showPage(name, el) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById(`page-${name}`).classList.add('active');
-  event.currentTarget?.classList.add('active');
+  if (el) el.classList.add('active');
+  if (name === 'tickets') renderTickets();
+  if (name === 'xp') renderXP();
+  if (name === 'staff') renderStaff();
+  if (name === 'users') renderUsers();
 }
 
 // ── Modal ──
@@ -683,7 +1033,7 @@ document.addEventListener('click',e=>{if(e.target.classList.contains('modal-ov')
 function toast(msg,type='success'){
   const el=document.createElement('div');
   el.className=`toast ${type}`;
-  el.innerHTML=`<span>${type==='success'?'✅':'❌'}</span><span>${msg}</span>`;
+  el.innerHTML=`<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span><span>${msg}</span>`;
   document.getElementById('toasts').appendChild(el);
   setTimeout(()=>el.remove(),3500);
 }
@@ -693,9 +1043,7 @@ async function executerSanction() {
   const targetId = document.getElementById('s-target-id').value.trim();
   const type = document.getElementById('s-type').value;
   const reason = document.getElementById('s-reason').value.trim();
-
   if (!targetId) return toast('Entrez un ID Discord valide', 'error');
-
   const res = await fetch(`${API}/api/cases`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -703,7 +1051,6 @@ async function executerSanction() {
   });
   const data = await res.json();
   if (data.error) return toast(data.error, 'error');
-
   closeModal('modal-sanction');
   document.getElementById('s-target-id').value = '';
   document.getElementById('s-reason').value = '';

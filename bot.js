@@ -8,10 +8,10 @@ const fs = require('fs');
 const path = require('path');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
-const BOT_TOKEN = process.env.BOT_TOKEN || 'process.env.BOT_TOKEN';
-const CLIENT_ID = process.env.CLIENT_ID || 'process.env.CLIENT_ID';
-const JWT_SECRET = process.env.JWT_SECRET || 'k25IOlNEx5IyAvBrnK_txuZrhXNcUi5t';
-const PANEL_URL = process.env.PANEL_URL || 'https://modbot-production-ad40.up.railway.app';
+const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN';
+const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_CLIENT_ID';
+const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
+const PANEL_URL = process.env.PANEL_URL || 'http://localhost:3000';
 const PORT = process.env.PORT || 3000;
 
 // ─── Database ─────────────────────────────────────────────────────────────────
@@ -660,6 +660,47 @@ app.get('/api/cases', authMiddleware, (req, res) => {
   res.json(cases[guildId] || []);
 });
 
+app.post('/api/cases', authMiddleware, async (req, res) => {
+  const { guildId, username } = req.user;
+  const { targetId, targetTag, type, reason } = req.body;
+  if (!targetId || !type) return res.status(400).json({ error: 'Champs manquants' });
+
+  const sanction = await addSanction(guildId, targetId, targetTag || targetId, username, type, reason || 'Sanction via panel');
+
+  // Log dans Discord si possible
+  const guild = client.guilds.cache.get(guildId);
+  if (guild) {
+    await logAction(guild, sanction);
+    // Appliquer la sanction sur Discord si possible
+    try {
+      const member = await guild.members.fetch(targetId).catch(() => null);
+      if (member) {
+        const configs = loadDB('mod_configs');
+        const config = configs[guildId] || {};
+        if (type === 'mute' && config.muteRole) await member.roles.add(config.muteRole).catch(() => {});
+        if (type === 'mute' && !config.muteRole) await member.timeout(3600000, reason).catch(() => {});
+        if (type === 'kick') await member.kick(reason || 'Sanction via panel').catch(() => {});
+        if (type === 'ban') await member.ban({ reason: reason || 'Sanction via panel' }).catch(() => {});
+        // DM au membre
+        const colors = { warn: 0xFEE75C, mute: 0xEB459E, kick: 0xED4245, ban: 0x000000 };
+        const icons = { warn: '⚠️', mute: '🔇', kick: '👢', ban: '🔨' };
+        const dmEmbed = new EmbedBuilder()
+          .setTitle(`${icons[type] || '📋'} Sanction — ${guild.name}`)
+          .setColor(colors[type] || 0x5865F2)
+          .addFields(
+            { name: '📝 Raison', value: reason || 'Aucune raison' },
+            { name: '🛡️ Modérateur', value: username }
+          );
+        await member.user.send({ embeds: [dmEmbed] }).catch(() => {});
+        // Check auto sanctions si warn
+        if (type === 'warn') await checkAutoSanctions(guild, member);
+      }
+    } catch {}
+  }
+
+  res.json(sanction);
+});
+
 app.get('/api/cases/user/:userId', authMiddleware, (req, res) => {
   const { guildId } = req.user;
   const cases = loadDB('mod_cases');
@@ -674,38 +715,6 @@ app.delete('/api/cases/:id', authMiddleware, (req, res) => {
   cases[guildId][idx].active = false;
   saveDB('mod_cases', cases);
   res.json({ success: true });
-});
-// AJOUTER CECI DANS LE FICHIER DU BOT (index.js)
-app.post('/api/actions/execute', authMiddleware, async (req, res) => {
-    const { guildId, adminLevel } = req.user;
-    const { targetId, type, reason, duration } = req.body;
-
-    // 1. Vérification des perms (Niveau 2 minimum pour agir)
-    if (adminLevel < 2) return res.status(403).json({ error: 'Permission insuffisante' });
-
-    try {
-        const guild = client.guilds.cache.get(guildId);
-        const member = await guild.members.fetch(targetId).catch(() => null);
-        if (!member && type !== 'unban') return res.status(404).json({ error: 'Membre introuvable sur le serveur' });
-
-        let sanction;
-        // 2. Exécution de l'action sur Discord
-        if (type === 'warn') {
-            sanction = await addSanction(guildId, targetId, member.user.tag, req.user.id, 'warn', reason);
-            await checkAutoSanctions(guild, member);
-        } else if (type === 'kick' && adminLevel >= 2) {
-            await member.kick(reason);
-            sanction = await addSanction(guildId, targetId, member.user.tag, req.user.id, 'kick', reason);
-        } else if (type === 'ban' && adminLevel >= 3) {
-            await member.ban({ reason });
-            sanction = await addSanction(guildId, targetId, member.user.tag, req.user.id, 'ban', reason);
-        }
-
-        if (sanction) await logAction(guild, sanction);
-        res.json({ success: true, sanction });
-    } catch (err) {
-        res.status(500).json({ error: 'Erreur lors de la sanction : ' + err.message });
-    }
 });
 
 // Staff

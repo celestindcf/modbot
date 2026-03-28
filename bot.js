@@ -4,8 +4,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
-const fs = require('fs');
-const path = require('path');
+const { MongoClient } = require('mongodb');
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN';
@@ -13,19 +12,19 @@ const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_CLIENT_ID';
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 const PANEL_URL = process.env.PANEL_URL || 'http://localhost:3000';
 const PORT = process.env.PORT || 3000;
+const MONGO_URL = process.env.MONGO_URL || 'YOUR_MONGODB_URL';
 
-// ─── Database ─────────────────────────────────────────────────────────────────
-const DB_PATH = './data';
-if (!fs.existsSync(DB_PATH)) fs.mkdirSync(DB_PATH, { recursive: true });
+// ─── MongoDB ──────────────────────────────────────────────────────────────────
+let db;
+async function connectDB() {
+  const client = new MongoClient(MONGO_URL);
+  await client.connect();
+  db = client.db('modbot');
+  console.log('✅ MongoDB connecté !');
+}
 
-function loadDB(file) {
-  const p = path.join(DB_PATH, `${file}.json`);
-  if (!fs.existsSync(p)) fs.writeFileSync(p, '{}');
-  return JSON.parse(fs.readFileSync(p, 'utf8'));
-}
-function saveDB(file, data) {
-  fs.writeFileSync(path.join(DB_PATH, `${file}.json`), JSON.stringify(data, null, 2));
-}
+function col(name) { return db.collection(name); }
+
 
 // ─── Niveaux d'admin ──────────────────────────────────────────────────────────
 // 1 = Modérateur, 2 = Senior Mod, 3 = Admin, 4 = Super Admin
@@ -56,8 +55,7 @@ const client = new Client({
 
 // ─── Helper: Log action ───────────────────────────────────────────────────────
 async function logAction(guild, action) {
-  const configs = loadDB('mod_configs');
-  const config = configs[guild.id] || {};
+  const config = await col('mod_configs').findOne({ guildId: guild.id }) || {};
   if (!config.logChannel) return;
   const channel = guild.channels.cache.get(config.logChannel);
   if (!channel) return;
@@ -76,10 +74,7 @@ async function logAction(guild, action) {
     .setTimestamp()
     .setFooter({ text: `ID: ${action.id}` });
 
-  if (action.duration) {
-    embed.addFields({ name: '⏱️ Durée', value: formatDuration(action.duration), inline: true });
-  }
-
+  if (action.duration) embed.addFields({ name: '⏱️ Durée', value: formatDuration(action.duration), inline: true });
   await channel.send({ embeds: [embed] });
 }
 
@@ -93,39 +88,26 @@ function formatDuration(ms) {
 
 // ─── Helper: Add sanction ─────────────────────────────────────────────────────
 async function addSanction(guildId, targetId, targetTag, modId, type, reason, duration = null) {
-  const cases = loadDB('mod_cases');
-  const guildCases = cases[guildId] || [];
-  const caseNumber = guildCases.length + 1;
-
+  const count = await col('mod_cases').countDocuments({ guildId });
   const sanction = {
     id: uuidv4().slice(0, 8),
-    caseNumber,
-    type,
-    targetId,
-    targetTag,
-    modId,
+    caseNumber: count + 1,
+    guildId, type, targetId, targetTag, modId,
     reason: reason || 'Aucune raison',
-    duration,
-    createdAt: new Date().toISOString(),
-    active: true
+    duration, createdAt: new Date().toISOString(), active: true
   };
-
-  cases[guildId] = [...guildCases, sanction];
-  saveDB('mod_cases', cases);
+  await col('mod_cases').insertOne(sanction);
   return sanction;
 }
 
 // ─── Helper: Check auto sanctions ────────────────────────────────────────────
 async function checkAutoSanctions(guild, member) {
-  const cases = loadDB('mod_cases');
-  const guildCases = cases[guild.id] || [];
-  const activeWarns = guildCases.filter(c => c.targetId === member.id && c.type === 'warn' && c.active).length;
+  const activeWarns = await col('mod_cases').countDocuments({ guildId: guild.id, targetId: member.id, type: 'warn', active: true });
 
   for (const rule of AUTO_SANCTIONS) {
     if (activeWarns === rule.warns) {
       if (rule.action === 'mute') {
-        const configs = loadDB('mod_configs');
-        const config = configs[guild.id] || {};
+        const config = await col('mod_configs').findOne({ guildId: guild.id }) || {};
         if (config.muteRole) {
           await member.roles.add(config.muteRole).catch(() => {});
           const sanction = await addSanction(guild.id, member.id, member.user.tag, client.user.id, 'mute', rule.reason, rule.duration);
@@ -275,14 +257,11 @@ async function handleCommand(interaction) {
   if (commandName === 'modsetup') {
     const logsChannel = options.getChannel('logs');
     const muteRole = options.getRole('mute_role');
-    const configs = loadDB('mod_configs');
-    configs[guildId] = {
-      logChannel: logsChannel.id,
+    await col('mod_configs').updateOne({ guildId }, { $set: {
+      guildId, logChannel: logsChannel.id,
       muteRole: muteRole?.id || null,
-      setupBy: user.id,
-      setupAt: new Date().toISOString()
-    };
-    saveDB('mod_configs', configs);
+      setupBy: user.id, setupAt: new Date().toISOString()
+    }}, { upsert: true });
 
     const embed = new EmbedBuilder()
       .setTitle('⚙️ Modération configurée')
@@ -291,7 +270,7 @@ async function handleCommand(interaction) {
         { name: '📋 Canal logs', value: `<#${logsChannel.id}>`, inline: true },
         { name: '🔇 Rôle mute', value: muteRole ? `<@&${muteRole.id}>` : 'Non défini', inline: true }
       );
-    await interaction.editReply({ embeds: [embed]});
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -310,13 +289,8 @@ async function handleCommand(interaction) {
   if (commandName === 'staffadd') {
     const target = options.getUser('membre');
     const niveau = options.getInteger('niveau');
-    const staff = loadDB('mod_staff');
-    staff[guildId] = staff[guildId] || [];
-    const existing = staff[guildId].findIndex(s => s.userId === target.id);
     const staffMember = { userId: target.id, tag: target.tag, niveau, addedBy: user.id, addedAt: new Date().toISOString() };
-    if (existing !== -1) staff[guildId][existing] = staffMember;
-    else staff[guildId].push(staffMember);
-    saveDB('mod_staff', staff);
+    await col('mod_staff').updateOne({ guildId, userId: target.id }, { $set: { guildId, ...staffMember } }, { upsert: true });
 
     const embed = new EmbedBuilder()
       .setTitle('👥 Staff mis à jour')
@@ -331,10 +305,9 @@ async function handleCommand(interaction) {
 
   // ── staffliste ──
   if (commandName === 'staffliste') {
-    const staff = loadDB('mod_staff');
-    const guildStaff = (staff[guildId] || []).sort((a, b) => b.niveau - a.niveau);
+    const guildStaff = await col('mod_staff').find({ guildId }).sort({ niveau: -1 }).toArray();
     if (!guildStaff.length) {
-      await interaction.editReply({ content: '❌ Aucun staff configuré.'});
+      await interaction.editReply({ content: '❌ Aucun staff configuré.' });
       return;
     }
     const embed = new EmbedBuilder()
@@ -357,7 +330,6 @@ async function handleCommand(interaction) {
     const sanction = await addSanction(guildId, target.id, target.user.tag, user.id, 'warn', raison);
     await logAction(guild, sanction);
 
-    // DM au membre
     try {
       const dmEmbed = new EmbedBuilder()
         .setTitle(`⚠️ Avertissement — ${guild.name}`)
@@ -370,7 +342,6 @@ async function handleCommand(interaction) {
       await target.user.send({ embeds: [dmEmbed] }).catch(() => {});
     } catch {}
 
-    // Check auto sanctions
     const auto = await checkAutoSanctions(guild, target);
 
     const embed = new EmbedBuilder()
@@ -397,13 +368,11 @@ async function handleCommand(interaction) {
     const mention = options.getString('mention');
     const duration = parseDuration(dureeStr);
 
-    const configs = loadDB('mod_configs');
-    const config = configs[guildId] || {};
+    const config = await col('mod_configs').findOne({ guildId }) || {};
 
     if (config.muteRole) {
       await target.roles.add(config.muteRole).catch(() => {});
     } else {
-      // Timeout Discord natif
       await target.timeout(duration || 3600000, raison).catch(() => {});
     }
 
@@ -426,9 +395,7 @@ async function handleCommand(interaction) {
           const m = await guild.members.fetch(target.id).catch(() => null);
           if (m) await m.roles.remove(config.muteRole).catch(() => {});
         }
-        const cases = loadDB('mod_cases');
-        const idx = (cases[guildId] || []).findIndex(c => c.id === sanction.id);
-        if (idx !== -1) { cases[guildId][idx].active = false; saveDB('mod_cases', cases); }
+        await col('mod_cases').updateOne({ id: sanction.id }, { $set: { active: false } });
       }, duration);
     }
 
@@ -447,18 +414,12 @@ async function handleCommand(interaction) {
   // ── unmute ──
   if (commandName === 'unmute') {
     const target = options.getMember('membre');
-    const configs = loadDB('mod_configs');
-    const config = configs[guildId] || {};
+    const config = await col('mod_configs').findOne({ guildId }) || {};
     if (config.muteRole) await target.roles.remove(config.muteRole).catch(() => {});
     await target.timeout(null).catch(() => {});
-
-    const cases = loadDB('mod_cases');
-    (cases[guildId] || []).forEach(c => { if (c.targetId === target.id && c.type === 'mute') c.active = false; });
-    saveDB('mod_cases', cases);
-
+    await col('mod_cases').updateMany({ guildId, targetId: target.id, type: 'mute' }, { $set: { active: false } });
     const sanction = await addSanction(guildId, target.id, target.user.tag, user.id, 'unmute', 'Unmute manuel');
     await logAction(guild, sanction);
-
     await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🔊 Unmute').setColor(0x57F287).setDescription(`<@${target.id}> a été unmute.`)] });
     return;
   }
@@ -539,9 +500,7 @@ async function handleCommand(interaction) {
   // ── casier ──
   if (commandName === 'casier') {
     const target = options.getUser('membre') || user;
-    const cases = loadDB('mod_cases');
-    const userCases = (cases[guildId] || []).filter(c => c.targetId === target.id).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
+    const userCases = await col('mod_cases').find({ guildId, targetId: target.id }).sort({ createdAt: -1 }).toArray();
     const counts = { warn: 0, mute: 0, kick: 0, ban: 0 };
     userCases.forEach(c => { if (counts[c.type] !== undefined) counts[c.type]++; });
 
@@ -565,19 +524,16 @@ async function handleCommand(interaction) {
         value: recent.map(c => `${icons[c.type]} **#${c.caseNumber}** ${c.type.toUpperCase()} — ${c.reason} <t:${Math.floor(new Date(c.createdAt).getTime()/1000)}:R>`).join('\n')
       });
     }
-
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setLabel('Voir le panel').setStyle(ButtonStyle.Link).setURL(`${PANEL_URL}/?guild=${guildId}&user=${target.id}`)
     );
-
     await interaction.editReply({ embeds: [embed], components: [row] });
     return;
   }
 
   // ── mafiche ──
   if (commandName === 'mafiche') {
-    const cases = loadDB('mod_cases');
-    const userCases = (cases[guildId] || []).filter(c => c.targetId === user.id);
+    const userCases = await col('mod_cases').find({ guildId, targetId: user.id }).toArray();
     const counts = { warn: 0, mute: 0, kick: 0, ban: 0 };
     userCases.forEach(c => { if (counts[c.type] !== undefined) counts[c.type]++; });
 
@@ -592,12 +548,10 @@ async function handleCommand(interaction) {
         { name: '👢 Kicks', value: `${counts.kick}`, inline: true },
         { name: '🔨 Bans', value: `${counts.ban}`, inline: true }
       );
-
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setLabel('Voir ma fiche complète').setStyle(ButtonStyle.Link).setURL(`${PANEL_URL}/fiche?guild=${guildId}&user=${user.id}`)
     );
-
-    await interaction.editReply({ embeds: [embed], components: [row]});
+    await interaction.editReply({ embeds: [embed], components: [row] });
     return;
   }
 
@@ -605,16 +559,12 @@ async function handleCommand(interaction) {
   if (commandName === 'clearwarn') {
     const target = options.getUser('membre');
     const warnId = options.getString('id');
-    const cases = loadDB('mod_cases');
-
     if (warnId) {
-      const idx = (cases[guildId] || []).findIndex(c => c.id === warnId && c.targetId === target.id && c.type === 'warn');
-      if (idx !== -1) { cases[guildId][idx].active = false; saveDB('mod_cases', cases); }
-      await interaction.editReply({ content: `✅ Warn \`${warnId}\` effacé.`});
+      await col('mod_cases').updateOne({ id: warnId, targetId: target.id, type: 'warn' }, { $set: { active: false } });
+      await interaction.editReply({ content: `✅ Warn \`${warnId}\` effacé.` });
     } else {
-      (cases[guildId] || []).forEach(c => { if (c.targetId === target.id && c.type === 'warn') c.active = false; });
-      saveDB('mod_cases', cases);
-      await interaction.editReply({ content: `✅ Tous les warns de <@${target.id}> ont été effacés.`});
+      await col('mod_cases').updateMany({ guildId, targetId: target.id, type: 'warn' }, { $set: { active: false } });
+      await interaction.editReply({ content: `✅ Tous les warns de <@${target.id}> ont été effacés.` });
     }
     return;
   }
@@ -622,6 +572,7 @@ async function handleCommand(interaction) {
 
 // ─── Express API ──────────────────────────────────────────────────────────────
 const app = express();
+const path = require('path');
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -637,21 +588,19 @@ function authMiddleware(req, res, next) {
 app.post('/api/auth/register', async (req, res) => {
   const { username, password, guildId } = req.body;
   if (!username || !password || !guildId) return res.status(400).json({ error: 'Champs manquants' });
-  const users = loadDB('mod_users');
-  const guildUsers = users[guildId] || [];
-  if (guildUsers.find(u => u.username === username)) return res.status(409).json({ error: 'Utilisateur existant' });
+  const existing = await col('mod_users').findOne({ guildId, username });
+  if (existing) return res.status(409).json({ error: 'Utilisateur existant' });
+  const count = await col('mod_users').countDocuments({ guildId });
   const hashedPwd = await bcrypt.hash(password, 10);
-  const user = { id: uuidv4(), username, password: hashedPwd, role: guildUsers.length === 0 ? 'superadmin' : 'staff', adminLevel: guildUsers.length === 0 ? 4 : 1, createdAt: new Date().toISOString() };
-  users[guildId] = [...guildUsers, user];
-  saveDB('mod_users', users);
+  const user = { id: uuidv4(), username, password: hashedPwd, guildId, role: count === 0 ? 'superadmin' : 'staff', adminLevel: count === 0 ? 4 : 1, createdAt: new Date().toISOString() };
+  await col('mod_users').insertOne(user);
   const token = jwt.sign({ id: user.id, username, guildId, role: user.role, adminLevel: user.adminLevel }, JWT_SECRET, { expiresIn: '7d' });
   res.json({ token, user: { id: user.id, username, role: user.role, adminLevel: user.adminLevel } });
 });
 
 app.post('/api/auth/login', async (req, res) => {
   const { username, password, guildId } = req.body;
-  const users = loadDB('mod_users');
-  const user = (users[guildId] || []).find(u => u.username === username);
+  const user = await col('mod_users').findOne({ guildId, username });
   if (!user || !await bcrypt.compare(password, user.password)) return res.status(401).json({ error: 'Identifiants incorrects' });
   const token = jwt.sign({ id: user.id, username, guildId, role: user.role, adminLevel: user.adminLevel }, JWT_SECRET, { expiresIn: '7d' });
   res.json({ token, user: { id: user.id, username, role: user.role, adminLevel: user.adminLevel } });
@@ -679,13 +628,11 @@ app.post('/api/cases', authMiddleware, async (req, res) => {
     try {
       const member = await guild.members.fetch(targetId).catch(() => null);
       if (member) {
-        const configs = loadDB('mod_configs');
-        const config = configs[guildId] || {};
+        const config = await col('mod_configs').findOne({ guildId }) || {};
         if (type === 'mute' && config.muteRole) await member.roles.add(config.muteRole).catch(() => {});
         if (type === 'mute' && !config.muteRole) await member.timeout(3600000, reason).catch(() => {});
         if (type === 'kick') await member.kick(reason || 'Sanction via panel').catch(() => {});
         if (type === 'ban') await member.ban({ reason: reason || 'Sanction via panel' }).catch(() => {});
-        // DM au membre
         const colors = { warn: 0xFEE75C, mute: 0xEB459E, kick: 0xED4245, ban: 0x000000 };
         const icons = { warn: '⚠️', mute: '🔇', kick: '👢', ban: '🔨' };
         const dmEmbed = new EmbedBuilder()
@@ -696,7 +643,6 @@ app.post('/api/cases', authMiddleware, async (req, res) => {
             { name: '🛡️ Modérateur', value: username }
           );
         await member.user.send({ embeds: [dmEmbed] }).catch(() => {});
-        // Check auto sanctions si warn
         if (type === 'warn') await checkAutoSanctions(guild, member);
       }
     } catch {}
@@ -705,79 +651,67 @@ app.post('/api/cases', authMiddleware, async (req, res) => {
   res.json(sanction);
 });
 
-app.get('/api/cases/user/:userId', authMiddleware, (req, res) => {
+app.get('/api/cases/user/:userId', authMiddleware, async (req, res) => {
   const { guildId } = req.user;
-  const cases = loadDB('mod_cases');
-  res.json((cases[guildId] || []).filter(c => c.targetId === req.params.userId));
+  res.json(await col('mod_cases').find({ guildId, targetId: req.params.userId }).toArray());
 });
 
-app.delete('/api/cases/:id', authMiddleware, (req, res) => {
+app.delete('/api/cases/:id', authMiddleware, async (req, res) => {
   const { guildId } = req.user;
-  const cases = loadDB('mod_cases');
-  const idx = (cases[guildId] || []).findIndex(c => c.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Case introuvable' });
-  cases[guildId][idx].active = false;
-  saveDB('mod_cases', cases);
+  const result = await col('mod_cases').updateOne({ id: req.params.id, guildId }, { $set: { active: false } });
+  if (result.matchedCount === 0) return res.status(404).json({ error: 'Case introuvable' });
   res.json({ success: true });
 });
 
 // Staff
-app.get('/api/staff', authMiddleware, (req, res) => {
+app.get('/api/staff', authMiddleware, async (req, res) => {
   const { guildId } = req.user;
-  const staff = loadDB('mod_staff');
-  res.json(staff[guildId] || []);
+  res.json(await col('mod_staff').find({ guildId }).toArray());
 });
 
-app.post('/api/staff', authMiddleware, (req, res) => {
+app.post('/api/staff', authMiddleware, async (req, res) => {
   if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' });
   const { guildId } = req.user;
   const { userId, tag, niveau } = req.body;
-  const staff = loadDB('mod_staff');
-  staff[guildId] = staff[guildId] || [];
-  const existing = staff[guildId].findIndex(s => s.userId === userId);
-  const member = { userId, tag, niveau, addedBy: req.user.username, addedAt: new Date().toISOString() };
-  if (existing !== -1) staff[guildId][existing] = member;
-  else staff[guildId].push(member);
-  saveDB('mod_staff', staff);
+  const member = { userId, tag, niveau, guildId, addedBy: req.user.username, addedAt: new Date().toISOString() };
+  await col('mod_staff').updateOne({ guildId, userId }, { $set: member }, { upsert: true });
   res.json(member);
 });
 
-app.patch('/api/staff/:userId', authMiddleware, (req, res) => {
+app.patch('/api/staff/:userId', authMiddleware, async (req, res) => {
   if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' });
   const { guildId } = req.user;
-  const staff = loadDB('mod_staff');
-  const idx = (staff[guildId] || []).findIndex(s => s.userId === req.params.userId);
-  if (idx === -1) return res.status(404).json({ error: 'Introuvable' });
-  staff[guildId][idx].niveau = req.body.niveau;
-  saveDB('mod_staff', staff);
-  res.json(staff[guildId][idx]);
-});
-
-// Users
-app.get('/api/users', authMiddleware, (req, res) => {
-  const { guildId } = req.user;
-  const users = loadDB('mod_users');
-  res.json((users[guildId] || []).map(u => ({ id: u.id, username: u.username, role: u.role, adminLevel: u.adminLevel, createdAt: u.createdAt })));
-});
-
-app.patch('/api/users/:id/level', authMiddleware, (req, res) => {
-  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' });
-  const { guildId } = req.user;
-  const users = loadDB('mod_users');
-  const idx = (users[guildId] || []).findIndex(u => u.id === req.params.id);
-  if (idx === -1) return res.status(404).json({ error: 'Introuvable' });
-  users[guildId][idx].adminLevel = req.body.adminLevel;
-  saveDB('mod_users', users);
+  await col('mod_staff').updateOne({ guildId, userId: req.params.userId }, { $set: { niveau: req.body.niveau } });
   res.json({ success: true });
 });
 
-// Public user fiche
-app.get('/api/public/fiche/:guildId/:userId', (req, res) => {
-  const cases = loadDB('mod_cases');
-  const userCases = (cases[req.params.guildId] || []).filter(c => c.targetId === req.params.userId);
+// Users
+app.get('/api/users', authMiddleware, async (req, res) => {
+  const { guildId } = req.user;
+  const users = await col('mod_users').find({ guildId }).toArray();
+  res.json(users.map(u => ({ id: u.id, username: u.username, role: u.role, adminLevel: u.adminLevel, createdAt: u.createdAt })));
+});
+
+app.patch('/api/users/:id/level', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' });
+  const { guildId } = req.user;
+  await col('mod_users').updateOne({ id: req.params.id, guildId }, { $set: { adminLevel: req.body.adminLevel } });
+  res.json({ success: true });
+});
+
+// Public fiche
+app.get('/api/public/fiche/:guildId/:userId', async (req, res) => {
+  const userCases = await col('mod_cases').find({ guildId: req.params.guildId, targetId: req.params.userId }).toArray();
   const counts = { warn: 0, mute: 0, kick: 0, ban: 0 };
   userCases.forEach(c => { if (counts[c.type] !== undefined) counts[c.type]++; });
   res.json({ cases: userCases.filter(c => c.type !== 'unban' && c.type !== 'unmute'), counts });
+});
+
+// modsetup
+app.post('/api/config', authMiddleware, async (req, res) => {
+  const { guildId } = req.user;
+  await col('mod_configs').updateOne({ guildId }, { $set: { guildId, ...req.body } }, { upsert: true });
+  res.json({ success: true });
 });
 
 // Guild info
@@ -787,5 +721,10 @@ app.get('/api/guild/:guildId', (req, res) => {
   res.json({ id: guild.id, name: guild.name, icon: guild.iconURL(), memberCount: guild.memberCount });
 });
 
-app.listen(PORT, () => console.log(`🌐 Panel: http://localhost:${PORT}`));
-client.login(BOT_TOKEN);
+// ─── Start ────────────────────────────────────────────────────────────────────
+async function start() {
+  await connectDB();
+  app.listen(PORT, () => console.log(`🌐 Panel: http://localhost:${PORT}`));
+  client.login(BOT_TOKEN);
+}
+start();

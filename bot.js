@@ -254,12 +254,16 @@ client.once('ready', async () => {
 client.on('interactionCreate', async interaction => {
   if (!interaction.isChatInputCommand()) return;
   try {
+    // Commandes éphémères
+    const ephemeralCmds = ['modsetup', 'modpanel', 'mafiche', 'clearwarn'];
+    const isEphemeral = ephemeralCmds.includes(interaction.commandName);
+    await interaction.deferReply({ ephemeral: isEphemeral });
     await handleCommand(interaction);
   } catch (err) {
     console.error(err);
-    const msg = { content: '❌ Une erreur est survenue.', ephemeral: true };
-    if (interaction.replied || interaction.deferred) await interaction.followUp(msg);
-    else await interaction.reply(msg);
+    const msg = { content: '❌ Une erreur est survenue.' };
+    if (interaction.replied || interaction.deferred) await interaction.editReply(msg);
+    else await interaction.editReply({ ...msg});
   }
 });
 
@@ -287,7 +291,7 @@ async function handleCommand(interaction) {
         { name: '📋 Canal logs', value: `<#${logsChannel.id}>`, inline: true },
         { name: '🔇 Rôle mute', value: muteRole ? `<@&${muteRole.id}>` : 'Non défini', inline: true }
       );
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed]});
     return;
   }
 
@@ -298,7 +302,7 @@ async function handleCommand(interaction) {
       .setColor(0x5865F2)
       .setDescription(`🔗 **[Ouvrir le panel](${PANEL_URL}/?guild=${guildId})**`)
       .addFields({ name: '🔑 Accès', value: 'Connectez-vous avec votre compte staff.' });
-    await interaction.reply({ embeds: [embed], ephemeral: true });
+    await interaction.editReply({ embeds: [embed]});
     return;
   }
 
@@ -321,7 +325,7 @@ async function handleCommand(interaction) {
         { name: '👤 Membre', value: `<@${target.id}>`, inline: true },
         { name: '🏅 Niveau', value: `${niveau} — ${ADMIN_LEVELS[niveau].name}`, inline: true }
       );
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -330,7 +334,7 @@ async function handleCommand(interaction) {
     const staff = loadDB('mod_staff');
     const guildStaff = (staff[guildId] || []).sort((a, b) => b.niveau - a.niveau);
     if (!guildStaff.length) {
-      await interaction.reply({ content: '❌ Aucun staff configuré.', ephemeral: true });
+      await interaction.editReply({ content: '❌ Aucun staff configuré.'});
       return;
     }
     const embed = new EmbedBuilder()
@@ -340,7 +344,7 @@ async function handleCommand(interaction) {
         const lvl = ADMIN_LEVELS[s.niveau];
         return `**[Niv.${s.niveau}] ${lvl.name}** — <@${s.userId}>`;
       }).join('\n'));
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -381,7 +385,7 @@ async function handleCommand(interaction) {
     if (auto.triggered) embed.addFields({ name: '🤖 Sanction auto', value: `${auto.warns} warns → ${auto.action}` });
     if (mention) embed.addFields({ name: '💬 Message envoyé', value: mention });
 
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -436,7 +440,7 @@ async function handleCommand(interaction) {
         { name: '⏱️ Durée', value: duration ? formatDuration(duration) : 'Indéfini', inline: true },
         { name: '📝 Raison', value: raison }
       );
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -455,7 +459,7 @@ async function handleCommand(interaction) {
     const sanction = await addSanction(guildId, target.id, target.user.tag, user.id, 'unmute', 'Unmute manuel');
     await logAction(guild, sanction);
 
-    await interaction.reply({ embeds: [new EmbedBuilder().setTitle('🔊 Unmute').setColor(0x57F287).setDescription(`<@${target.id}> a été unmute.`)] });
+    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🔊 Unmute').setColor(0x57F287).setDescription(`<@${target.id}> a été unmute.`)] });
     return;
   }
 
@@ -486,7 +490,7 @@ async function handleCommand(interaction) {
         { name: '👤 Membre', value: `${target.user.tag}`, inline: true },
         { name: '📝 Raison', value: raison, inline: true }
       );
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -517,7 +521,7 @@ async function handleCommand(interaction) {
         { name: '👤 Membre', value: `${target.user.tag}`, inline: true },
         { name: '📝 Raison', value: raison, inline: true }
       );
-    await interaction.reply({ embeds: [embed] });
+    await interaction.editReply({ embeds: [embed] });
     return;
   }
 
@@ -528,7 +532,7 @@ async function handleCommand(interaction) {
     await guild.members.unban(userId, raison).catch(() => {});
     const sanction = await addSanction(guildId, userId, userId, user.id, 'unban', raison);
     await logAction(guild, sanction);
-    await interaction.reply({ embeds: [new EmbedBuilder().setTitle('✅ Unban').setColor(0x57F287).setDescription(`\`${userId}\` a été débanni.`)] });
+    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('✅ Unban').setColor(0x57F287).setDescription(`\`${userId}\` a été débanni.`)] });
     return;
   }
 
@@ -566,7 +570,7 @@ async function handleCommand(interaction) {
       new ButtonBuilder().setLabel('Voir le panel').setStyle(ButtonStyle.Link).setURL(`${PANEL_URL}/?guild=${guildId}&user=${target.id}`)
     );
 
-    await interaction.reply({ embeds: [embed], components: [row] });
+    await interaction.editReply({ embeds: [embed], components: [row] });
     return;
   }
 
@@ -593,7 +597,7 @@ async function handleCommand(interaction) {
       new ButtonBuilder().setLabel('Voir ma fiche complète').setStyle(ButtonStyle.Link).setURL(`${PANEL_URL}/fiche?guild=${guildId}&user=${user.id}`)
     );
 
-    await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+    await interaction.editReply({ embeds: [embed], components: [row]});
     return;
   }
 
@@ -606,11 +610,11 @@ async function handleCommand(interaction) {
     if (warnId) {
       const idx = (cases[guildId] || []).findIndex(c => c.id === warnId && c.targetId === target.id && c.type === 'warn');
       if (idx !== -1) { cases[guildId][idx].active = false; saveDB('mod_cases', cases); }
-      await interaction.reply({ content: `✅ Warn \`${warnId}\` effacé.`, ephemeral: true });
+      await interaction.editReply({ content: `✅ Warn \`${warnId}\` effacé.`});
     } else {
       (cases[guildId] || []).forEach(c => { if (c.targetId === target.id && c.type === 'warn') c.active = false; });
       saveDB('mod_cases', cases);
-      await interaction.reply({ content: `✅ Tous les warns de <@${target.id}> ont été effacés.`, ephemeral: true });
+      await interaction.editReply({ content: `✅ Tous les warns de <@${target.id}> ont été effacés.`});
     }
     return;
   }

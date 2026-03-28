@@ -321,6 +321,43 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- Modal: Sanctionner -->
+<div class="modal-ov" id="modal-sanction">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">🔨 Sanctionner un membre</div>
+      <button class="modal-x" onclick="closeModal('modal-sanction')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field">
+        <label>ID Discord de la cible</label>
+        <input type="text" id="s-target-id" placeholder="Ex: 123456789012345678">
+      </div>
+      <div class="form-field">
+        <label>Type de sanction</label>
+        <select id="s-type">
+          <option value="warn">⚠️ Avertissement</option>
+          <option value="mute">🔇 Mute</option>
+          <option value="kick">👢 Kick</option>
+          <option value="ban">🔨 Ban</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Raison</label>
+        <textarea id="s-reason" rows="3" placeholder="Raison de la sanction..."></textarea>
+      </div>
+      <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="executerSanction()">
+        Confirmer la sanction
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Bouton flottant -->
+<button class="btn btn-red" id="btn-sanctionner" style="display:none;position:fixed;bottom:30px;right:30px;border-radius:50px;padding:15px 25px;z-index:99;box-shadow:0 8px 15px rgba(255,71,87,0.3)" onclick="openModal('modal-sanction')">
+  + Sanctionner
+</button>
+
 <div class="toasts" id="toasts"></div>
 
 <script>
@@ -396,6 +433,7 @@ function showApp() {
   document.getElementById('user-av').textContent = currentUser.username[0].toUpperCase();
   document.getElementById('user-lvl').innerHTML = `<span class="${ADMIN_LEVELS[lvl].color}">${ADMIN_LEVELS[lvl].name}</span>`;
   if (lvl < 3) { document.getElementById('nav-staff').style.display='none'; document.getElementById('nav-users').style.display='none'; }
+  document.getElementById('btn-sanctionner').style.display = 'flex';
   loadAll();
 }
 

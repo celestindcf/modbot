@@ -170,17 +170,28 @@ async function checkSpam(message) {
   const config = await col('mod_configs').findOne({ guildId: message.guild.id }) || {};
   if (!config.antiSpam) return false;
 
+  // Exclure les bots, admins, modos, et staff Discord
+  const member = message.member;
+  if (!member) return false;
+  if (member.permissions.has(PermissionFlagsBits.ManageMessages)) return false;
+  if (member.permissions.has(PermissionFlagsBits.Administrator)) return false;
+  if (member.permissions.has(PermissionFlagsBits.ModerateMembers)) return false;
+
+  // Exclure les membres du staff enregistrés dans la DB
+  const staffEntry = await col('mod_staff').findOne({ guildId: message.guild.id, userId: message.author.id });
+  if (staffEntry) return false;
+
   const userId = message.author.id;
   const now = Date.now();
   const userData = spamMap.get(userId) || { timestamps: [], warned: false };
 
-  userData.timestamps = userData.timestamps.filter(t => now - t < 5000); // fenêtre 5s
+  userData.timestamps = userData.timestamps.filter(t => now - t < 5000);
   userData.timestamps.push(now);
   spamMap.set(userId, userData);
 
   // Détection liens non autorisés
   const linkRegex = /(https?:\/\/|discord\.gg\/|discord\.com\/invite\/)/gi;
-  if (config.antiLinks && linkRegex.test(message.content) && !message.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
+  if (config.antiLinks && linkRegex.test(message.content)) {
     await message.delete().catch(() => {});
     return 'link';
   }
@@ -396,7 +407,7 @@ async function closeTicket(guild, channel, closedBy, ticketId) {
 }
 
 // ─── Bot Events ───────────────────────────────────────────────────────────────
-client.once('clientReady', async () => {
+client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} connecté !`);
   await registerCommands();
 });
@@ -1014,6 +1025,11 @@ app.post('/api/send-credentials', authMiddleware, async (req, res) => {
   } catch (e) {
     res.status(400).json({ error: 'Impossible d\'envoyer le MP (DMs fermés ?)' });
   }
+});
+
+// ─── Catch-all → index.html (pour /fiche, /panel etc.) ───────────────────────
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────

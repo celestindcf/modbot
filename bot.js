@@ -170,28 +170,17 @@ async function checkSpam(message) {
   const config = await col('mod_configs').findOne({ guildId: message.guild.id }) || {};
   if (!config.antiSpam) return false;
 
-  // Exclure les bots, admins, modos, et staff Discord
-  const member = message.member;
-  if (!member) return false;
-  if (member.permissions.has(PermissionFlagsBits.ManageMessages)) return false;
-  if (member.permissions.has(PermissionFlagsBits.Administrator)) return false;
-  if (member.permissions.has(PermissionFlagsBits.ModerateMembers)) return false;
-
-  // Exclure les membres du staff enregistrés dans la DB
-  const staffEntry = await col('mod_staff').findOne({ guildId: message.guild.id, userId: message.author.id });
-  if (staffEntry) return false;
-
   const userId = message.author.id;
   const now = Date.now();
   const userData = spamMap.get(userId) || { timestamps: [], warned: false };
 
-  userData.timestamps = userData.timestamps.filter(t => now - t < 5000);
+  userData.timestamps = userData.timestamps.filter(t => now - t < 5000); // fenêtre 5s
   userData.timestamps.push(now);
   spamMap.set(userId, userData);
 
   // Détection liens non autorisés
   const linkRegex = /(https?:\/\/|discord\.gg\/|discord\.com\/invite\/)/gi;
-  if (config.antiLinks && linkRegex.test(message.content)) {
+  if (config.antiLinks && linkRegex.test(message.content) && !message.member.permissions.has(PermissionFlagsBits.ManageMessages)) {
     await message.delete().catch(() => {});
     return 'link';
   }
@@ -321,14 +310,19 @@ function parseDuration(str) {
 }
 
 // ─── Ticket: Créer un ticket ──────────────────────────────────────────────────
-async function createTicket(guild, user, config) {
+async function createTicket(guild, user, config, ticketType = null) {
   const ticketNumber = (await col('tickets').countDocuments({ guildId: guild.id })) + 1;
-  const channelName = `ticket-${ticketNumber.toString().padStart(4, '0')}`;
+  const typeSlug = ticketType ? ticketType.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 15) : 'ticket';
+  const channelName = `${typeSlug}-${ticketNumber.toString().padStart(4, '0')}`;
+
+  const ticketTypes = config.ticketTypes || [];
+  const typeConfig = ticketTypes.find(t => t.label === ticketType) || {};
+  const categoryId = typeConfig.categoryId || config.ticketCategory;
 
   const channel = await guild.channels.create({
     name: channelName,
     type: ChannelType.GuildText,
-    parent: config.ticketCategory,
+    parent: categoryId,
     permissionOverwrites: [
       { id: guild.id, deny: [PermissionFlagsBits.ViewChannel] },
       { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] },
@@ -343,15 +337,19 @@ async function createTicket(guild, user, config) {
     userId: user.id,
     userTag: user.tag,
     channelId: channel.id,
+    type: ticketType || 'Support',
     status: 'open',
     createdAt: new Date().toISOString()
   };
   await col('tickets').insertOne(ticket);
 
+  const welcomeMsg = typeConfig.welcomeMessage || config.ticketWelcomeMessage || `Bonjour <@${user.id}> !\nNotre équipe va vous répondre dès que possible.\n\nPour fermer ce ticket, cliquez sur le bouton ci-dessous.`;
+  const welcomeColor = typeConfig.color ? parseInt(typeConfig.color.replace('#', ''), 16) : 0x5865F2;
+
   const embed = new EmbedBuilder()
-    .setTitle(`🎫 Ticket #${ticketNumber.toString().padStart(4, '0')}`)
-    .setColor(0x5865F2)
-    .setDescription(`Bonjour <@${user.id}> !\nNotre équipe va vous répondre dès que possible.\n\nPour fermer ce ticket, cliquez sur le bouton ci-dessous.`)
+    .setTitle(`${typeConfig.emoji || '🎫'} ${ticketType || 'Support'} — Ticket #${ticketNumber.toString().padStart(4, '0')}`)
+    .setColor(welcomeColor)
+    .setDescription(welcomeMsg.replace('{user}', `<@${user.id}>`))
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
@@ -359,6 +357,25 @@ async function createTicket(guild, user, config) {
   );
 
   await channel.send({ content: `<@${user.id}> <@&${config.ticketStaffRole}>`, embeds: [embed], components: [row] });
+
+  // MP de bienvenue personnalisé
+  const dmMsg = typeConfig.dmMessage || config.ticketDmMessage;
+  if (dmMsg) {
+    try {
+      const dmEmbed = new EmbedBuilder()
+        .setTitle(`${typeConfig.emoji || '🎫'} Ticket ouvert — ${guild.name}`)
+        .setColor(welcomeColor)
+        .setDescription(dmMsg
+          .replace('{user}', user.username)
+          .replace('{type}', ticketType || 'Support')
+          .replace('{number}', `#${ticketNumber.toString().padStart(4, '0')}`)
+          .replace('{channel}', `<#${channel.id}>`)
+        )
+        .setTimestamp();
+      await user.send({ embeds: [dmEmbed] });
+    } catch {}
+  }
+
   return { channel, ticket };
 }
 
@@ -407,7 +424,7 @@ async function closeTicket(guild, channel, closedBy, ticketId) {
 }
 
 // ─── Bot Events ───────────────────────────────────────────────────────────────
-client.once('ready', async () => {
+client.once('clientReady', async () => {
   console.log(`🤖 ${client.user.tag} connecté !`);
   await registerCommands();
 });
@@ -544,19 +561,47 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
-  // Bouton ouvrir ticket depuis panel
+  // Bouton ouvrir ticket — affiche sélecteur de type
   if (interaction.isButton() && interaction.customId === 'open_ticket') {
     const config = await col('mod_configs').findOne({ guildId: interaction.guild.id }) || {};
     if (!config.ticketCategory || !config.ticketStaffRole) {
-      return interaction.reply({ content: '❌ Le système de tickets n\'est pas configuré. Utilisez `/ticketsetup`', ephemeral: true });
+      return interaction.reply({ content: '❌ Tickets non configurés. Utilisez `/ticketsetup`', ephemeral: true });
     }
     const existingTicket = await col('tickets').findOne({ guildId: interaction.guild.id, userId: interaction.user.id, status: 'open' });
     if (existingTicket) {
       return interaction.reply({ content: `❌ Vous avez déjà un ticket ouvert : <#${existingTicket.channelId}>`, ephemeral: true });
     }
-    await interaction.reply({ content: '🎫 Création de votre ticket...', ephemeral: true });
-    const { channel } = await createTicket(interaction.guild, interaction.user, config);
-    await interaction.editReply({ content: `✅ Votre ticket a été créé : <#${channel.id}>` });
+    const ticketTypes = config.ticketTypes || [];
+    if (ticketTypes.length === 0) {
+      // Pas de types configurés → créer directement
+      await interaction.reply({ content: '🎫 Création de votre ticket...', ephemeral: true });
+      const { channel } = await createTicket(interaction.guild, interaction.user, config, null);
+      await interaction.editReply({ content: `✅ Ticket créé : <#${channel.id}>` });
+      return;
+    }
+    // Afficher menu de sélection de type
+    const { StringSelectMenuBuilder } = require('discord.js');
+    const select = new StringSelectMenuBuilder()
+      .setCustomId('select_ticket_type')
+      .setPlaceholder('Choisissez le type de votre demande...')
+      .addOptions(ticketTypes.map(t => ({
+        label: t.label,
+        description: t.description || `Ouvrir un ticket ${t.label}`,
+        value: t.label,
+        emoji: t.emoji || '🎫'
+      })));
+    const row = new ActionRowBuilder().addComponents(select);
+    await interaction.reply({ content: '📋 **Quel type de ticket souhaitez-vous ouvrir ?**', components: [row], ephemeral: true });
+    return;
+  }
+
+  // Sélection du type de ticket
+  if (interaction.isStringSelectMenu() && interaction.customId === 'select_ticket_type') {
+    const ticketType = interaction.values[0];
+    const config = await col('mod_configs').findOne({ guildId: interaction.guild.id }) || {};
+    await interaction.update({ content: '🎫 Création de votre ticket...', components: [] });
+    const { channel } = await createTicket(interaction.guild, interaction.user, config, ticketType);
+    await interaction.editReply({ content: `✅ Ticket **${ticketType}** créé : <#${channel.id}>`, components: [] });
     return;
   }
 
@@ -995,6 +1040,23 @@ app.post('/api/config', authMiddleware, async (req, res) => {
   res.json({ success: true });
 });
 
+// Ticket types config
+app.get('/api/ticket-config', authMiddleware, async (req, res) => {
+  const config = await col('mod_configs').findOne({ guildId: req.user.guildId }) || {};
+  res.json({
+    ticketTypes: config.ticketTypes || [],
+    ticketWelcomeMessage: config.ticketWelcomeMessage || '',
+    ticketDmMessage: config.ticketDmMessage || ''
+  });
+});
+
+app.post('/api/ticket-config', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' });
+  const { ticketTypes, ticketWelcomeMessage, ticketDmMessage } = req.body;
+  await col('mod_configs').updateOne({ guildId: req.user.guildId }, { $set: { ticketTypes, ticketWelcomeMessage, ticketDmMessage } }, { upsert: true });
+  res.json({ success: true });
+});
+
 app.get('/api/guild/:guildId', (req, res) => {
   const guild = client.guilds.cache.get(req.params.guildId);
   if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
@@ -1025,11 +1087,6 @@ app.post('/api/send-credentials', authMiddleware, async (req, res) => {
   } catch (e) {
     res.status(400).json({ error: 'Impossible d\'envoyer le MP (DMs fermés ?)' });
   }
-});
-
-// ─── Catch-all → index.html (pour /fiche, /panel etc.) ───────────────────────
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────

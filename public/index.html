@@ -262,6 +262,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <a class="nav-item" id="nav-staff" onclick="showPage('staff',this)"><span class="ico">🛡️</span><span>Staff</span></a>
       <a class="nav-item" id="nav-users" onclick="showPage('users',this)"><span class="ico">👥</span><span>Comptes</span></a>
       <a class="nav-item" id="nav-addadmin" onclick="showPage('addadmin',this)"><span class="ico">➕</span><span>Ajouter Admin</span></a>
+      <div class="nav-label">Tickets</div>
+      <a class="nav-item" id="nav-ticketconfig" onclick="showPage('ticketconfig',this)"><span class="ico">🎫</span><span>Config Tickets</span></a>
     </div>
     <div class="sidebar-foot">
       <div class="user-row">
@@ -425,6 +427,39 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
             ✅ Créer le compte & envoyer en MP
           </button>
           <div id="cred-result" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKET CONFIG -->
+    <div class="page" id="page-ticketconfig">
+      <div class="ph">
+        <div class="ph-title">Config Tickets <small>Types & messages personnalisés</small></div>
+        <button class="btn btn-red" onclick="saveTicketConfig()">💾 Sauvegarder</button>
+      </div>
+
+      <div class="card" style="max-width:700px;margin-bottom:20px">
+        <div class="card-head"><div class="card-title">📩 Messages globaux</div></div>
+        <div class="card-body">
+          <div class="form-field">
+            <label>Message d'accueil dans le ticket (variables: {user})</label>
+            <textarea id="tc-welcome" rows="3" placeholder="Bonjour {user} ! Notre équipe va vous répondre dès que possible..."></textarea>
+          </div>
+          <div class="form-field">
+            <label>MP envoyé à l'ouverture (variables: {user}, {type}, {number}, {channel}) — laisser vide pour désactiver</label>
+            <textarea id="tc-dm" rows="4" placeholder="Bonjour {user} ! Votre ticket {type} {number} a bien été ouvert. Notre équipe vous répondra bientôt !"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:700px">
+        <div class="card-head">
+          <div class="card-title">🗂️ Types de tickets</div>
+          <button class="btn btn-ghost" onclick="addTicketType()" style="font-size:11px">+ Ajouter un type</button>
+        </div>
+        <div class="card-body">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Chaque type peut avoir sa propre catégorie Discord, son message d'accueil et son MP personnalisé.</div>
+          <div id="ticket-types-list"></div>
         </div>
       </div>
     </div>
@@ -627,6 +662,9 @@ function showApp() {
   // Seuls les possesseurs/admin Discord (niveau 4) peuvent créer des admins
   if (lvl < 4) {
     document.getElementById('nav-addadmin').style.display='none';
+  }
+  if (lvl < 3) {
+    document.getElementById('nav-ticketconfig').style.display='none';
   }
 
   loadAll();
@@ -1019,6 +1057,7 @@ function showPage(name, el) {
   document.getElementById(`page-${name}`).classList.add('active');
   if (el) el.classList.add('active');
   if (name === 'tickets') renderTickets();
+  if (name === 'ticketconfig') loadTicketConfig();
   if (name === 'xp') renderXP();
   if (name === 'staff') renderStaff();
   if (name === 'users') renderUsers();
@@ -1056,6 +1095,101 @@ async function executerSanction() {
   document.getElementById('s-reason').value = '';
   toast(`✅ Sanction ${type} appliquée !`, 'success');
   await loadAll();
+}
+
+// ── Ticket Config ──
+let ticketTypes = [];
+let ticketWelcome = '';
+let ticketDm = '';
+
+async function loadTicketConfig() {
+  try {
+    const data = await apiGet('/api/ticket-config');
+    ticketTypes = data.ticketTypes || [];
+    ticketWelcome = data.ticketWelcomeMessage || '';
+    ticketDm = data.ticketDmMessage || '';
+    document.getElementById('tc-welcome').value = ticketWelcome;
+    document.getElementById('tc-dm').value = ticketDm;
+    renderTicketTypes();
+  } catch {}
+}
+
+function renderTicketTypes() {
+  const container = document.getElementById('ticket-types-list');
+  if (!ticketTypes.length) {
+    container.innerHTML = '<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun type configuré</div><div style="font-size:12px;color:var(--muted);margin-top:4px">Cliquez sur "+ Ajouter un type" pour commencer</div></div>';
+    return;
+  }
+  container.innerHTML = ticketTypes.map((t, i) => `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:12px">
+      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px">
+        <div style="flex:1;display:grid;grid-template-columns:80px 1fr 1fr;gap:10px">
+          <div class="form-field" style="margin-bottom:0">
+            <label>Emoji</label>
+            <input type="text" value="${t.emoji||'🎫'}" oninput="updateType(${i},'emoji',this.value)" placeholder="🎫" style="padding:8px;font-size:18px;text-align:center">
+          </div>
+          <div class="form-field" style="margin-bottom:0">
+            <label>Nom du type *</label>
+            <input type="text" value="${t.label||''}" oninput="updateType(${i},'label',this.value)" placeholder="Ex: Support, Bug, Aide...">
+          </div>
+          <div class="form-field" style="margin-bottom:0">
+            <label>Description (menu)</label>
+            <input type="text" value="${t.description||''}" oninput="updateType(${i},'description',this.value)" placeholder="Ex: Signaler un problème">
+          </div>
+        </div>
+        <button class="btn btn-danger" onclick="removeTicketType(${i})" style="padding:6px 10px;margin-top:20px">🗑️</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="form-field" style="margin-bottom:0">
+          <label>ID Catégorie Discord (optionnel)</label>
+          <input type="text" value="${t.categoryId||''}" oninput="updateType(${i},'categoryId',this.value)" placeholder="ID de la catégorie Discord">
+        </div>
+        <div class="form-field" style="margin-bottom:0">
+          <label>Couleur</label>
+          <input type="color" value="${t.color||'#5865F2'}" oninput="updateType(${i},'color',this.value)" style="height:40px;padding:4px 8px;cursor:pointer">
+        </div>
+      </div>
+      <div class="form-field" style="margin-bottom:8px">
+        <label>Message d'accueil spécifique (remplace le message global — variable: {user})</label>
+        <textarea rows="2" oninput="updateType(${i},'welcomeMessage',this.value)" placeholder="Laisser vide pour utiliser le message global...">${t.welcomeMessage||''}</textarea>
+      </div>
+      <div class="form-field" style="margin-bottom:0">
+        <label>MP spécifique à l'ouverture (remplace le MP global — variables: {user}, {type}, {number}, {channel})</label>
+        <textarea rows="2" oninput="updateType(${i},'dmMessage',this.value)" placeholder="Laisser vide pour utiliser le MP global...">${t.dmMessage||''}</textarea>
+      </div>
+    </div>`).join('');
+}
+
+function addTicketType() {
+  ticketTypes.push({ label: '', emoji: '🎫', description: '', categoryId: '', color: '#5865F2', welcomeMessage: '', dmMessage: '' });
+  renderTicketTypes();
+}
+
+function removeTicketType(i) {
+  ticketTypes.splice(i, 1);
+  renderTicketTypes();
+}
+
+function updateType(i, key, value) {
+  ticketTypes[i][key] = value;
+}
+
+async function saveTicketConfig() {
+  const welcome = document.getElementById('tc-welcome').value.trim();
+  const dm = document.getElementById('tc-dm').value.trim();
+  const validTypes = ticketTypes.filter(t => t.label.trim());
+  if (validTypes.length < ticketTypes.length) {
+    toast('⚠️ Certains types sans nom ont été ignorés', 'info');
+  }
+  const r = await fetch('/api/ticket-config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ ticketTypes: validTypes, ticketWelcomeMessage: welcome, ticketDmMessage: dm })
+  });
+  const data = await r.json();
+  if (data.error) return toast(data.error, 'error');
+  ticketTypes = validTypes;
+  toast('✅ Configuration tickets sauvegardée !', 'success');
 }
 
 init();

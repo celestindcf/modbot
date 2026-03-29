@@ -513,6 +513,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 let token = localStorage.getItem('mb_token');
 let currentUser = JSON.parse(localStorage.getItem('mb_user') || 'null');
 let guildId = new URLSearchParams(location.search).get('guild') || '';
+
+// Si le guildId de l'URL ne correspond pas au guildId du token → déconnecter
+if (token && currentUser && guildId) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.guildId && payload.guildId !== guildId) {
+      token = null; currentUser = null;
+      localStorage.removeItem('mb_token');
+      localStorage.removeItem('mb_user');
+    }
+  } catch {}
+}
 let targetUserId = new URLSearchParams(location.search).get('user') || '';
 let guildData = null;
 let allCases = [];

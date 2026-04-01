@@ -1,4 +1,5 @@
 const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, REST, Routes, ModalBuilder, TextInputBuilder, TextInputStyle, ChannelType, AttachmentBuilder } = require('discord.js');
+const { checkLicence, isPremium } = require('./licenceChecker');
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');

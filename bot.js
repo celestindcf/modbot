@@ -1159,7 +1159,45 @@ app.get('/api/guild/:guildId', (req, res) => {
   if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
   res.json({ id: guild.id, name: guild.name, icon: guild.iconURL(), memberCount: guild.memberCount });
 });
+// Cette route reçoit les infos de ton panel (bouton Sauvegarder)
+app.post('/api/premium-config', async (req, res) => {
+    try {
+        // 1. On récupère les infos envoyées par le panel
+        const { 
+            welcomeEnabled, welcomeChannel, welcomeMessage, 
+            leaveEnabled, leaveChannel, leaveMessage, 
+            botNickname 
+        } = req.body;
 
+        // 2. Récupère l'ID du serveur (depuis les headers ou le body selon ton setup)
+        const guildId = req.headers.guildid; 
+        if (!guildId) return res.status(400).json({ error: "ID de serveur manquant" });
+
+        // 3. SAUVEGARDE (Exemple avec une DB simple, adapte selon la tienne !)
+        // Si tu utilises quick.db :
+        db.set(`premium_${guildId}`, {
+            welcome: { enabled: welcomeEnabled, channel: welcomeChannel, msg: welcomeMessage },
+            leave: { enabled: leaveEnabled, channel: leaveChannel, msg: leaveMessage },
+            nickname: botNickname
+        });
+
+        // 4. CHANGER LE SURNOM DIRECTEMENT
+        if (botNickname) {
+            const guild = client.guilds.cache.get(guildId);
+            if (guild) {
+                const me = guild.members.me || await guild.members.fetch(client.user.id);
+                me.setNickname(botNickname).catch(e => console.log("Erreur surnom:", e.message));
+            }
+        }
+
+        // On répond au panel que c'est tout bon !
+        res.json({ success: true });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Le bot a planté en sauvant" });
+    }
+});
 // ─── Envoyer identifiants en MP ───────────────────────────────────────────────
 app.post('/api/send-credentials', authMiddleware, async (req, res) => {
   if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' });

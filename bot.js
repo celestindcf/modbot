@@ -551,7 +551,73 @@ client.on('messageCreate', async message => {
     }
   }
 });
+// ─── SYSTÈME D'ARRIVÉE (Welcome) - PREMIUM ──────────────────────────────────
+client.on('guildMemberAdd', async member => {
+  const { guild } = member;
+  const licence = await checkLicence(guild.id);
+  
+  // On vérifie si le serveur est Premium
+  if (!licence.isPremium) return;
 
+  const config = await col('mod_configs').findOne({ guildId: guild.id });
+  if (!config || !config.welcomeEnabled || !config.welcomeChannel) return;
+
+  const channel = guild.channels.cache.get(config.welcomeChannel);
+  if (channel) {
+    let msg = config.welcomeMessage || "Bienvenue {user} sur {server} ! Nous sommes maintenant {count}.";
+    msg = msg.replace('{user}', member.user.toString())
+             .replace('{server}', guild.name)
+             .replace('{count}', guild.memberCount.toString());
+
+    const embed = new EmbedBuilder()
+      .setTitle('✨ Bienvenue !')
+      .setColor(config.welcomeColor || 0x5865F2)
+      .setDescription(msg)
+      .setThumbnail(member.user.displayAvatarURL())
+      .setTimestamp();
+    
+    await channel.send({ embeds: [embed] });
+  }
+});
+// ─── SYSTÈME DE DÉPART (Leave) - PREMIUM ────────────────────────────────────
+client.on('guildMemberRemove', async member => {
+  const { guild } = member;
+
+  // 1. Logs techniques (Toujours actif pour le staff)
+  const logEmbed = new EmbedBuilder()
+    .setTitle('🚪 Membre parti')
+    .setColor(0xED4245)
+    .setThumbnail(member.user.displayAvatarURL())
+    .addFields(
+      { name: '👤 Membre', value: `${member.user.tag}`, inline: true },
+      { name: '👥 Membres', value: `${guild.memberCount}`, inline: true }
+    );
+  await logEvent(guild, logEmbed);
+
+  // 2. Message public (Uniquement Premium)
+  const licence = await checkLicence(guild.id);
+  if (!licence.isPremium) return;
+
+  const config = await col('mod_configs').findOne({ guildId: guild.id });
+  if (!config || !config.leaveEnabled || !config.leaveChannel) return;
+
+  const channel = guild.channels.cache.get(config.leaveChannel);
+  if (channel) {
+    let msg = config.leaveMessage || "{user} nous a quitté. Il reste {count} membres.";
+    msg = msg.replace('{user}', member.user.username)
+             .replace('{server}', guild.name)
+             .replace('{count}', guild.memberCount.toString());
+
+    const embed = new EmbedBuilder()
+      .setTitle('👋 Au revoir')
+      .setColor(0xFF4757)
+      .setDescription(msg)
+      .setThumbnail(member.user.displayAvatarURL())
+      .setTimestamp();
+    
+    await channel.send({ embeds: [embed] });
+  }
+});
 // ─── Interactions ─────────────────────────────────────────────────────────────
 client.on('interactionCreate', async interaction => {
   const { commandName, options, guildId, user, guild } = interaction;

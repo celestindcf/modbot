@@ -1299,6 +1299,38 @@ async function savePremiumConfig() {
     alert('❌ Le serveur ne répond pas. Vérifie si le bot est ON.');
   }
 }
+// Fonction pour afficher la page (indispensable)
+function showPage(pageId, el) {
+    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + pageId).style.display = 'block';
+    el.classList.add('active');
+}
+
+// Fonction pour sauvegarder vers le BOT
+async function savePremiumConfig() {
+    const config = {
+        welcomeEnabled: document.getElementById('p-welcome-enabled').value === 'true',
+        welcomeChannel: document.getElementById('p-welcome-channel').value,
+        welcomeMessage: document.getElementById('p-welcome-msg').value,
+        leaveEnabled: document.getElementById('p-leave-enabled').value === 'true',
+        leaveChannel: document.getElementById('p-leave-channel').value,
+        leaveMessage: document.getElementById('p-leave-msg').value,
+        botNickname: document.getElementById('p-bot-nick').value
+    };
+
+    const res = await fetch('/api/premium-config', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + localStorage.getItem('token') 
+        },
+        body: JSON.stringify(config)
+    });
+
+    if (res.ok) alert('✅ Config enregistrée !');
+    else alert('❌ Erreur de sauvegarde');
+}
 </script>
 </body>
 </html>

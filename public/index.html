@@ -262,8 +262,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <a class="nav-item" id="nav-staff" onclick="showPage('staff',this)"><span class="ico">🛡️</span><span>Staff</span></a>
       <a class="nav-item" id="nav-users" onclick="showPage('users',this)"><span class="ico">👥</span><span>Comptes</span></a>
       <a class="nav-item" id="nav-addadmin" onclick="showPage('addadmin',this)"><span class="ico">➕</span><span>Ajouter Admin</span></a>
-      <div class="nav-label">Tickets</div>
+
+      <div class="nav-label">Configuration</div>
       <a class="nav-item" id="nav-ticketconfig" onclick="showPage('ticketconfig',this)"><span class="ico">🎫</span><span>Config Tickets</span></a>
+      <a class="nav-item" id="nav-premium" onclick="showPage('premium',this)" style="color:var(--pink); font-weight:bold;"><span class="ico">⭐</span><span>Premium</span></a>
     </div>
     <div class="sidebar-foot">
       <div class="user-row">
@@ -278,6 +280,64 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </nav>
 
   <main class="main">
+
+    <div id="page-premium" class="page" style="display:none">
+      <div class="ph">
+        <div class="ph-title">⭐ Configuration Premium <small>Options exclusives</small></div>
+      </div>
+
+      <div class="card" style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:25px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px;">
+          
+          <div style="background:var(--surface2); padding:20px; border-radius:12px; border:1px solid var(--border);">
+            <h3 style="color:var(--blue); margin-bottom:15px; display:flex; align-items:center; gap:10px;">✨ Message d'Arrivée</h3>
+            <div style="margin-bottom:15px;">
+              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">Activer le module</label>
+              <select id="p-welcome-enabled" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;">
+                <option value="false">Désactivé</option>
+                <option value="true">Activé</option>
+              </select>
+            </div>
+            <div style="margin-bottom:15px;">
+              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">ID du Salon Textuel</label>
+              <input type="text" id="p-welcome-channel" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;" placeholder="Ex: 1029384756...">
+            </div>
+            <div>
+              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">Message ({user} = Mention, {server} = Nom)</label>
+              <textarea id="p-welcome-msg" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px; height:80px; resize:none;" placeholder="Bienvenue {user} sur {server} !"></textarea>
+            </div>
+          </div>
+
+          <div style="background:var(--surface2); padding:20px; border-radius:12px; border:1px solid var(--border);">
+            <h3 style="color:var(--red); margin-bottom:15px; display:flex; align-items:center; gap:10px;">👋 Message de Départ</h3>
+            <div style="margin-bottom:15px;">
+              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">Activer le module</label>
+              <select id="p-leave-enabled" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;">
+                <option value="false">Désactivé</option>
+                <option value="true">Activé</option>
+              </select>
+            </div>
+            <div style="margin-bottom:15px;">
+              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">ID du Salon Textuel</label>
+              <input type="text" id="p-leave-channel" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;" placeholder="Ex: 1029384756...">
+            </div>
+            <div>
+              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">Message ({user} = Nom, {count} = Membres)</label>
+              <textarea id="p-leave-msg" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px; height:80px; resize:none;" placeholder="{user} a quitté le serveur. Nous sommes désormais {count}."></textarea>
+            </div>
+          </div>
+
+        </div>
+
+        <div style="margin-top:25px; background:var(--surface2); padding:20px; border-radius:12px; border:1px solid var(--border);">
+            <h3 style="color:var(--purple); margin-bottom:10px;">🤖 Identité Visuelle</h3>
+            <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">Surnom du Bot sur ce serveur (Nickname)</label>
+            <input type="text" id="p-bot-nick" style="width:100%; padding:12px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;" placeholder="Ex: Modérateur Suprême">
+        </div>
+
+        <button onclick="savePremiumConfig()" style="width:100%; margin-top:25px; padding:18px; background:var(--blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">💾 ENREGISTRER LA CONFIGURATION</button>
+      </div>
+    </div>
 
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
@@ -1205,6 +1265,40 @@ async function saveTicketConfig() {
 }
 
 init();
+  // FONCTION POUR ENVOYER LA CONFIG PREMIUM AU BOT
+async function savePremiumConfig() {
+  const body = {
+    welcomeEnabled: document.getElementById('p-welcome-enabled').value === 'true',
+    welcomeChannel: document.getElementById('p-welcome-channel').value,
+    welcomeMessage: document.getElementById('p-welcome-msg').value,
+    leaveEnabled: document.getElementById('p-leave-enabled').value === 'true',
+    leaveChannel: document.getElementById('p-leave-channel').value,
+    leaveMessage: document.getElementById('p-leave-msg').value,
+    botNickname: document.getElementById('p-bot-nick').value
+  };
+
+  try {
+    const response = await fetch('/api/premium-config', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}` // Sécurité
+      },
+      body: JSON.stringify(body)
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('✅ Configuration Premium mise à jour !');
+    } else {
+      alert('❌ Erreur : ' + (result.error || 'Impossible de sauvegarder'));
+    }
+  } catch (error) {
+    console.error('Erreur Premium:', error);
+    alert('❌ Le serveur ne répond pas. Vérifie si le bot est ON.');
+  }
+}
 </script>
 </body>
 </html>

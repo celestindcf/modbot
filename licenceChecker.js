@@ -2,7 +2,7 @@
 // Copiez ce fichier dans votre projet sous le nom "licenceChecker.js"
 // Puis ajoutez dans votre bot.js : const { checkLicence, isPremium } = require('./licenceChecker');
 
-const LICENCE_SERVER_URL = process.env.LICENCE_SERVER_URL || 'https://ncl-licences.onrender.com';
+const LICENCE_SERVER_URL = process.env.LICENCE_SERVER_URL || 'http://5.180.34.39:27247';
 const API_SECRET = process.env.API_SECRET || 'api-secret-key'; // Doit être identique au serveur de licences
 const BOT_NAME = process.env.BOT_NAME || 'modbot'; // 'modbot' ou 'meetingbot'
 

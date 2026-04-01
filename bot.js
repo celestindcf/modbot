@@ -554,49 +554,78 @@ client.on('messageCreate', async message => {
 
 // ─── Interactions ─────────────────────────────────────────────────────────────
 client.on('interactionCreate', async interaction => {
-  // Bouton fermeture ticket
-  if (interaction.isButton() && interaction.customId.startsWith('close_ticket_')) {
-    const ticketId = interaction.customId.replace('close_ticket_', '');
-    await interaction.reply({ content: '🔒 Fermeture du ticket...', ephemeral: true });
-    await closeTicket(interaction.guild, interaction.channel, interaction.user, ticketId);
-    return;
+  const { commandName, options, guildId, user, guild } = interaction;
+
+  // 1. VÉRIFICATION DE LICENCE (STRUCTURE MEETING-BOT)
+  // On vérifie la licence avant même de savoir si c'est un bouton ou une commande
+  const licence = await checkLicence(guildId);
+  
+  if (!licence.valid) {
+    const reasons = {
+      NO_LICENCE: "Ce serveur n'a pas de licence active.",
+      BLOCKED: "La licence de ce serveur a été révoquée.",
+      EXPIRED: "La licence de ce serveur a expiré."
+    };
+
+    const errorEmbed = new EmbedBuilder()
+      .setTitle('❌ Licence requise')
+      .setColor(0xED4245)
+      .setDescription(reasons[licence.reason] || 'Licence invalide.')
+      .setFooter({ text: "Contactez l'administration pour obtenir un accès." });
+
+    // Le "return" ici est crucial : il stoppe net l'exécution du bot
+    return await interaction.reply({ 
+      embeds: [errorEmbed], 
+      ephemeral: true 
+    });
   }
 
-  // Bouton ouvrir ticket — affiche sélecteur de type
-  if (interaction.isButton() && interaction.customId === 'open_ticket') {
-    const config = await col('mod_configs').findOne({ guildId: interaction.guild.id }) || {};
-    if (!config.ticketCategory || !config.ticketStaffRole) {
-      return interaction.reply({ content: '❌ Tickets non configurés. Utilisez `/ticketsetup`', ephemeral: true });
-    }
-    const existingTicket = await col('tickets').findOne({ guildId: interaction.guild.id, userId: interaction.user.id, status: 'open' });
-    if (existingTicket) {
-      return interaction.reply({ content: `❌ Vous avez déjà un ticket ouvert : <#${existingTicket.channelId}>`, ephemeral: true });
-    }
-    const ticketTypes = config.ticketTypes || [];
-    if (ticketTypes.length === 0) {
-      // Pas de types configurés → créer directement
-      await interaction.reply({ content: '🎫 Création de votre ticket...', ephemeral: true });
-      const { channel } = await createTicket(interaction.guild, interaction.user, config, null);
-      await interaction.editReply({ content: `✅ Ticket créé : <#${channel.id}>` });
+  // --- SI LA LICENCE EST VALIDE, LE BOT CONTINUE CI-DESSOUS ---
+
+  // Gestion des boutons (Tickets)
+  if (interaction.isButton()) {
+    // Bouton Fermeture
+    if (interaction.customId.startsWith('close_ticket_')) {
+      const ticketId = interaction.customId.replace('close_ticket_', '');
+      await interaction.reply({ content: '🔒 Fermeture du ticket...', ephemeral: true });
+      await closeTicket(interaction.guild, interaction.channel, interaction.user, ticketId);
       return;
     }
-    // Afficher menu de sélection de type
-    const { StringSelectMenuBuilder } = require('discord.js');
-    const select = new StringSelectMenuBuilder()
-      .setCustomId('select_ticket_type')
-      .setPlaceholder('Choisissez le type de votre demande...')
-      .addOptions(ticketTypes.map(t => ({
-        label: t.label,
-        description: t.description || `Ouvrir un ticket ${t.label}`,
-        value: t.label,
-        emoji: t.emoji || '🎫'
-      })));
-    const row = new ActionRowBuilder().addComponents(select);
-    await interaction.reply({ content: '📋 **Quel type de ticket souhaitez-vous ouvrir ?**', components: [row], ephemeral: true });
-    return;
+
+    // Bouton Ouverture
+    if (interaction.customId === 'open_ticket') {
+      const config = await col('mod_configs').findOne({ guildId: interaction.guild.id }) || {};
+      if (!config.ticketCategory || !config.ticketStaffRole) {
+        return interaction.reply({ content: '❌ Tickets non configurés. Utilisez `/ticketsetup`', ephemeral: true });
+      }
+      const existingTicket = await col('tickets').findOne({ guildId: interaction.guild.id, userId: interaction.user.id, status: 'open' });
+      if (existingTicket) {
+        return interaction.reply({ content: `❌ Vous avez déjà un ticket ouvert : <#${existingTicket.channelId}>`, ephemeral: true });
+      }
+      const ticketTypes = config.ticketTypes || [];
+      if (ticketTypes.length === 0) {
+        await interaction.reply({ content: '🎫 Création de votre ticket...', ephemeral: true });
+        const { channel } = await createTicket(interaction.guild, interaction.user, config, null);
+        await interaction.editReply({ content: `✅ Ticket créé : <#${channel.id}>` });
+        return;
+      }
+      const { StringSelectMenuBuilder } = require('discord.js');
+      const select = new StringSelectMenuBuilder()
+        .setCustomId('select_ticket_type')
+        .setPlaceholder('Choisissez le type de votre demande...')
+        .addOptions(ticketTypes.map(t => ({
+          label: t.label,
+          description: t.description || `Ouvrir un ticket ${t.label}`,
+          value: t.label,
+          emoji: t.emoji || '🎫'
+        })));
+      const row = new ActionRowBuilder().addComponents(select);
+      await interaction.reply({ content: '📋 **Quel type de ticket souhaitez-vous ouvrir ?**', components: [row], ephemeral: true });
+      return;
+    }
   }
 
-  // Sélection du type de ticket
+  // Sélection du type de ticket (Menu)
   if (interaction.isStringSelectMenu() && interaction.customId === 'select_ticket_type') {
     const ticketType = interaction.values[0];
     const config = await col('mod_configs').findOne({ guildId: interaction.guild.id }) || {};
@@ -606,17 +635,18 @@ client.on('interactionCreate', async interaction => {
     return;
   }
 
-  if (!interaction.isChatInputCommand()) return;
-
-  try {
-    const ephemeralCmds = ['modsetup', 'modpanel', 'mafiche', 'clearwarn', 'ticketsetup', 'xpsetup', 'fermerticket'];
-    const isEphemeral = ephemeralCmds.includes(interaction.commandName);
-    await interaction.deferReply({ ephemeral: isEphemeral });
-    await handleCommand(interaction);
-  } catch (err) {
-    console.error(err);
-    const msg = { content: '❌ Une erreur est survenue.' };
-    if (interaction.replied || interaction.deferred) await interaction.editReply(msg);
+  // Commandes Slash (Staff, Config, XP, etc.)
+  if (interaction.isChatInputCommand()) {
+    try {
+      const ephemeralCmds = ['modsetup', 'modpanel', 'mafiche', 'clearwarn', 'ticketsetup', 'xpsetup', 'fermerticket'];
+      const isEphemeral = ephemeralCmds.includes(commandName);
+      await interaction.deferReply({ ephemeral: isEphemeral });
+      
+      // Cette fonction appelle tout le reste de ton code
+      await handleCommand(interaction); 
+    } catch (err) {
+      console.error(err);
+    }
   }
 });
 

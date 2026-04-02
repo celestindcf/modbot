@@ -1238,7 +1238,6 @@ async function handleBlackjackButton(interaction) {
 const col = (name) => db.collection(name);
 
 // ─── Express API ──────────────────────────────────────────────────────────────
-const app = express();
 // ... la suite de ton code
 // ─── Express API ──────────────────────────────────────────────────────────────
 const app = express();

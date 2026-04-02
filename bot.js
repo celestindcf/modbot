@@ -8,8 +8,6 @@ const { v4: uuidv4 } = require('uuid');
 const { MongoClient } = require('mongodb');
 const path = require('path');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN';
@@ -18,8 +16,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 const PANEL_URL = process.env.PANEL_URL || 'http://localhost:3000';
 const PORT = process.env.PORT || 3000;
 const MONGO_URL = process.env.MONGO_URL || 'YOUR_MONGODB_URL';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSyBdsUc5nu4I21arvq7vjay2v3Fho5c4zm4';
 const ACTIVITY_WEBHOOK = 'https://discord.com/api/webhooks/1489280601683922954/hD3sNwiIflznrj5fU1RxKbbf55IZIDqJnJN4JImpK1RCbq0aiudZ5bQD9tRcXDR7itu8';
+
+// ─── IA Config (L'ordre est important !) ─────────────────────────────────────
+// On récupère la clé depuis les variables d'environnement de Render
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'TA_CLE_DE_SECOURS_ICI';
+
+// On initialise seulement APRÈS avoir défini la clé
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+console.log("✅ Système IA configuré.");
 
 // ─── MongoDB ──────────────────────────────────────────────────────────────────
 let db;

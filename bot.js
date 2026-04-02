@@ -9,35 +9,41 @@ const { MongoClient } = require('mongodb');
 const path = require('path');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// ─── Config ───────────────────────────────────────────────────────────────────
-const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN';
-const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_CLIENT_ID';
-const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
-const PANEL_URL = process.env.PANEL_URL || 'http://localhost:3000';
-const PORT = process.env.PORT || 3000;
-const MONGO_URL = process.env.MONGO_URL || 'YOUR_MONGODB_URL';
-const ACTIVITY_WEBHOOK = 'https://discord.com/api/webhooks/1489280601683922954/hD3sNwiIflznrj5fU1RxKbbf55IZIDqJnJN4JImpK1RCbq0aiudZ5bQD9tRcXDR7itu8';
-
-// ─── IA Config (L'ordre est important !) ─────────────────────────────────────
-// On récupère la clé depuis les variables d'environnement de Render
+// ─── IA Config ─────────────────────────────────────────────────────────────
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'TA_CLE_DE_SECOURS_ICI';
-
-// On initialise seulement APRÈS avoir défini la clé
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 console.log("✅ Système IA configuré.");
 
-// ─── MongoDB ──────────────────────────────────────────────────────────────────
+// ─── MongoDB & Middleware ──────────────────────────────────────────────────
+const mongoClient = new MongoClient(MONGO_URL);
 let db;
-async function connectDB() {
-  const mongoClient = new MongoClient(MONGO_URL);
-  await mongoClient.connect();
-  db = mongoClient.db('modbot');
-  console.log('✅ MongoDB connecté !');
-}
-function col(name) { return db.collection(name); }
 
+async function connectDB() {
+    try {
+        await mongoClient.connect();
+        db = mongoClient.db();
+        console.log("✅ Connecté à MongoDB");
+    } catch (err) {
+        console.error("❌ Erreur MongoDB:", err);
+    }
+}
+connectDB();
+
+// ─── Fonctions IA ──────────────────────────────────────────────────────────
+async function callAI(prompt, systemPrompt = '') {
+    if (!GEMINI_API_KEY) return null;
+    try {
+        const finalPrompt = `${systemPrompt}\n\nQuestion: ${prompt}`;
+        const result = await aiModel.generateContent(finalPrompt);
+        const response = await result.response;
+        return response.text();
+    } catch (error) {
+        console.error("Erreur IA:", error);
+        return null;
+    }
+}
 // ─── Admin Levels ─────────────────────────────────────────────────────────────
 const ADMIN_LEVELS = {
   1: { name: 'Modérateur', color: 0x57F287, perms: ['warn', 'mute'] },

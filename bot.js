@@ -15,7 +15,7 @@ const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_CLIENT_ID';
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 const PANEL_URL = process.env.PANEL_URL || 'http://localhost:3000';
 const PORT = process.env.PORT || 3000;
-const MONGO_URL = process.env.MONGO_URL || 'YOUR_MONGODB_URL';
+const MONGO_URL = process.env.MONGO_URL || 'mongodb+srv://cdevaux112_db_user:HWFfmBd9YY59ZQHk@ncl-bot.wqshtti.mongodb.net/?appName=NCL-BOT';
 const ACTIVITY_WEBHOOK = 'https://discord.com/api/webhooks/1489280601683922954/hD3sNwiIflznrj5fU1RxKbbf55IZIDqJnJN4JImpK1RCbq0aiudZ5bQD9tRcXDR7itu8';
 
 // Clé Gemini

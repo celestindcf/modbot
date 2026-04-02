@@ -15,7 +15,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 const PANEL_URL = process.env.PANEL_URL || 'http://localhost:3000';
 const PORT = process.env.PORT || 3000;
 const MONGO_URL = process.env.MONGO_URL || 'YOUR_MONGODB_URL';
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const ACTIVITY_WEBHOOK = 'https://discord.com/api/webhooks/1489280601683922954/hD3sNwiIflznrj5fU1RxKbbf55IZIDqJnJN4JImpK1RCbq0aiudZ5bQD9tRcXDR7itu8';
 
 // ─── MongoDB ──────────────────────────────────────────────────────────────────
@@ -243,32 +243,29 @@ async function sendActivityWebhook(content) {
   } catch {}
 }
 
-// ─── PREMIUM: IA (Claude API) ────────────────────────────────────────────────
+// ─── PREMIUM: IA (Gemini API) ─────────────────────────────────────────────────
 async function callAI(prompt, systemPrompt = '') {
-  if (!ANTHROPIC_API_KEY) return null;
+  if (!GEMINI_API_KEY) return null;
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: systemPrompt || 'Tu es un assistant de modération Discord. Réponds en français, sois concis.',
-        messages: [{ role: 'user', content: prompt }]
+        contents: [{ parts: [{ text: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt }] }],
+        generationConfig: { maxOutputTokens: 1000, temperature: 0.3 }
       })
     });
     const data = await res.json();
-    return data.content?.[0]?.text || null;
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
   } catch { return null; }
 }
 
 async function checkAIModeration(message, config) {
-  if (!config.aiModeration || !ANTHROPIC_API_KEY) return false;
+  if (!config.aiModeration || !GEMINI_API_KEY) return false;
   const response = await callAI(
-    `Message Discord à analyser: "${message.content}"\nC'est une insulte déguisée, du harcèlement ou du contenu toxique? Réponds SEULEMENT par "OUI" ou "NON".`,
-    'Tu es un modérateur Discord. Analyse si un message est toxique ou du harcèlement. Réponds UNIQUEMENT par OUI ou NON.'
+    `Tu es un modérateur Discord. Analyse si ce message est une insulte déguisée, du harcèlement ou du contenu toxique. Réponds UNIQUEMENT par OUI ou NON.\n\nMessage: "${message.content}"`
   );
-  return response?.trim().toUpperCase() === 'OUI';
+  return response?.trim().toUpperCase().startsWith('OUI');
 }
 
 // ─── PREMIUM: Captcha ─────────────────────────────────────────────────────────
@@ -399,7 +396,7 @@ async function registerCommands() {
 }
 
 // ─── Bot Events ───────────────────────────────────────────────────────────────
-client.once('clientReady', async () => {
+client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} connecté !`);
   await registerCommands();
   // Webhook activité au démarrage
@@ -480,14 +477,36 @@ client.on('messageDelete', async message => {
   if (!message.guild || message.author?.bot) return;
   const licence = await checkLicence(message.guild.id);
   const embed = new EmbedBuilder().setTitle('🗑️ Message supprimé').setColor(0xED4245)
-    .addFields({ name: '👤 Auteur', value: `<@${message.author?.id}>`, inline: true }, { name: '📍 Salon', value: `<#${message.channel.id}>`, inline: true }, { name: '💬 Message', value: message.content?.slice(0, 1024) || '*Contenu inconnu*' })
-    .setTimestamp();
-  // Images supprimées (PREMIUM)
+    .addFields(
+      { name: '👤 Auteur', value: `<@${message.author?.id}> (${message.author?.tag})`, inline: true },
+      { name: '📍 Salon', value: `<#${message.channel.id}>`, inline: true },
+      { name: '💬 Message', value: message.content?.slice(0, 1024) || '*Contenu inconnu*' }
+    ).setTimestamp();
+
   const files = [];
+
+  // Images (PREMIUM) — affichage en embed + fichier joint
   if (licence.isPremium && message.attachments.size > 0) {
-    embed.addFields({ name: '🖼️ Pièces jointes', value: message.attachments.map(a => a.url).join('\n').slice(0, 500) });
+    const images = message.attachments.filter(a => a.contentType?.startsWith('image/'));
+    const others = message.attachments.filter(a => !a.contentType?.startsWith('image/'));
+
+    if (images.size > 0) {
+      // Première image en thumbnail dans l'embed
+      const firstImg = images.first();
+      embed.setImage(firstImg.proxyURL || firstImg.url);
+      embed.addFields({ name: '🖼️ Image(s) supprimée(s)', value: images.map(a => `[${a.name}](${a.url})`).join('\n').slice(0, 400) });
+    }
+    if (others.size > 0) {
+      embed.addFields({ name: '📎 Fichier(s)', value: others.map(a => a.name).join(', ').slice(0, 200) });
+    }
   }
-  await logEvent(message.guild, embed);
+
+  const config = await col('mod_configs').findOne({ guildId: message.guild.id }) || {};
+  const channelId = config.eventLogChannel || config.logChannel;
+  if (!channelId) return;
+  const logChannel = message.guild.channels.cache.get(channelId);
+  if (!logChannel) return;
+  await logChannel.send({ embeds: [embed], files }).catch(() => {});
 });
 
 // ─── Message Update ───────────────────────────────────────────────────────────
@@ -580,7 +599,7 @@ client.on('messageCreate', async message => {
   // Support Auto FAQ (PREMIUM)
   if (licence.isPremium && config.faqEnabled) {
     const faqs = await col('faq').find({ guildId: message.guild.id }).toArray();
-    if (faqs.length > 0 && ANTHROPIC_API_KEY) {
+    if (faqs.length > 0 && GEMINI_API_KEY) {
       const faqText = faqs.map(f => `Q: ${f.question}\nR: ${f.answer}`).join('\n\n');
       const answer = await callAI(
         `Message d'un membre: "${message.content}"\n\nFAQ du serveur:\n${faqText}\n\nY a-t-il une réponse pertinente dans la FAQ? Si oui, réponds avec la réponse. Sinon réponds AUCUNE.`,
@@ -981,7 +1000,7 @@ async function handleCommand(interaction, licence) {
   // ── PREMIUM: resume ──
   if (commandName === 'resume') {
     if (!await requirePremium()) return;
-    if (!ANTHROPIC_API_KEY) { await interaction.editReply({ content: '❌ Clé API Anthropic non configurée.' }); return; }
+    if (!GEMINI_API_KEY) { await interaction.editReply({ content: '❌ Clé API Gemini non configurée. Ajoutez GEMINI_API_KEY dans les variables Render.' }); return; }
     const nombre = options.getInteger('nombre') || 50;
     const messages = await interaction.channel.messages.fetch({ limit: nombre });
     const text = messages.reverse().filter(m => !m.author.bot).map(m => `${m.author.username}: ${m.content}`).join('\n');
@@ -1402,6 +1421,11 @@ app.get('/api/licence', authMiddleware, async (req, res) => {
 // ─── Nickname history ─────────────────────────────────────────────────────────
 app.get('/api/nickname-history/:userId', authMiddleware, async (req, res) => {
   res.json(await col('nickname_history').find({ guildId: req.user.guildId, userId: req.params.userId }).sort({ changedAt: -1 }).limit(20).toArray());
+});
+
+// ─── Catch-all → index.html ───────────────────────────────────────────────────
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────

@@ -260,7 +260,7 @@ async function sendActivityWebhook(content) {
 }
 
 // ─── PREMIUM: IA (GEMINI API) ────────────────────────────────────────────────
-sync function callAI(prompt, systemPrompt = '') {
+async function callAI(prompt, systemPrompt = '') {
   // On vérifie si la clé Gemini est là
   if (!process.env.GEMINI_API_KEY && !ANTHROPIC_API_KEY) return null; 
 

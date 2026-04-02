@@ -265,7 +265,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
       <div class="nav-label">Configuration</div>
       <a class="nav-item" id="nav-ticketconfig" onclick="showPage('ticketconfig',this)"><span class="ico">🎫</span><span>Config Tickets</span></a>
-      <a class="nav-item" id="nav-premium" onclick="showPage('premium',this)" style="color:var(--pink); font-weight:bold;"><span class="ico">⭐</span><span>Premium</span></a>
+      <div class="nav-label" style="color:var(--yellow)">⭐ Premium</div>
+      <a class="nav-item" id="nav-premium" onclick="showPage('premium',this)" style="color:var(--yellow)"><span class="ico">⭐</span><span>Config Premium</span></a>
+      <a class="nav-item" id="nav-shop" onclick="showPage('shop',this)"><span class="ico">🏪</span><span>Boutique</span></a>
+      <a class="nav-item" id="nav-economy" onclick="showPage('economy',this)"><span class="ico">🪙</span><span>Économie</span></a>
+      <a class="nav-item" id="nav-faq" onclick="showPage('faq',this)"><span class="ico">❓</span><span>FAQ Auto</span></a>
+      <a class="nav-item" id="nav-identity" onclick="showPage('identity',this)"><span class="ico">🤖</span><span>Identité Bot</span></a>
     </div>
     <div class="sidebar-foot">
       <div class="user-row">
@@ -281,249 +286,163 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
   <main class="main">
 
-    <div id="page-premium" class="page" style="display:none">
+    <!-- ── PREMIUM CONFIG ── -->
+    <div class="page" id="page-premium">
       <div class="ph">
-        <div class="ph-title">⭐ Configuration Premium <small>Options exclusives</small></div>
+        <div class="ph-title">⭐ Configuration Premium <small>Fonctionnalités exclusives</small></div>
       </div>
-
-      <div class="card" style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:25px;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px;">
-          
-          <div style="background:var(--surface2); padding:20px; border-radius:12px; border:1px solid var(--border);">
-            <h3 style="color:var(--blue); margin-bottom:15px; display:flex; align-items:center; gap:10px;">✨ Message d'Arrivée</h3>
-            <div style="margin-bottom:15px;">
-              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">Activer le module</label>
-              <select id="p-welcome-enabled" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;">
-                <option value="false">Désactivé</option>
-                <option value="true">Activé</option>
-              </select>
-            </div>
-            <div style="margin-bottom:15px;">
-              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">ID du Salon Textuel</label>
-              <input type="text" id="p-welcome-channel" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;" placeholder="Ex: 1029384756...">
-            </div>
-            <div>
-              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">Message ({user} = Mention, {server} = Nom)</label>
-              <textarea id="p-welcome-msg" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px; height:80px; resize:none;" placeholder="Bienvenue {user} sur {server} !"></textarea>
-            </div>
+      <div class="grid2" style="margin-bottom:18px">
+        <div class="card">
+          <div class="card-head"><div class="card-title">✨ Message d'Arrivée</div></div>
+          <div class="card-body">
+            <div class="form-field"><label>Activer</label><select id="p-welcome-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
+            <div class="form-field"><label>ID du salon</label><input type="text" id="p-welcome-channel" placeholder="ID du salon de bienvenue"></div>
+            <div class="form-field"><label>Message ({user}, {server}, {count})</label><textarea id="p-welcome-msg" rows="2" placeholder="Bienvenue {user} sur {server} !"></textarea></div>
+            <div class="form-field"><label>Messages aléatoires (un par ligne)</label><textarea id="p-welcome-msgs" rows="4" placeholder="Message 1&#10;Message 2&#10;Message 3"></textarea></div>
           </div>
-
-          <div style="background:var(--surface2); padding:20px; border-radius:12px; border:1px solid var(--border);">
-            <h3 style="color:var(--red); margin-bottom:15px; display:flex; align-items:center; gap:10px;">👋 Message de Départ</h3>
-            <div style="margin-bottom:15px;">
-              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">Activer le module</label>
-              <select id="p-leave-enabled" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;">
-                <option value="false">Désactivé</option>
-                <option value="true">Activé</option>
-              </select>
-            </div>
-            <div style="margin-bottom:15px;">
-              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">ID du Salon Textuel</label>
-              <input type="text" id="p-leave-channel" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;" placeholder="Ex: 1029384756...">
-            </div>
-            <div>
-              <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">Message ({user} = Nom, {count} = Membres)</label>
-              <textarea id="p-leave-msg" style="width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px; height:80px; resize:none;" placeholder="{user} a quitté le serveur. Nous sommes désormais {count}."></textarea>
-            </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">👋 Message de Départ</div></div>
+          <div class="card-body">
+            <div class="form-field"><label>Activer</label><select id="p-leave-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
+            <div class="form-field"><label>ID du salon</label><input type="text" id="p-leave-channel" placeholder="ID du salon de départ"></div>
+            <div class="form-field"><label>Message ({user}, {server}, {count})</label><textarea id="p-leave-msg" rows="2" placeholder="{user} a quitté {server}."></textarea></div>
           </div>
-
         </div>
-
-        <div style="margin-top:25px; background:var(--surface2); padding:20px; border-radius:12px; border:1px solid var(--border);">
-            <h3 style="color:var(--purple); margin-bottom:10px;">🤖 Identité Visuelle</h3>
-            <label style="display:block; margin-bottom:5px; font-size:12px; color:var(--muted);">Surnom du Bot sur ce serveur (Nickname)</label>
-            <input type="text" id="p-bot-nick" style="width:100%; padding:12px; background:var(--bg); border:1px solid var(--border); color:white; border-radius:6px;" placeholder="Ex: Modérateur Suprême">
+      </div>
+      <div class="grid2" style="margin-bottom:18px">
+        <div class="card">
+          <div class="card-head"><div class="card-title">🔐 Captcha de Vérification</div></div>
+          <div class="card-body">
+            <div class="form-field"><label>Activer le captcha</label><select id="p-captcha-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
+            <div class="form-field"><label>ID du salon captcha</label><input type="text" id="p-captcha-channel" placeholder="ID du salon"></div>
+            <div class="form-field"><label>ID du rôle après vérification</label><input type="text" id="p-captcha-role" placeholder="ID du rôle"></div>
+          </div>
         </div>
-
-        <button onclick="savePremiumConfig()" style="width:100%; margin-top:25px; padding:18px; background:var(--blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px; transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">💾 ENREGISTRER LA CONFIGURATION</button>
+        <div class="card">
+          <div class="card-head"><div class="card-title">🤖 Modération IA</div></div>
+          <div class="card-body">
+            <div class="form-field"><label>Modération IA (détecte insultes déguisées)</label><select id="p-ai-mod"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
+            <div class="form-field"><label>Support Auto FAQ</label><select id="p-faq-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
+            <p style="font-size:11px;color:var(--muted);margin-top:8px">Nécessite ANTHROPIC_API_KEY configuré dans Render.</p>
+          </div>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <button class="btn btn-red" style="padding:12px 28px;font-weight:700;font-size:13px" onclick="savePremiumConfig()">💾 Sauvegarder la configuration</button>
       </div>
     </div>
 
-    <!-- DASHBOARD -->
-    <div class="page active" id="page-dashboard">
+    <!-- ── BOUTIQUE ── -->
+    <div class="page" id="page-shop">
       <div class="ph">
-        <div class="ph-title">Dashboard <small>Vue d'ensemble</small></div>
-      </div>
-      <div class="stats">
-        <div class="stat"><div class="stat-label">Avertissements</div><div class="stat-val" id="s-warns">0</div></div>
-        <div class="stat"><div class="stat-label">Mutes</div><div class="stat-val" id="s-mutes">0</div></div>
-        <div class="stat"><div class="stat-label">Kicks</div><div class="stat-val" id="s-kicks">0</div></div>
-        <div class="stat"><div class="stat-label">Bans</div><div class="stat-val" id="s-bans">0</div></div>
-        <div class="stat"><div class="stat-label">Total</div><div class="stat-val" id="s-total">0</div></div>
-      </div>
-      <div class="grid2">
-        <div class="card">
-          <div class="card-head"><div class="card-title">🕐 Dernières sanctions</div></div>
-          <table class="dt"><thead><tr><th>Type</th><th>Membre</th><th>Raison</th><th>Date</th></tr></thead>
-          <tbody id="recent-cases"></tbody></table>
-        </div>
-        <div class="card">
-          <div class="card-head"><div class="card-title">🏆 Top modérateurs</div></div>
-          <div class="card-body" id="top-mods"></div>
-        </div>
-      </div>
-      <div class="grid2">
-        <div class="card">
-          <div class="card-head"><div class="card-title">🎫 Tickets récents</div></div>
-          <div class="card-body" id="dash-tickets"></div>
-        </div>
-        <div class="card">
-          <div class="card-head"><div class="card-title">⭐ Top XP</div></div>
-          <div class="card-body" id="dash-xp"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CASES -->
-    <div class="page" id="page-cases">
-      <div class="ph">
-        <div class="ph-title">Sanctions <small>Historique complet</small></div>
-        <button class="btn btn-red" onclick="openModal('modal-sanction')">+ Sanctionner</button>
-      </div>
-      <div class="search-bar">
-        <input type="text" id="search-cases" placeholder="Rechercher par membre, raison..." oninput="filterCases()">
-        <select id="filter-type" onchange="filterCases()">
-          <option value="">Tous les types</option>
-          <option value="warn">⚠️ Warn</option>
-          <option value="mute">🔇 Mute</option>
-          <option value="kick">👢 Kick</option>
-          <option value="ban">🔨 Ban</option>
-          <option value="unban">✅ Unban</option>
-          <option value="unmute">🔊 Unmute</option>
-        </select>
+        <div class="ph-title">🏪 Boutique <small>Gestion des articles (Super Admin uniquement)</small></div>
+        <button class="btn btn-red" onclick="openModal('modal-add-item')">+ Ajouter un article</button>
       </div>
       <div class="card">
-        <table class="dt"><thead><tr><th>#</th><th>Type</th><th>Membre</th><th>Raison</th><th>Modérateur</th><th>Date</th><th>Actions</th></tr></thead>
-        <tbody id="all-cases"></tbody></table>
+        <table class="dt"><thead><tr><th>Nom</th><th>Prix</th><th>Type</th><th>Détails</th><th>Actions</th></tr></thead>
+        <tbody id="shop-table"></tbody></table>
       </div>
     </div>
 
-    <!-- MEMBERS -->
-    <div class="page" id="page-members">
+    <!-- ── ÉCONOMIE ── -->
+    <div class="page" id="page-economy">
       <div class="ph">
-        <div class="ph-title">Membres <small>Fiches individuelles</small></div>
+        <div class="ph-title">🪙 Économie <small>Gestion des coins</small></div>
       </div>
-      <div class="search-bar">
-        <input type="text" id="search-members" placeholder="Rechercher un membre..." oninput="filterMembers()">
-      </div>
-      <div id="members-list"></div>
-    </div>
-
-    <!-- TICKETS -->
-    <div class="page" id="page-tickets">
-      <div class="ph">
-        <div class="ph-title">Tickets <small>Support membres</small></div>
-        <div style="display:flex;gap:8px">
-          <select id="ticket-filter" onchange="renderTickets()" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none">
-            <option value="">Tous</option>
-            <option value="open">Ouverts</option>
-            <option value="closed">Fermés</option>
-          </select>
+      <div class="grid2" style="margin-bottom:18px">
+        <div class="card">
+          <div class="card-head"><div class="card-title">💰 Donner / Retirer des coins</div></div>
+          <div class="card-body">
+            <div class="form-field"><label>ID Discord du membre</label><input type="text" id="eco-user-id" placeholder="ID Discord"></div>
+            <div class="form-field"><label>Montant</label><input type="number" id="eco-amount" placeholder="100" min="1"></div>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-green" style="flex:1;justify-content:center" onclick="giveCoins()">✅ Donner</button>
+              <button class="btn btn-danger" style="flex:1;justify-content:center" onclick="removeCoinsAdmin()">❌ Retirer</button>
+            </div>
+          </div>
         </div>
-      </div>
-      <div id="tickets-list"></div>
-    </div>
-
-    <!-- XP -->
-    <div class="page" id="page-xp">
-      <div class="ph">
-        <div class="ph-title">Classement XP <small>Top membres du serveur</small></div>
-      </div>
-      <div id="xp-list"></div>
-    </div>
-
-    <!-- STAFF -->
-    <div class="page" id="page-staff">
-      <div class="ph">
-        <div class="ph-title">Staff <small>Équipe de modération</small></div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">🏆 Top 3 Coins</div></div>
+          <div class="card-body" id="economy-top"></div>
+        </div>
       </div>
       <div class="card">
-        <table class="dt"><thead><tr><th>Membre</th><th>Niveau</th><th>Permissions</th><th>Ajouté le</th><th>Actions</th></tr></thead>
-        <tbody id="staff-table"></tbody></table>
+        <div class="card-head"><div class="card-title">📊 Classement complet</div></div>
+        <table class="dt"><thead><tr><th>#</th><th>Membre</th><th>Coins</th><th>Actions</th></tr></thead>
+        <tbody id="economy-table"></tbody></table>
       </div>
     </div>
 
-    <!-- USERS -->
-    <div class="page" id="page-users">
+    <!-- ── FAQ ── -->
+    <div class="page" id="page-faq">
       <div class="ph">
-        <div class="ph-title">Comptes Staff <small>Gestion des accès panel</small></div>
+        <div class="ph-title">❓ FAQ Auto <small>Support automatique par IA</small></div>
+        <button class="btn btn-red" onclick="openModal('modal-add-faq')">+ Ajouter une FAQ</button>
       </div>
-      <div class="card">
-        <table class="dt"><thead><tr><th>Utilisateur</th><th>Rôle</th><th>Niveau admin</th><th>Créé le</th><th>Actions</th></tr></thead>
-        <tbody id="users-table"></tbody></table>
-      </div>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:18px">Le bot répond automatiquement aux questions des membres si la réponse est dans la FAQ (IA activée requise).</p>
+      <div id="faq-list"></div>
     </div>
 
-    <!-- AJOUTER ADMIN -->
-    <div class="page" id="page-addadmin">
+    <!-- ── IDENTITÉ BOT ── -->
+    <div class="page" id="page-identity">
       <div class="ph">
-        <div class="ph-title">Ajouter un Admin <small>Créer un accès au panel</small></div>
+        <div class="ph-title">🤖 Identité du Bot <small>Super Admin uniquement</small></div>
       </div>
-      <div class="card" style="max-width:520px">
-        <div class="card-head"><div class="card-title">➕ Nouveau compte staff</div></div>
+      <div class="card" style="max-width:600px">
+        <div class="card-head"><div class="card-title">🎭 Apparence du bot</div></div>
         <div class="card-body">
-          <div class="form-field">
-            <label>Nom d'utilisateur</label>
-            <input type="text" id="na-user" placeholder="pseudo du staff">
+          <div class="form-field"><label>Surnom (Nickname) sur ce serveur</label><input type="text" id="bot-nickname" placeholder="Ex: Modérateur Suprême (vide = défaut)"></div>
+          <div class="form-field"><label>URL Avatar (change l'avatar global)</label><input type="url" id="bot-avatar" placeholder="https://... (image directe)"></div>
+          <div class="form-field"><label>Bio / À propos (globale)</label><textarea id="bot-bio" rows="3" placeholder="Bio du bot..."></textarea></div>
+          <div id="bot-preview" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <img id="bot-avatar-preview" style="width:48px;height:48px;border-radius:50%;object-fit:cover" src="" alt="">
+              <div><div id="bot-name-preview" style="font-family:var(--font-head);font-weight:700;font-size:15px"></div><div id="bot-bio-preview" style="font-size:12px;color:var(--muted);margin-top:2px"></div></div>
+            </div>
           </div>
-          <div class="form-field">
-            <label>Mot de passe (laisser vide = généré automatiquement)</label>
-            <input type="text" id="na-pass" placeholder="Laisser vide pour générer">
-          </div>
-          <div class="form-field">
-            <label>Niveau admin</label>
-            <select id="na-level">
-              <option value="1">Niveau 1 — Modérateur (warn, mute)</option>
-              <option value="2">Niveau 2 — Senior Mod (warn, mute, kick)</option>
-              <option value="3">Niveau 3 — Admin (tout sauf gestion staff)</option>
-              <option value="4">Niveau 4 — Super Admin (tous les droits)</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label>ID Discord du membre (pour lui envoyer ses identifiants en MP)</label>
-            <input type="text" id="na-discord-id" placeholder="Ex: 123456789012345678">
-          </div>
-          <button class="btn btn-green" style="width:100%;justify-content:center;padding:12px;font-size:13px;font-weight:700" onclick="creerAdmin()">
-            ✅ Créer le compte & envoyer en MP
-          </button>
-          <div id="cred-result" style="display:none"></div>
+          <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="saveBotIdentity()">💾 Appliquer</button>
         </div>
       </div>
     </div>
 
-    <!-- TICKET CONFIG -->
-    <div class="page" id="page-ticketconfig">
-      <div class="ph">
-        <div class="ph-title">Config Tickets <small>Types & messages personnalisés</small></div>
-        <button class="btn btn-red" onclick="saveTicketConfig()">💾 Sauvegarder</button>
-      </div>
+  </main>
+</div>
 
-      <div class="card" style="max-width:700px;margin-bottom:20px">
-        <div class="card-head"><div class="card-title">📩 Messages globaux</div></div>
-        <div class="card-body">
-          <div class="form-field">
-            <label>Message d'accueil dans le ticket (variables: {user})</label>
-            <textarea id="tc-welcome" rows="3" placeholder="Bonjour {user} ! Notre équipe va vous répondre dès que possible..."></textarea>
-          </div>
-          <div class="form-field">
-            <label>MP envoyé à l'ouverture (variables: {user}, {type}, {number}, {channel}) — laisser vide pour désactiver</label>
-            <textarea id="tc-dm" rows="4" placeholder="Bonjour {user} ! Votre ticket {type} {number} a bien été ouvert. Notre équipe vous répondra bientôt !"></textarea>
-          </div>
-        </div>
-      </div>
+<!-- Modal: Ajouter article -->
+<div class="modal-ov" id="modal-add-item">
+  <div class="modal"><div class="modal-head"><div class="modal-title">🏪 Ajouter un article</div><button class="modal-x" onclick="closeModal('modal-add-item')">×</button></div>
+  <div class="modal-body">
+    <div class="form-field"><label>Nom</label><input type="text" id="item-nom" placeholder="Ex: Rôle VIP"></div>
+    <div class="form-field"><label>Prix (coins)</label><input type="number" id="item-prix" placeholder="100" min="1"></div>
+    <div class="form-field"><label>Type</label><select id="item-type"><option value="role">🎭 Rôle Discord</option><option value="premium">⭐ Licence Premium</option><option value="custom">🎁 Personnalisé</option></select></div>
+    <div class="form-field"><label>ID du rôle (si type = Rôle)</label><input type="text" id="item-role-id" placeholder="ID du rôle"></div>
+    <div class="form-field"><label>Description</label><input type="text" id="item-desc" placeholder="Description"></div>
+    <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="addShopItem()">Ajouter</button>
+  </div></div>
+</div>
 
-      <div class="card" style="max-width:700px">
-        <div class="card-head">
-          <div class="card-title">🗂️ Types de tickets</div>
-          <button class="btn btn-ghost" onclick="addTicketType()" style="font-size:11px">+ Ajouter un type</button>
-        </div>
-        <div class="card-body">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:16px">Chaque type peut avoir sa propre catégorie Discord, son message d'accueil et son MP personnalisé.</div>
-          <div id="ticket-types-list"></div>
-        </div>
-      </div>
-    </div>
+<!-- Modal: Modifier article -->
+<div class="modal-ov" id="modal-edit-item">
+  <div class="modal"><div class="modal-head"><div class="modal-title">✏️ Modifier l'article</div><button class="modal-x" onclick="closeModal('modal-edit-item')">×</button></div>
+  <div class="modal-body">
+    <input type="hidden" id="edit-item-id">
+    <div class="form-field"><label>Nom</label><input type="text" id="edit-item-nom"></div>
+    <div class="form-field"><label>Prix (coins)</label><input type="number" id="edit-item-prix" min="1"></div>
+    <div class="form-field"><label>Description</label><input type="text" id="edit-item-desc"></div>
+    <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="saveShopItem()">💾 Sauvegarder</button>
+  </div></div>
+</div>
 
+<!-- Modal: FAQ -->
+<div class="modal-ov" id="modal-add-faq">
+  <div class="modal"><div class="modal-head"><div class="modal-title">❓ Ajouter une FAQ</div><button class="modal-x" onclick="closeModal('modal-add-faq')">×</button></div>
+  <div class="modal-body">
+    <div class="form-field"><label>Question</label><input type="text" id="faq-question" placeholder="Ex: Comment ouvrir un ticket ?"></div>
+    <div class="form-field"><label>Réponse</label><textarea id="faq-answer" rows="4" placeholder="Pour ouvrir un ticket..."></textarea></div>
+    <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="addFAQ()">Ajouter</button>
+  </div></div>
+</div>
   </main>
 </div>
 
@@ -1331,6 +1250,232 @@ async function savePremiumConfig() {
     if (res.ok) alert('✅ Config enregistrée !');
     else alert('❌ Erreur de sauvegarde');
 }
+</script>
+</body>
+</html>
+
+// ── Licence check ──
+let currentLicence = { valid: true, isPremium: false };
+async function checkLicenceStatus() {
+  try {
+    const data = await apiGet('/api/licence');
+    currentLicence = data;
+  } catch {}
+}
+
+// ── Premium Config ──
+async function loadPremiumConfig() {
+  try {
+    const data = await apiGet('/api/premium-config');
+    if (!data || data.error) return;
+    document.getElementById('p-welcome-enabled').value = data.welcomeEnabled ? 'true' : 'false';
+    document.getElementById('p-welcome-channel').value = data.welcomeChannel || '';
+    document.getElementById('p-welcome-msg').value = data.welcomeMessage || '';
+    document.getElementById('p-welcome-msgs').value = (data.welcomeMessages || []).join('\n');
+    document.getElementById('p-leave-enabled').value = data.leaveEnabled ? 'true' : 'false';
+    document.getElementById('p-leave-channel').value = data.leaveChannel || '';
+    document.getElementById('p-leave-msg').value = data.leaveMessage || '';
+    document.getElementById('p-captcha-enabled').value = data.captchaEnabled ? 'true' : 'false';
+    document.getElementById('p-captcha-channel').value = data.captchaChannel || '';
+    document.getElementById('p-captcha-role').value = data.captchaRole || '';
+    document.getElementById('p-ai-mod').value = data.aiModeration ? 'true' : 'false';
+    document.getElementById('p-faq-enabled').value = data.faqEnabled ? 'true' : 'false';
+  } catch(e) { console.error('loadPremiumConfig error:', e); }
+}
+
+async function savePremiumConfig() {
+  const welcomeMessages = (document.getElementById('p-welcome-msgs').value.trim() || '')
+    .split('\n').map(s => s.trim()).filter(s => s.length > 0);
+  const config = {
+    welcomeEnabled: document.getElementById('p-welcome-enabled').value === 'true',
+    welcomeChannel: document.getElementById('p-welcome-channel').value.trim(),
+    welcomeMessage: document.getElementById('p-welcome-msg').value.trim(),
+    welcomeMessages,
+    leaveEnabled: document.getElementById('p-leave-enabled').value === 'true',
+    leaveChannel: document.getElementById('p-leave-channel').value.trim(),
+    leaveMessage: document.getElementById('p-leave-msg').value.trim(),
+    captchaEnabled: document.getElementById('p-captcha-enabled').value === 'true',
+    captchaChannel: document.getElementById('p-captcha-channel').value.trim(),
+    captchaRole: document.getElementById('p-captcha-role').value.trim(),
+    aiModeration: document.getElementById('p-ai-mod').value === 'true',
+    faqEnabled: document.getElementById('p-faq-enabled').value === 'true',
+  };
+  const r = await fetch(`${API}/api/premium-config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(config)
+  });
+  const data = await r.json();
+  if (data.error) return toast(data.error, 'error');
+  toast('✅ Configuration premium sauvegardée !', 'success');
+}
+
+// ── Boutique ──
+let allShopItems = [];
+async function loadShop() {
+  allShopItems = await apiGet('/api/shop');
+  renderShop();
+}
+function renderShop() {
+  const tbody = document.getElementById('shop-table');
+  if (!allShopItems || !allShopItems.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><div class="empty-ico">🏪</div><div class="empty-title">Aucun article</div></div></td></tr>'; return; }
+  tbody.innerHTML = allShopItems.map(item => `<tr>
+    <td style="font-family:var(--font-head);font-weight:700">${item.nom}</td>
+    <td><span style="color:var(--yellow);font-weight:700">${item.prix} 🪙</span></td>
+    <td><span class="badge b-blue">${item.type}</span></td>
+    <td style="font-size:11px;color:var(--muted)">${item.description || (item.roleId ? 'Rôle: ' + item.roleId : '-')}</td>
+    <td>
+      <button class="btn btn-ghost" style="padding:4px 8px;font-size:10px" onclick="editShopItem('${item.id}')">✏️</button>
+      <button class="btn btn-danger" style="padding:4px 8px;font-size:10px;margin-left:4px" onclick="deleteShopItem('${item.id}')">🗑️</button>
+    </td>
+  </tr>`).join('');
+}
+async function addShopItem() {
+  const nom = document.getElementById('item-nom').value.trim();
+  const prix = parseInt(document.getElementById('item-prix').value);
+  const type = document.getElementById('item-type').value;
+  const roleId = document.getElementById('item-role-id').value.trim();
+  const description = document.getElementById('item-desc').value.trim();
+  if (!nom || !prix) return toast('Nom et prix requis', 'error');
+  const r = await fetch(`${API}/api/shop`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ nom, prix, type, roleId, description }) });
+  const data = await r.json();
+  if (data.error) return toast(data.error, 'error');
+  closeModal('modal-add-item');
+  ['item-nom','item-prix','item-role-id','item-desc'].forEach(id => document.getElementById(id).value = '');
+  toast('✅ Article ajouté !', 'success');
+  await loadShop();
+}
+function editShopItem(id) {
+  const item = allShopItems.find(i => i.id === id);
+  if (!item) return;
+  document.getElementById('edit-item-id').value = id;
+  document.getElementById('edit-item-nom').value = item.nom;
+  document.getElementById('edit-item-prix').value = item.prix;
+  document.getElementById('edit-item-desc').value = item.description || '';
+  openModal('modal-edit-item');
+}
+async function saveShopItem() {
+  const id = document.getElementById('edit-item-id').value;
+  const nom = document.getElementById('edit-item-nom').value.trim();
+  const prix = parseInt(document.getElementById('edit-item-prix').value);
+  const description = document.getElementById('edit-item-desc').value.trim();
+  if (!nom || !prix) return toast('Nom et prix requis', 'error');
+  await fetch(`${API}/api/shop/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ nom, prix, description }) });
+  closeModal('modal-edit-item');
+  toast('✅ Article modifié !', 'success');
+  await loadShop();
+}
+async function deleteShopItem(id) {
+  if (!confirm('Supprimer cet article ?')) return;
+  await fetch(`${API}/api/shop/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+  toast('Article supprimé', 'success');
+  await loadShop();
+}
+
+// ── Économie ──
+async function loadEconomy() {
+  const data = await apiGet('/api/economy');
+  if (!Array.isArray(data)) return;
+  const medals = ['🥇','🥈','🥉'];
+  document.getElementById('economy-top').innerHTML = data.slice(0,3).map((u,i) =>
+    `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:20px">${medals[i]||'#'+(i+1)}</span>
+      <div style="flex:1"><div style="font-weight:700">${u.username||u.userId}</div></div>
+      <span style="color:var(--yellow);font-weight:700">${u.coins} 🪙</span>
+    </div>`).join('') || '<div style="color:var(--muted);text-align:center;padding:20px">Aucune donnée</div>';
+  document.getElementById('economy-table').innerHTML = data.map((u,i) => `<tr>
+    <td style="color:var(--muted)">#${i+1}</td>
+    <td><div style="font-family:var(--font-head);font-weight:700">${u.username||'?'}</div><div style="font-size:10px;color:var(--muted)">${u.userId}</div></td>
+    <td><span style="color:var(--yellow);font-weight:700">${u.coins} 🪙</span></td>
+    <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:10px" onclick="document.getElementById('eco-user-id').value='${u.userId}'">Sélectionner</button></td>
+  </tr>`).join('');
+}
+async function giveCoins() {
+  const userId = document.getElementById('eco-user-id').value.trim();
+  const amount = parseInt(document.getElementById('eco-amount').value);
+  if (!userId || !amount) return toast('Remplissez tous les champs', 'error');
+  const r = await fetch(`${API}/api/economy/give`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ userId, amount }) });
+  const data = await r.json();
+  if (data.error) return toast(data.error, 'error');
+  toast(`✅ +${amount} 🪙 donné !`, 'success');
+  await loadEconomy();
+}
+async function removeCoinsAdmin() {
+  const userId = document.getElementById('eco-user-id').value.trim();
+  const amount = parseInt(document.getElementById('eco-amount').value);
+  if (!userId || !amount) return toast('Remplissez tous les champs', 'error');
+  const r = await fetch(`${API}/api/economy/remove`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ userId, amount }) });
+  const data = await r.json();
+  if (data.error) return toast(data.error, 'error');
+  toast(`✅ -${amount} 🪙 retiré !`, 'success');
+  await loadEconomy();
+}
+
+// ── FAQ ──
+let allFAQ = [];
+async function loadFAQ() {
+  allFAQ = await apiGet('/api/faq');
+  renderFAQ();
+}
+function renderFAQ() {
+  const container = document.getElementById('faq-list');
+  if (!Array.isArray(allFAQ) || !allFAQ.length) { container.innerHTML = '<div class="empty"><div class="empty-ico">❓</div><div class="empty-title">Aucune FAQ configurée</div></div>'; return; }
+  container.innerHTML = allFAQ.map(f => `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start">
+      <div style="flex:1">
+        <div style="font-family:var(--font-head);font-weight:700;font-size:14px;margin-bottom:6px">❓ ${f.question}</div>
+        <div style="font-size:12px;color:var(--muted)">${f.answer}</div>
+      </div>
+      <button class="btn btn-danger" style="padding:4px 8px;font-size:10px;flex-shrink:0" onclick="deleteFAQ('${f.id}')">🗑️</button>
+    </div>`).join('');
+}
+async function addFAQ() {
+  const question = document.getElementById('faq-question').value.trim();
+  const answer = document.getElementById('faq-answer').value.trim();
+  if (!question || !answer) return toast('Question et réponse requises', 'error');
+  const r = await fetch(`${API}/api/faq`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ question, answer }) });
+  const data = await r.json();
+  if (data.error) return toast(data.error, 'error');
+  closeModal('modal-add-faq');
+  document.getElementById('faq-question').value = '';
+  document.getElementById('faq-answer').value = '';
+  toast('✅ FAQ ajoutée !', 'success');
+  await loadFAQ();
+}
+async function deleteFAQ(id) {
+  if (!confirm('Supprimer cette FAQ ?')) return;
+  await fetch(`${API}/api/faq/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+  toast('FAQ supprimée', 'success');
+  await loadFAQ();
+}
+
+// ── Identité Bot ──
+document.addEventListener('DOMContentLoaded', () => {
+  const av = document.getElementById('bot-avatar');
+  if (av) {
+    av.addEventListener('input', () => {
+      const url = av.value.trim();
+      const preview = document.getElementById('bot-preview');
+      if (url) {
+        document.getElementById('bot-avatar-preview').src = url;
+        document.getElementById('bot-name-preview').textContent = document.getElementById('bot-nickname').value || 'ModBot';
+        document.getElementById('bot-bio-preview').textContent = document.getElementById('bot-bio').value || '';
+        preview.style.display = 'block';
+      } else { preview.style.display = 'none'; }
+    });
+  }
+});
+async function saveBotIdentity() {
+  const nickname = document.getElementById('bot-nickname').value.trim();
+  const avatarUrl = document.getElementById('bot-avatar').value.trim();
+  const bio = document.getElementById('bot-bio').value.trim();
+  const r = await fetch(`${API}/api/bot-identity`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ nickname, avatarUrl, bio }) });
+  const data = await r.json();
+  if (data.error) return toast(data.error, 'error');
+  toast('✅ Identité du bot mise à jour !', 'success');
+}
+
+
 </script>
 </body>
 </html>

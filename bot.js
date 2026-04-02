@@ -7,56 +7,27 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { MongoClient } = require('mongodb');
 const path = require('path');
-const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-// ─── CONFIGURATION (D'abord on définit les variables) ────────────────────────
+// ─── Config ───────────────────────────────────────────────────────────────────
 const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN';
 const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_CLIENT_ID';
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 const PANEL_URL = process.env.PANEL_URL || 'http://localhost:3000';
 const PORT = process.env.PORT || 3000;
-const MONGO_URL = process.env.MONGO_URL || 'mongodb+srv://cdevaux112_db_user:HWFfmBd9YY59ZQHk@ncl-bot.wqshtti.mongodb.net/?appName=NCL-BOT';
+const MONGO_URL = process.env.MONGO_URL || 'YOUR_MONGODB_URL';
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 const ACTIVITY_WEBHOOK = 'https://discord.com/api/webhooks/1489280601683922954/hD3sNwiIflznrj5fU1RxKbbf55IZIDqJnJN4JImpK1RCbq0aiudZ5bQD9tRcXDR7itu8';
 
-// Clé Gemini
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || 'AIzaSy...';
-
-// ─── INITIALISATION (Ensuite on utilise les variables) ───────────────────────
-
-// Initialisation de l'IA
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-const aiModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-// Initialisation MongoDB (Maintenant MONGO_URL existe !)
-const mongoClient = new MongoClient(MONGO_URL);
+// ─── MongoDB ──────────────────────────────────────────────────────────────────
 let db;
-
 async function connectDB() {
-    try {
-        await mongoClient.connect();
-        db = mongoClient.db();
-        console.log("✅ Connecté à MongoDB");
-    } catch (err) {
-        console.error("❌ Erreur MongoDB:", err);
-    }
+  const mongoClient = new MongoClient(MONGO_URL);
+  await mongoClient.connect();
+  db = mongoClient.db('modbot');
+  console.log('✅ MongoDB connecté !');
 }
-connectDB();
+function col(name) { return db.collection(name); }
 
-console.log("✅ Système IA configuré.");
-
-// ─── FONCTIONS IA ───────────────────────────────────────────────────────────
-async function callAI(prompt, systemPrompt = '') {
-    if (!GEMINI_API_KEY) return null;
-    try {
-        const finalPrompt = `${systemPrompt}\n\nQuestion: ${prompt}`;
-        const result = await aiModel.generateContent(finalPrompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Erreur IA:", error);
-        return null;
-    }
-}
 // ─── Admin Levels ─────────────────────────────────────────────────────────────
 const ADMIN_LEVELS = {
   1: { name: 'Modérateur', color: 0x57F287, perms: ['warn', 'mute'] },
@@ -272,35 +243,32 @@ async function sendActivityWebhook(content) {
   } catch {}
 }
 
-// ─── PREMIUM: IA (GEMINI API) ────────────────────────────────────────────────
+// ─── PREMIUM: IA (Claude API) ────────────────────────────────────────────────
 async function callAI(prompt, systemPrompt = '') {
-  // On vérifie si la clé Gemini est là
-  if (!process.env.GEMINI_API_KEY && !ANTHROPIC_API_KEY) return null; 
-
+  if (!ANTHROPIC_API_KEY) return null;
   try {
-    // On construit le prompt complet (Système + Utilisateur)
-    const fullPrompt = `${systemPrompt || 'Tu es un assistant de modération Discord. Réponds en français, sois concis.'}\n\nQuestion: ${prompt}`;
-    
-    const result = await model.generateContent(fullPrompt);
-    const response = await result.response;
-    return response.text() || null;
-  } catch (error) { 
-    console.error("Erreur IA:", error);
-    return null; 
-  }
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt || 'Tu es un assistant de modération Discord. Réponds en français, sois concis.',
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    return data.content?.[0]?.text || null;
+  } catch { return null; }
 }
 
 async function checkAIModeration(message, config) {
-  // On adapte la condition pour Gemini
-  if (!config.aiModeration || (!process.env.GEMINI_API_KEY && !ANTHROPIC_API_KEY)) return false;
-
+  if (!config.aiModeration || !ANTHROPIC_API_KEY) return false;
   const response = await callAI(
-    `Message Discord à analyser: "${message.content}"\nEst-ce une insulte déguisée, du harcèlement ou du contenu toxique ? Réponds SEULEMENT par "OUI" ou "NON".`,
+    `Message Discord à analyser: "${message.content}"\nC'est une insulte déguisée, du harcèlement ou du contenu toxique? Réponds SEULEMENT par "OUI" ou "NON".`,
     'Tu es un modérateur Discord. Analyse si un message est toxique ou du harcèlement. Réponds UNIQUEMENT par OUI ou NON.'
   );
-
-  // On nettoie la réponse au cas où l'IA rajoute un point ou un espace
-  return response?.trim().toUpperCase().includes('OUI');
+  return response?.trim().toUpperCase() === 'OUI';
 }
 
 // ─── PREMIUM: Captcha ─────────────────────────────────────────────────────────
@@ -1234,11 +1202,7 @@ async function handleBlackjackButton(interaction) {
     return interaction.update({ embeds: [new EmbedBuilder().setTitle('🃏 Blackjack — Résultat').setColor(color).addFields({ name: '👤 Vos cartes', value: `${playerHand.join(' ')} = **${pv}**`, inline: true }, { name: '🤖 Dealer', value: `${dealerHand.join(' ')} = **${dv}**`, inline: true }, { name: '📊 Résultat', value: result }, { name: '💰 Nouveau solde', value: `${newSolde} 🪙` })], components: [] });
   }
 }
-// Cette fonction permet d'utiliser col('nom') partout dans ton code sans erreur
-const col = (name) => db.collection(name);
 
-// ─── Express API ──────────────────────────────────────────────────────────────
-// ... la suite de ton code
 // ─── Express API ──────────────────────────────────────────────────────────────
 const app = express();
 app.use(express.json());
@@ -1327,6 +1291,117 @@ app.post('/api/send-credentials', authMiddleware, async (req, res) => {
 app.get('/api/licence', authMiddleware, async (req, res) => {
   const lic = await checkLicence(req.user.guildId);
   res.json(lic);
+});
+
+
+// ─── Premium Config (Welcome/Leave/FAQ) ──────────────────────────────────────
+app.get('/api/premium-config', authMiddleware, async (req, res) => {
+  const config = await col('mod_configs').findOne({ guildId: req.user.guildId }) || {};
+  res.json({
+    welcomeEnabled: config.welcomeEnabled || false,
+    welcomeChannel: config.welcomeChannel || '',
+    welcomeMessage: config.welcomeMessage || '',
+    welcomeMessages: config.welcomeMessages || [],
+    leaveEnabled: config.leaveEnabled || false,
+    leaveChannel: config.leaveChannel || '',
+    leaveMessage: config.leaveMessage || '',
+    captchaEnabled: config.captchaEnabled || false,
+    captchaChannel: config.captchaChannel || '',
+    captchaRole: config.captchaRole || '',
+    aiModeration: config.aiModeration || false,
+    faqEnabled: config.faqEnabled || false,
+  });
+});
+
+app.post('/api/premium-config', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' });
+  const { guildId } = req.user;
+  const { welcomeEnabled, welcomeChannel, welcomeMessage, welcomeMessages, leaveEnabled, leaveChannel, leaveMessage, captchaEnabled, captchaChannel, captchaRole, aiModeration, faqEnabled } = req.body;
+  await col('mod_configs').updateOne({ guildId }, { $set: { welcomeEnabled, welcomeChannel, welcomeMessage, welcomeMessages, leaveEnabled, leaveChannel, leaveMessage, captchaEnabled, captchaChannel, captchaRole, aiModeration, faqEnabled } }, { upsert: true });
+  res.json({ success: true });
+});
+
+// ─── Bot Identity (PREMIUM) ───────────────────────────────────────────────────
+app.post('/api/bot-identity', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' });
+  const { guildId } = req.user;
+  const { nickname, avatarUrl, bio } = req.body;
+  try {
+    const guild = client.guilds.cache.get(guildId);
+    if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
+    const me = guild.members.me || await guild.members.fetch(client.user.id);
+    if (nickname !== undefined) await me.setNickname(nickname || null).catch(() => {});
+    if (avatarUrl) {
+      await client.user.setAvatar(avatarUrl).catch(() => {});
+    }
+    if (bio !== undefined) {
+      await client.user.edit({ bio: bio || '' }).catch(() => {});
+    }
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ─── FAQ Management ───────────────────────────────────────────────────────────
+app.get('/api/faq', authMiddleware, async (req, res) => {
+  res.json(await col('faq').find({ guildId: req.user.guildId }).toArray());
+});
+app.post('/api/faq', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' });
+  const { question, answer } = req.body;
+  const item = { id: require('uuid').v4().slice(0, 8), guildId: req.user.guildId, question, answer, createdBy: req.user.username, createdAt: new Date().toISOString() };
+  await col('faq').insertOne(item);
+  await col('mod_configs').updateOne({ guildId: req.user.guildId }, { $set: { faqEnabled: true } }, { upsert: true });
+  res.json(item);
+});
+app.delete('/api/faq/:id', authMiddleware, async (req, res) => {
+  await col('faq').deleteOne({ id: req.params.id, guildId: req.user.guildId });
+  res.json({ success: true });
+});
+
+// ─── Economy Admin ────────────────────────────────────────────────────────────
+app.post('/api/economy/give', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' });
+  const { userId, amount } = req.body;
+  await addCoins(req.user.guildId, userId, '', parseInt(amount));
+  res.json({ success: true });
+});
+app.post('/api/economy/remove', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' });
+  const { userId, amount } = req.body;
+  const ok = await removeCoins(req.user.guildId, userId, parseInt(amount));
+  res.json({ success: ok, error: ok ? null : 'Solde insuffisant' });
+});
+
+// ─── Shop Management ──────────────────────────────────────────────────────────
+app.post('/api/shop', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Réservé aux Super Admins' });
+  const { nom, prix, type, roleId, description } = req.body;
+  const item = { id: require('uuid').v4().slice(0, 8), guildId: req.user.guildId, nom, prix: parseInt(prix), type, roleId: roleId || null, description: description || '', createdAt: new Date().toISOString() };
+  await col('shop').insertOne(item);
+  res.json(item);
+});
+app.patch('/api/shop/:id', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Réservé aux Super Admins' });
+  await col('shop').updateOne({ id: req.params.id, guildId: req.user.guildId }, { $set: req.body });
+  res.json({ success: true });
+});
+app.delete('/api/shop/:id', authMiddleware, async (req, res) => {
+  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Réservé aux Super Admins' });
+  await col('shop').deleteOne({ id: req.params.id, guildId: req.user.guildId });
+  res.json({ success: true });
+});
+
+// ─── Licence status ───────────────────────────────────────────────────────────
+app.get('/api/licence', authMiddleware, async (req, res) => {
+  const lic = await checkLicence(req.user.guildId);
+  res.json(lic);
+});
+
+// ─── Nickname history ─────────────────────────────────────────────────────────
+app.get('/api/nickname-history/:userId', authMiddleware, async (req, res) => {
+  res.json(await col('nickname_history').find({ guildId: req.user.guildId, userId: req.params.userId }).sort({ changedAt: -1 }).limit(20).toArray());
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────

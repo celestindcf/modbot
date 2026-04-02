@@ -1234,7 +1234,12 @@ async function handleBlackjackButton(interaction) {
     return interaction.update({ embeds: [new EmbedBuilder().setTitle('🃏 Blackjack — Résultat').setColor(color).addFields({ name: '👤 Vos cartes', value: `${playerHand.join(' ')} = **${pv}**`, inline: true }, { name: '🤖 Dealer', value: `${dealerHand.join(' ')} = **${dv}**`, inline: true }, { name: '📊 Résultat', value: result }, { name: '💰 Nouveau solde', value: `${newSolde} 🪙` })], components: [] });
   }
 }
+// Cette fonction permet d'utiliser col('nom') partout dans ton code sans erreur
+const col = (name) => db.collection(name);
 
+// ─── Express API ──────────────────────────────────────────────────────────────
+const app = express();
+// ... la suite de ton code
 // ─── Express API ──────────────────────────────────────────────────────────────
 const app = express();
 app.use(express.json());

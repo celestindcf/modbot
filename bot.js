@@ -962,14 +962,28 @@ async function handleCommand(interaction, licence) {
   if (commandName === 'lockdown') {
     if (!await requirePremium()) return;
     const action = options.getString('action');
-    const textChannels = guild.channels.cache.filter(c => c.type === ChannelType.GuildText);
+    const textChannels = guild.channels.cache.filter(c => c.type === ChannelType.GuildText && !c.isThread());
     if (action === 'on') {
       lockdownActive.set(guildId, true);
-      for (const [, ch] of textChannels) await ch.permissionOverwrites.edit(guild.id, { SendMessages: false }).catch(() => {});
-      await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🔒 Lockdown activé').setColor(0xED4245).setDescription('Tous les salons textuels sont verrouillés.')] });
+      let count = 0;
+      for (const [, ch] of textChannels) {
+        try {
+          await ch.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: false });
+          count++;
+        } catch {}
+      }
+      await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🔒 Lockdown activé').setColor(0xED4245).setDescription(`${count} salons verrouillés. Personne ne peut écrire.`).setTimestamp()] });
     } else {
       lockdownActive.delete(guildId);
-      for (const [, ch] of textChannels) await ch.permissionOverwrites.edit(guild.id, { SendMessages: null }).catch(() => {});
+      let count = 0;
+      for (const [, ch] of textChannels) {
+        try {
+          // Remove the SendMessages overwrite (reset to default)
+          const existing = ch.permissionOverwrites.cache.get(guild.roles.everyone.id);
+          if (existing) await existing.delete();
+          count++;
+        } catch {}
+      }
       await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🔓 Lockdown désactivé').setColor(0x57F287).setDescription('Tous les salons sont déverrouillés.')] });
     }
     return;

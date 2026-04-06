@@ -9,54 +9,58 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#080b12;--surface:#0e1219;--surface2:#141a24;--border:#1e2535;
-  --red:#ff4757;--yellow:#ffd32a;--green:#2ed573;--blue:#5352ed;--purple:#a29bfe;--pink:#fd79a8;--orange:#ff9f43;
+  --red:#ff4757;--yellow:#ffd32a;--green:#2ed573;--blue:#5352ed;--purple:#a29bfe;
+  --pink:#fd79a8;--orange:#ff9f43;--gold:#FFD700;
   --text:#e2e8f0;--muted:#4a5568;
   --font-head:'Outfit',sans-serif;--font-mono:'JetBrains Mono',monospace;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 40% at 20% 0%,rgba(83,82,237,0.06) 0%,transparent 60%),radial-gradient(ellipse 40% 30% at 80% 100%,rgba(255,71,87,0.04) 0%,transparent 60%);pointer-events:none;z-index:0}
 
-/* ── AUTH ── */
+/* AUTH */
 #auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;z-index:1}
 .auth-wrap{width:420px}
 .auth-brand{text-align:center;margin-bottom:32px}
 .auth-brand h1{font-family:var(--font-head);font-size:36px;font-weight:900;letter-spacing:-1px}
 .auth-brand h1 span{color:var(--red)}
-.auth-brand p{color:var(--muted);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-top:6px}
+.auth-brand p{color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase;margin-top:6px}
 .auth-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative}
 .auth-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),var(--purple),var(--blue))}
 .auth-tabs{display:flex;border-bottom:1px solid var(--border)}
-.auth-tab{flex:1;padding:14px;text-align:center;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:var(--muted);background:none;border:none;letter-spacing:0.05em;text-transform:uppercase;transition:all .2s;border-bottom:2px solid transparent}
+.auth-tab{flex:1;padding:14px;text-align:center;cursor:pointer;font-family:var(--font-mono);font-size:11px;color:var(--muted);background:none;border:none;letter-spacing:.05em;text-transform:uppercase;transition:all .2s;border-bottom:2px solid transparent}
 .auth-tab.active{color:var(--red);border-bottom-color:var(--red)}
 .auth-body{padding:28px}
-.guild-badge{margin-bottom:20px;padding:12px 16px;background:rgba(83,82,237,0.08);border:1px solid rgba(83,82,237,0.2);border-radius:6px;font-size:11px;color:var(--purple)}
+.guild-badge{margin-bottom:20px;padding:12px 16px;background:rgba(83,82,237,.08);border:1px solid rgba(83,82,237,.2);border-radius:6px;font-size:11px;color:var(--purple)}
 .guild-badge strong{display:block;font-size:14px;font-family:var(--font-head);color:var(--text);margin-top:4px}
 .field{margin-bottom:14px}
-.field label{display:block;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.field label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .field input{width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:13px;outline:none;transition:border-color .2s}
 .field input:focus{border-color:var(--blue)}
 .btn-auth{width:100%;padding:12px;background:var(--red);color:white;border:none;border-radius:6px;cursor:pointer;font-family:var(--font-head);font-size:14px;font-weight:700;transition:opacity .2s;margin-top:6px}
 .btn-auth:hover{opacity:.85}
 .auth-err{display:none;padding:10px 14px;background:rgba(255,71,87,.1);border:1px solid rgba(255,71,87,.3);border-radius:6px;color:var(--red);font-size:12px;margin-bottom:14px}
 
-/* ── PUBLIC FICHE ── */
+/* PUBLIC FICHE */
 #public-fiche{display:none;min-height:100vh;padding:40px 20px;position:relative;z-index:1;max-width:700px;margin:0 auto}
 .public-brand{text-align:center;margin-bottom:28px}
 .public-brand h1{font-family:var(--font-head);font-size:28px;font-weight:900}
 .public-brand h1 span{color:var(--red)}
 
-/* ── LAYOUT ── */
+/* APP LAYOUT */
 #app{display:none;min-height:100vh;position:relative;z-index:1}
 .sidebar{position:fixed;left:0;top:0;bottom:0;width:230px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:100}
 .sidebar-top{padding:20px;border-bottom:1px solid var(--border)}
-.sidebar-top h1{font-family:var(--font-head);font-size:20px;font-weight:900;letter-spacing:-0.5px}
+.sidebar-top h1{font-family:var(--font-head);font-size:20px;font-weight:900;letter-spacing:-.5px}
 .sidebar-top h1 span{color:var(--red)}
 .sidebar-guild{font-size:11px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sidebar-nav{flex:1;padding:12px 0;overflow-y:auto}
 .nav-label{padding:10px 18px 4px;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted)}
+.nav-label.gold{color:var(--gold)}
 .nav-item{display:flex;align-items:center;gap:10px;padding:10px 18px;cursor:pointer;font-size:12px;color:var(--muted);transition:all .15s;border-left:2px solid transparent;text-decoration:none}
 .nav-item:hover{background:rgba(255,255,255,.03);color:var(--text)}
 .nav-item.active{color:var(--red);background:rgba(255,71,87,.06);border-left-color:var(--red)}
+.nav-item.gold-item{color:var(--gold)}
+.nav-item.gold-item.active{color:var(--gold);background:rgba(255,215,0,.06);border-left-color:var(--gold)}
 .nav-item .ico{font-size:15px;width:20px;text-align:center}
 .sidebar-foot{padding:14px 18px;border-top:1px solid var(--border)}
 .user-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
@@ -72,7 +76,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .ph-title{font-family:var(--font-head);font-size:24px;font-weight:900;letter-spacing:-.5px}
 .ph-title small{font-size:11px;color:var(--muted);font-weight:400;letter-spacing:0;display:block;margin-top:3px;font-family:var(--font-mono)}
 
-/* ── STATS ── */
+/* PREMIUM BADGE */
+.premium-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.3);border-radius:4px;font-size:10px;color:var(--gold);font-weight:700;margin-left:8px}
+.premium-lock{background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.2);border-radius:6px;padding:16px;text-align:center;margin-bottom:16px}
+.premium-lock p{color:var(--muted);font-size:12px;margin-top:4px}
+
+/* STATS */
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:16px;position:relative;overflow:hidden}
 .stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
@@ -84,20 +93,20 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .stat-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .stat-val{font-family:var(--font-head);font-size:32px;font-weight:900;letter-spacing:-1px;line-height:1}
 
-/* ── CARDS ── */
+/* CARDS */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:6px;margin-bottom:18px;overflow:hidden}
 .card-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .card-title{font-family:var(--font-head);font-size:14px;font-weight:700}
 .card-body{padding:18px}
 
-/* ── TABLE ── */
+/* TABLE */
 .dt{width:100%;border-collapse:collapse}
 .dt th{text-align:left;padding:9px 14px;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border)}
 .dt td{padding:12px 14px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle}
 .dt tr:last-child td{border-bottom:none}
 .dt tr:hover td{background:rgba(255,255,255,.015)}
 
-/* ── BADGES ── */
+/* BADGES */
 .badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;font-family:var(--font-head)}
 .b-warn{background:rgba(255,211,42,.12);color:var(--yellow)}
 .b-mute{background:rgba(253,121,168,.12);color:var(--pink)}
@@ -108,31 +117,31 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .b-green{background:rgba(46,213,115,.12);color:var(--green)}
 .b-red{background:rgba(255,71,87,.12);color:var(--red)}
 .b-yellow{background:rgba(255,211,42,.12);color:var(--yellow)}
-.b-orange{background:rgba(255,159,67,.12);color:var(--orange)}
+.b-gold{background:rgba(255,215,0,.12);color:var(--gold)}
 
-/* ── BUTTONS ── */
+/* BUTTONS */
 .btn{padding:7px 14px;border-radius:6px;cursor:pointer;font-family:var(--font-mono);font-size:11px;border:none;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
 .btn-red{background:var(--red);color:white}.btn-red:hover{opacity:.85}
 .btn-ghost{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{background:rgba(255,255,255,.08)}
 .btn-danger{background:rgba(255,71,87,.1);color:var(--red);border:1px solid rgba(255,71,87,.3)}.btn-danger:hover{background:rgba(255,71,87,.2)}
 .btn-blue{background:rgba(83,82,237,.2);color:var(--purple);border:1px solid rgba(83,82,237,.3)}
 .btn-green{background:rgba(46,213,115,.2);color:var(--green);border:1px solid rgba(46,213,115,.3)}
-.btn-orange{background:rgba(255,159,67,.2);color:var(--orange);border:1px solid rgba(255,159,67,.3)}
+.btn-gold{background:rgba(255,215,0,.2);color:var(--gold);border:1px solid rgba(255,215,0,.3)}
 
-/* ── SEARCH ── */
+/* SEARCH */
 .search-bar{display:flex;gap:10px;margin-bottom:18px}
 .search-bar input{flex:1;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none}
 .search-bar input:focus{border-color:var(--blue)}
 .search-bar select{padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none}
 
-/* ── USER CARD ── */
+/* USER CARD */
 .user-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:12px;display:flex;gap:14px;align-items:flex-start}
 .user-card-av{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;font-family:var(--font-head);flex-shrink:0}
 .user-card-info{flex:1}
 .user-card-name{font-family:var(--font-head);font-weight:700;font-size:15px;margin-bottom:6px}
 .user-card-stats{display:flex;gap:8px;flex-wrap:wrap}
 
-/* ── FICHE ── */
+/* FICHE */
 .fiche-header{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px;margin-bottom:18px;display:flex;gap:20px;align-items:center}
 .fiche-av{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:28px;font-family:var(--font-head);flex-shrink:0}
 .fiche-counts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
@@ -140,22 +149,21 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .fiche-count-val{font-family:var(--font-head);font-size:28px;font-weight:900;line-height:1;margin-bottom:4px}
 .fiche-count-label{font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
 
-/* ── XP BAR ── */
+/* XP BAR */
 .xp-bar-wrap{background:var(--surface2);height:8px;border-radius:4px;overflow:hidden;margin-top:6px}
 .xp-bar{height:100%;background:linear-gradient(90deg,var(--yellow),var(--orange));border-radius:4px;transition:width .5s}
 .xp-rank-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;display:flex;align-items:center;gap:16px;margin-bottom:10px}
-.xp-rank-pos{font-family:var(--font-head);font-size:22px;font-weight:900;width:36px;text-align:center}
 .xp-rank-info{flex:1}
 .xp-rank-name{font-family:var(--font-head);font-weight:700;font-size:14px}
 .xp-rank-level{font-size:11px;color:var(--muted);margin-top:2px}
 
-/* ── TICKET CARD ── */
+/* TICKET CARD */
 .ticket-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .ticket-info{flex:1}
 .ticket-num{font-family:var(--font-head);font-weight:700;font-size:14px}
 .ticket-meta{font-size:11px;color:var(--muted);margin-top:3px}
 
-/* ── MODAL ── */
+/* MODAL */
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(4px)}
 .modal-ov.open{opacity:1;pointer-events:all}
 .modal{width:480px;max-height:85vh;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;transform:translateY(16px);transition:transform .2s;position:relative}
@@ -163,8 +171,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),var(--purple))}
 .modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .modal-title{font-family:var(--font-head);font-size:16px;font-weight:800}
-.modal-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1}
-.modal-x:hover{color:var(--text)}
+.modal-x{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1}.modal-x:hover{color:var(--text)}
 .modal-body{padding:22px}
 .form-field{margin-bottom:14px}
 .form-field label{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -172,7 +179,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .form-field input:focus,.form-field select:focus,.form-field textarea:focus{border-color:var(--blue)}
 .form-field select option{background:var(--surface2)}
 
-/* ── CREDENTIALS BOX ── */
+/* CRED BOX */
 .cred-box{background:rgba(46,213,115,.05);border:1px solid rgba(46,213,115,.3);border-radius:8px;padding:20px;margin-top:16px}
 .cred-box h3{font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--green);margin-bottom:12px}
 .cred-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--surface2);border-radius:6px;margin-bottom:8px}
@@ -180,7 +187,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .cred-val{font-family:var(--font-head);font-weight:700;font-size:14px;color:var(--text)}
 .cred-warn{font-size:11px;color:var(--yellow);margin-top:10px;padding:8px 12px;background:rgba(255,211,42,.05);border:1px solid rgba(255,211,42,.2);border-radius:6px}
 
-/* ── TOAST ── */
+/* TOAST */
 .toasts{position:fixed;bottom:18px;right:18px;z-index:999;display:flex;flex-direction:column;gap:7px}
 .toast{padding:11px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:12px;max-width:300px;display:flex;align-items:center;gap:8px;animation:tIn .3s ease}
 .toast.success{border-left:3px solid var(--green)}
@@ -192,8 +199,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .empty{text-align:center;padding:40px 20px;color:var(--muted)}
 .empty-ico{font-size:40px;margin-bottom:10px;opacity:.4}
 .empty-title{font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
-
-/* ── GRID 2 ── */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 
 @media(max-width:900px){
@@ -210,10 +215,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-wrap">
-    <div class="auth-brand">
-      <h1>Mod<span>Bot</span></h1>
-      <p>Panel de modération — Staff Access</p>
-    </div>
+    <div class="auth-brand"><h1>Mod<span>Bot</span></h1><p>Panel de modération — Staff Access</p></div>
     <div class="auth-box">
       <div class="auth-tabs">
         <button class="auth-tab active" onclick="switchTab('login')">Connexion</button>
@@ -238,7 +240,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 </div>
 
-<!-- FICHE PUBLIQUE -->
+<!-- PUBLIC FICHE -->
 <div id="public-fiche">
   <div class="public-brand"><h1>Mod<span>Bot</span></h1><p style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-top:6px">Ma fiche de sanctions</p></div>
   <div id="public-fiche-content"></div>
@@ -262,15 +264,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <a class="nav-item" id="nav-staff" onclick="showPage('staff',this)"><span class="ico">🛡️</span><span>Staff</span></a>
       <a class="nav-item" id="nav-users" onclick="showPage('users',this)"><span class="ico">👥</span><span>Comptes</span></a>
       <a class="nav-item" id="nav-addadmin" onclick="showPage('addadmin',this)"><span class="ico">➕</span><span>Ajouter Admin</span></a>
-
       <div class="nav-label">Configuration</div>
       <a class="nav-item" id="nav-ticketconfig" onclick="showPage('ticketconfig',this)"><span class="ico">🎫</span><span>Config Tickets</span></a>
-      <div class="nav-label" style="color:var(--yellow)">⭐ Premium</div>
-      <a class="nav-item" id="nav-premium" onclick="showPage('premium',this)" style="color:var(--yellow)"><span class="ico">⭐</span><span>Config Premium</span></a>
-      <a class="nav-item" id="nav-shop" onclick="showPage('shop',this)"><span class="ico">🏪</span><span>Boutique</span></a>
-      <a class="nav-item" id="nav-economy" onclick="showPage('economy',this)"><span class="ico">🪙</span><span>Économie</span></a>
-      <a class="nav-item" id="nav-faq" onclick="showPage('faq',this)"><span class="ico">❓</span><span>FAQ Auto</span></a>
-      <a class="nav-item" id="nav-identity" onclick="showPage('identity',this)"><span class="ico">🤖</span><span>Identité Bot</span></a>
+      <div class="nav-label gold">⭐ Premium</div>
+      <a class="nav-item gold-item" id="nav-premium" onclick="showPage('premium',this)"><span class="ico">⭐</span><span>Config Premium</span></a>
+      <a class="nav-item gold-item" id="nav-shop" onclick="showPage('shop',this)"><span class="ico">🏪</span><span>Boutique</span></a>
+      <a class="nav-item gold-item" id="nav-economy" onclick="showPage('economy',this)"><span class="ico">🪙</span><span>Économie</span></a>
+      <a class="nav-item gold-item" id="nav-faq" onclick="showPage('faq',this)"><span class="ico">❓</span><span>FAQ Auto</span></a>
+      <a class="nav-item gold-item" id="nav-identity" onclick="showPage('identity',this)"><span class="ico">🤖</span><span>Identité Bot</span></a>
     </div>
     <div class="sidebar-foot">
       <div class="user-row">
@@ -286,57 +287,203 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
   <main class="main">
 
-    <!-- ── PREMIUM CONFIG ── -->
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="ph">
+        <div class="ph-title">Dashboard <small>Vue d'ensemble</small></div>
+        <button class="btn btn-red" onclick="openModal('modal-sanction')">+ Sanctionner</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Avertissements</div><div class="stat-val" id="s-warns">0</div></div>
+        <div class="stat"><div class="stat-label">Mutes</div><div class="stat-val" id="s-mutes">0</div></div>
+        <div class="stat"><div class="stat-label">Kicks</div><div class="stat-val" id="s-kicks">0</div></div>
+        <div class="stat"><div class="stat-label">Bans</div><div class="stat-val" id="s-bans">0</div></div>
+        <div class="stat"><div class="stat-label">Total</div><div class="stat-val" id="s-total">0</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><div class="card-title">🕐 Dernières sanctions</div></div>
+          <table class="dt"><thead><tr><th>Type</th><th>Membre</th><th>Raison</th><th>Date</th></tr></thead>
+          <tbody id="recent-cases"></tbody></table>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">🏆 Top modérateurs</div></div>
+          <div class="card-body" id="top-mods"></div>
+        </div>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><div class="card-title">🎫 Tickets récents</div></div>
+          <div class="card-body" id="dash-tickets"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">⭐ Top XP</div></div>
+          <div class="card-body" id="dash-xp"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SANCTIONS -->
+    <div class="page" id="page-cases">
+      <div class="ph">
+        <div class="ph-title">Sanctions <small>Historique complet</small></div>
+        <button class="btn btn-red" onclick="openModal('modal-sanction')">+ Sanctionner</button>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="search-cases" placeholder="Rechercher..." oninput="filterCases()">
+        <select id="filter-type" onchange="filterCases()">
+          <option value="">Tous les types</option>
+          <option value="warn">⚠️ Warn</option>
+          <option value="mute">🔇 Mute</option>
+          <option value="kick">👢 Kick</option>
+          <option value="ban">🔨 Ban</option>
+          <option value="unban">✅ Unban</option>
+          <option value="unmute">🔊 Unmute</option>
+        </select>
+      </div>
+      <div class="card">
+        <table class="dt"><thead><tr><th>#</th><th>Type</th><th>Membre</th><th>Raison</th><th>Modérateur</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody id="all-cases"></tbody></table>
+      </div>
+    </div>
+
+    <!-- MEMBRES -->
+    <div class="page" id="page-members">
+      <div class="ph"><div class="ph-title">Membres <small>Fiches individuelles</small></div></div>
+      <div class="search-bar"><input type="text" id="search-members" placeholder="Rechercher un membre..." oninput="filterMembers()"></div>
+      <div id="members-list"></div>
+    </div>
+
+    <!-- TICKETS -->
+    <div class="page" id="page-tickets">
+      <div class="ph">
+        <div class="ph-title">Tickets <small>Support membres</small></div>
+        <select id="ticket-filter" onchange="renderTickets()" style="padding:7px 12px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;font-size:12px;outline:none">
+          <option value="">Tous</option><option value="open">Ouverts</option><option value="closed">Fermés</option>
+        </select>
+      </div>
+      <div id="tickets-list"></div>
+    </div>
+
+    <!-- XP -->
+    <div class="page" id="page-xp">
+      <div class="ph"><div class="ph-title">Classement XP <small>Top membres</small></div></div>
+      <div id="xp-list"></div>
+    </div>
+
+    <!-- STAFF -->
+    <div class="page" id="page-staff">
+      <div class="ph"><div class="ph-title">Staff <small>Équipe de modération</small></div></div>
+      <div class="card">
+        <table class="dt"><thead><tr><th>Membre</th><th>Niveau</th><th>Permissions</th><th>Ajouté le</th><th>Actions</th></tr></thead>
+        <tbody id="staff-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="ph"><div class="ph-title">Comptes Staff <small>Gestion des accès</small></div></div>
+      <div class="card">
+        <table class="dt"><thead><tr><th>Utilisateur</th><th>Rôle</th><th>Niveau</th><th>Créé le</th><th>Actions</th></tr></thead>
+        <tbody id="users-table"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ADD ADMIN -->
+    <div class="page" id="page-addadmin">
+      <div class="ph"><div class="ph-title">Ajouter Admin <small>Créer un accès panel</small></div></div>
+      <div class="card" style="max-width:520px">
+        <div class="card-head"><div class="card-title">➕ Nouveau compte staff</div></div>
+        <div class="card-body">
+          <div class="form-field"><label>Nom d'utilisateur</label><input type="text" id="na-user" placeholder="pseudo"></div>
+          <div class="form-field"><label>Mot de passe (vide = généré)</label><input type="text" id="na-pass" placeholder="Laisser vide pour générer"></div>
+          <div class="form-field"><label>Niveau admin</label>
+            <select id="na-level">
+              <option value="1">Niveau 1 — Modérateur</option>
+              <option value="2">Niveau 2 — Senior Mod</option>
+              <option value="3">Niveau 3 — Admin</option>
+              <option value="4">Niveau 4 — Super Admin</option>
+            </select>
+          </div>
+          <div class="form-field"><label>ID Discord (pour MP)</label><input type="text" id="na-discord-id" placeholder="ID Discord du membre"></div>
+          <button class="btn btn-green" style="width:100%;justify-content:center;padding:12px;font-size:13px;font-weight:700" onclick="creerAdmin()">✅ Créer & envoyer en MP</button>
+          <div id="cred-result" style="display:none"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKET CONFIG -->
+    <div class="page" id="page-ticketconfig">
+      <div class="ph">
+        <div class="ph-title">Config Tickets <small>Types & messages</small></div>
+        <button class="btn btn-red" onclick="saveTicketConfig()">💾 Sauvegarder</button>
+      </div>
+      <div class="card" style="max-width:700px;margin-bottom:20px">
+        <div class="card-head"><div class="card-title">📩 Messages globaux</div></div>
+        <div class="card-body">
+          <div class="form-field"><label>Message d'accueil (variable: {user})</label><textarea id="tc-welcome" rows="3" placeholder="Bonjour {user} ! Notre équipe vous répondra..."></textarea></div>
+          <div class="form-field"><label>MP à l'ouverture (variables: {user}, {type}, {number}, {channel})</label><textarea id="tc-dm" rows="3" placeholder="Bonjour {user} ! Votre ticket {type} {number} est ouvert."></textarea></div>
+        </div>
+      </div>
+      <div class="card" style="max-width:700px">
+        <div class="card-head"><div class="card-title">🗂️ Types de tickets</div><button class="btn btn-ghost" onclick="addTicketType()">+ Ajouter</button></div>
+        <div class="card-body"><div id="ticket-types-list"></div></div>
+      </div>
+    </div>
+
+    <!-- ══ PREMIUM CONFIG ══ -->
     <div class="page" id="page-premium">
       <div class="ph">
-        <div class="ph-title">⭐ Configuration Premium <small>Fonctionnalités exclusives</small></div>
+        <div class="ph-title">⭐ Config Premium <small>Fonctionnalités exclusives</small></div>
+        <button class="btn btn-gold" onclick="savePremiumConfig()">💾 Sauvegarder</button>
+      </div>
+      <div id="premium-lock-notice" style="display:none" class="premium-lock">
+        <span style="font-size:24px">🔒</span>
+        <p>Ce serveur n'a pas de licence Premium. Ces options sont visibles mais non sauvegardées.</p>
       </div>
       <div class="grid2" style="margin-bottom:18px">
         <div class="card">
-          <div class="card-head"><div class="card-title">✨ Message d'Arrivée</div></div>
+          <div class="card-head"><div class="card-title">✨ Message d'Arrivée <span class="premium-badge">⭐ Premium</span></div></div>
           <div class="card-body">
             <div class="form-field"><label>Activer</label><select id="p-welcome-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
             <div class="form-field"><label>ID du salon</label><input type="text" id="p-welcome-channel" placeholder="ID du salon de bienvenue"></div>
             <div class="form-field"><label>Message ({user}, {server}, {count})</label><textarea id="p-welcome-msg" rows="2" placeholder="Bienvenue {user} sur {server} !"></textarea></div>
-            <div class="form-field"><label>Messages aléatoires (un par ligne)</label><textarea id="p-welcome-msgs" rows="4" placeholder="Message 1&#10;Message 2&#10;Message 3"></textarea></div>
+            <div class="form-field"><label>Messages aléatoires — 1 par ligne (remplace le message unique)</label><textarea id="p-welcome-msgs" rows="4" placeholder="Bienvenue {user} !&#10;Hey {user}, content de te voir !&#10;{user} vient de rejoindre !"></textarea></div>
           </div>
         </div>
         <div class="card">
-          <div class="card-head"><div class="card-title">👋 Message de Départ</div></div>
+          <div class="card-head"><div class="card-title">👋 Message de Départ <span class="premium-badge">⭐ Premium</span></div></div>
           <div class="card-body">
             <div class="form-field"><label>Activer</label><select id="p-leave-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
-            <div class="form-field"><label>ID du salon</label><input type="text" id="p-leave-channel" placeholder="ID du salon de départ"></div>
-            <div class="form-field"><label>Message ({user}, {server}, {count})</label><textarea id="p-leave-msg" rows="2" placeholder="{user} a quitté {server}."></textarea></div>
+            <div class="form-field"><label>ID du salon</label><input type="text" id="p-leave-channel" placeholder="ID du salon"></div>
+            <div class="form-field"><label>Message ({user}, {server}, {count})</label><textarea id="p-leave-msg" rows="3" placeholder="{user} a quitté {server}. Il reste {count} membres."></textarea></div>
           </div>
         </div>
       </div>
-      <div class="grid2" style="margin-bottom:18px">
+      <div class="grid2">
         <div class="card">
-          <div class="card-head"><div class="card-title">🔐 Captcha de Vérification</div></div>
+          <div class="card-head"><div class="card-title">🔐 Captcha <span class="premium-badge">⭐ Premium</span></div></div>
           <div class="card-body">
-            <div class="form-field"><label>Activer le captcha</label><select id="p-captcha-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
-            <div class="form-field"><label>ID du salon captcha</label><input type="text" id="p-captcha-channel" placeholder="ID du salon"></div>
-            <div class="form-field"><label>ID du rôle après vérification</label><input type="text" id="p-captcha-role" placeholder="ID du rôle"></div>
+            <div class="form-field"><label>Activer le captcha à l'arrivée</label><select id="p-captcha-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
+            <div class="form-field"><label>ID du salon captcha</label><input type="text" id="p-captcha-channel" placeholder="ID du salon de vérification"></div>
+            <div class="form-field"><label>ID du rôle donné après vérification</label><input type="text" id="p-captcha-role" placeholder="ID du rôle membre"></div>
           </div>
         </div>
         <div class="card">
-          <div class="card-head"><div class="card-title">🤖 Modération IA</div></div>
+          <div class="card-head"><div class="card-title">🤖 Modération IA <span class="premium-badge">⭐ Premium</span></div></div>
           <div class="card-body">
-            <div class="form-field"><label>Modération IA (détecte insultes déguisées)</label><select id="p-ai-mod"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
-            <div class="form-field"><label>Support Auto FAQ</label><select id="p-faq-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
-            <p style="font-size:11px;color:var(--muted);margin-top:8px">Nécessite ANTHROPIC_API_KEY configuré dans Render.</p>
+            <div class="form-field"><label>Modération IA contextuelle</label><select id="p-ai-mod"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
+            <div class="form-field"><label>Support Auto (réponses FAQ)</label><select id="p-faq-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
+            <p style="font-size:11px;color:var(--muted);margin-top:8px">⚠️ Nécessite la variable <code>ANTHROPIC_API_KEY</code> dans Render.</p>
           </div>
         </div>
-      </div>
-      <div style="text-align:right">
-        <button class="btn btn-red" style="padding:12px 28px;font-weight:700;font-size:13px" onclick="savePremiumConfig()">💾 Sauvegarder la configuration</button>
       </div>
     </div>
 
-    <!-- ── BOUTIQUE ── -->
+    <!-- ══ BOUTIQUE ══ -->
     <div class="page" id="page-shop">
       <div class="ph">
-        <div class="ph-title">🏪 Boutique <small>Gestion des articles (Super Admin uniquement)</small></div>
+        <div class="ph-title">🏪 Boutique <small>Super Admin uniquement</small></div>
         <button class="btn btn-red" onclick="openModal('modal-add-item')">+ Ajouter un article</button>
       </div>
       <div class="card">
@@ -345,11 +492,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
 
-    <!-- ── ÉCONOMIE ── -->
+    <!-- ══ ÉCONOMIE ══ -->
     <div class="page" id="page-economy">
-      <div class="ph">
-        <div class="ph-title">🪙 Économie <small>Gestion des coins</small></div>
-      </div>
+      <div class="ph"><div class="ph-title">🪙 Économie <small>Gestion des coins</small></div></div>
       <div class="grid2" style="margin-bottom:18px">
         <div class="card">
           <div class="card-head"><div class="card-title">💰 Donner / Retirer des coins</div></div>
@@ -363,7 +508,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
           </div>
         </div>
         <div class="card">
-          <div class="card-head"><div class="card-title">🏆 Top 3 Coins</div></div>
+          <div class="card-head"><div class="card-title">🏆 Top 3</div></div>
           <div class="card-body" id="economy-top"></div>
         </div>
       </div>
@@ -374,33 +519,35 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
 
-    <!-- ── FAQ ── -->
+    <!-- ══ FAQ ══ -->
     <div class="page" id="page-faq">
       <div class="ph">
-        <div class="ph-title">❓ FAQ Auto <small>Support automatique par IA</small></div>
-        <button class="btn btn-red" onclick="openModal('modal-add-faq')">+ Ajouter une FAQ</button>
+        <div class="ph-title">❓ FAQ Auto <small>Support IA</small></div>
+        <button class="btn btn-red" onclick="openModal('modal-add-faq')">+ Ajouter</button>
       </div>
-      <p style="color:var(--muted);font-size:12px;margin-bottom:18px">Le bot répond automatiquement aux questions des membres si la réponse est dans la FAQ (IA activée requise).</p>
+      <p style="color:var(--muted);font-size:12px;margin-bottom:18px">Le bot répond automatiquement aux membres si la réponse est dans la FAQ. Nécessite la Modération IA activée.</p>
       <div id="faq-list"></div>
     </div>
 
-    <!-- ── IDENTITÉ BOT ── -->
+    <!-- ══ IDENTITÉ BOT ══ -->
     <div class="page" id="page-identity">
-      <div class="ph">
-        <div class="ph-title">🤖 Identité du Bot <small>Super Admin uniquement</small></div>
-      </div>
+      <div class="ph"><div class="ph-title">🤖 Identité du Bot <small>Super Admin uniquement</small></div></div>
       <div class="card" style="max-width:600px">
         <div class="card-head"><div class="card-title">🎭 Apparence du bot</div></div>
         <div class="card-body">
-          <div class="form-field"><label>Surnom (Nickname) sur ce serveur</label><input type="text" id="bot-nickname" placeholder="Ex: Modérateur Suprême (vide = défaut)"></div>
-          <div class="form-field"><label>URL Avatar (change l'avatar global)</label><input type="url" id="bot-avatar" placeholder="https://... (image directe)"></div>
+          <div class="form-field"><label>Surnom sur ce serveur (nickname)</label><input type="text" id="bot-nickname" placeholder="Laisser vide = nom par défaut"></div>
+          <div class="form-field"><label>URL Avatar (change l'avatar global du bot)</label><input type="url" id="bot-avatar" placeholder="https://..." oninput="previewAvatar()"></div>
           <div class="form-field"><label>Bio / À propos (globale)</label><textarea id="bot-bio" rows="3" placeholder="Bio du bot..."></textarea></div>
           <div id="bot-preview" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:14px">
             <div style="display:flex;align-items:center;gap:12px">
-              <img id="bot-avatar-preview" style="width:48px;height:48px;border-radius:50%;object-fit:cover" src="" alt="">
-              <div><div id="bot-name-preview" style="font-family:var(--font-head);font-weight:700;font-size:15px"></div><div id="bot-bio-preview" style="font-size:12px;color:var(--muted);margin-top:2px"></div></div>
+              <img id="bot-avatar-img" style="width:48px;height:48px;border-radius:50%;object-fit:cover" src="" alt="Preview">
+              <div>
+                <div id="bot-name-preview" style="font-family:var(--font-head);font-weight:700;font-size:15px">ModBot</div>
+                <div id="bot-bio-preview" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+              </div>
             </div>
           </div>
+          <p style="font-size:11px;color:var(--muted);margin-bottom:12px">⚠️ L'avatar change sur TOUS les serveurs. Limité à 2 changements par heure par Discord.</p>
           <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="saveBotIdentity()">💾 Appliquer</button>
         </div>
       </div>
@@ -409,44 +556,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </main>
 </div>
 
-<!-- Modal: Ajouter article -->
-<div class="modal-ov" id="modal-add-item">
-  <div class="modal"><div class="modal-head"><div class="modal-title">🏪 Ajouter un article</div><button class="modal-x" onclick="closeModal('modal-add-item')">×</button></div>
-  <div class="modal-body">
-    <div class="form-field"><label>Nom</label><input type="text" id="item-nom" placeholder="Ex: Rôle VIP"></div>
-    <div class="form-field"><label>Prix (coins)</label><input type="number" id="item-prix" placeholder="100" min="1"></div>
-    <div class="form-field"><label>Type</label><select id="item-type"><option value="role">🎭 Rôle Discord</option><option value="premium">⭐ Licence Premium</option><option value="custom">🎁 Personnalisé</option></select></div>
-    <div class="form-field"><label>ID du rôle (si type = Rôle)</label><input type="text" id="item-role-id" placeholder="ID du rôle"></div>
-    <div class="form-field"><label>Description</label><input type="text" id="item-desc" placeholder="Description"></div>
-    <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="addShopItem()">Ajouter</button>
-  </div></div>
-</div>
-
-<!-- Modal: Modifier article -->
-<div class="modal-ov" id="modal-edit-item">
-  <div class="modal"><div class="modal-head"><div class="modal-title">✏️ Modifier l'article</div><button class="modal-x" onclick="closeModal('modal-edit-item')">×</button></div>
-  <div class="modal-body">
-    <input type="hidden" id="edit-item-id">
-    <div class="form-field"><label>Nom</label><input type="text" id="edit-item-nom"></div>
-    <div class="form-field"><label>Prix (coins)</label><input type="number" id="edit-item-prix" min="1"></div>
-    <div class="form-field"><label>Description</label><input type="text" id="edit-item-desc"></div>
-    <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="saveShopItem()">💾 Sauvegarder</button>
-  </div></div>
-</div>
-
-<!-- Modal: FAQ -->
-<div class="modal-ov" id="modal-add-faq">
-  <div class="modal"><div class="modal-head"><div class="modal-title">❓ Ajouter une FAQ</div><button class="modal-x" onclick="closeModal('modal-add-faq')">×</button></div>
-  <div class="modal-body">
-    <div class="form-field"><label>Question</label><input type="text" id="faq-question" placeholder="Ex: Comment ouvrir un ticket ?"></div>
-    <div class="form-field"><label>Réponse</label><textarea id="faq-answer" rows="4" placeholder="Pour ouvrir un ticket..."></textarea></div>
-    <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="addFAQ()">Ajouter</button>
-  </div></div>
-</div>
-  </main>
-</div>
-
-<!-- Modal: Fiche membre -->
+<!-- Modals -->
 <div class="modal-ov" id="modal-fiche">
   <div class="modal" style="width:620px">
     <div class="modal-head"><div class="modal-title">📋 Fiche membre</div><button class="modal-x" onclick="closeModal('modal-fiche')">×</button></div>
@@ -454,34 +564,52 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   </div>
 </div>
 
-<!-- Modal: Sanctionner -->
 <div class="modal-ov" id="modal-sanction">
   <div class="modal">
-    <div class="modal-head">
-      <div class="modal-title">🔨 Sanctionner un membre</div>
-      <button class="modal-x" onclick="closeModal('modal-sanction')">×</button>
-    </div>
+    <div class="modal-head"><div class="modal-title">🔨 Sanctionner</div><button class="modal-x" onclick="closeModal('modal-sanction')">×</button></div>
     <div class="modal-body">
-      <div class="form-field">
-        <label>ID Discord de la cible</label>
-        <input type="text" id="s-target-id" placeholder="Ex: 123456789012345678">
-      </div>
-      <div class="form-field">
-        <label>Type de sanction</label>
-        <select id="s-type">
-          <option value="warn">⚠️ Avertissement</option>
-          <option value="mute">🔇 Mute</option>
-          <option value="kick">👢 Kick</option>
-          <option value="ban">🔨 Ban</option>
-        </select>
-      </div>
-      <div class="form-field">
-        <label>Raison</label>
-        <textarea id="s-reason" rows="3" placeholder="Raison de la sanction..."></textarea>
-      </div>
-      <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="executerSanction()">
-        Confirmer la sanction
-      </button>
+      <div class="form-field"><label>ID Discord de la cible</label><input type="text" id="s-target-id" placeholder="Ex: 123456789"></div>
+      <div class="form-field"><label>Type</label><select id="s-type"><option value="warn">⚠️ Warn</option><option value="mute">🔇 Mute</option><option value="kick">👢 Kick</option><option value="ban">🔨 Ban</option></select></div>
+      <div class="form-field"><label>Raison</label><textarea id="s-reason" rows="3" placeholder="Raison..."></textarea></div>
+      <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="executerSanction()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-add-item">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">🏪 Ajouter un article</div><button class="modal-x" onclick="closeModal('modal-add-item')">×</button></div>
+    <div class="modal-body">
+      <div class="form-field"><label>Nom</label><input type="text" id="item-nom" placeholder="Ex: Rôle VIP"></div>
+      <div class="form-field"><label>Prix (coins)</label><input type="number" id="item-prix" placeholder="100" min="1"></div>
+      <div class="form-field"><label>Type</label><select id="item-type"><option value="role">🎭 Rôle Discord</option><option value="premium">⭐ Licence Premium</option><option value="custom">🎁 Personnalisé</option></select></div>
+      <div class="form-field"><label>ID du rôle (si type = Rôle)</label><input type="text" id="item-role-id" placeholder="ID du rôle"></div>
+      <div class="form-field"><label>Description</label><input type="text" id="item-desc" placeholder="Description courte"></div>
+      <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="addShopItem()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-edit-item">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">✏️ Modifier l'article</div><button class="modal-x" onclick="closeModal('modal-edit-item')">×</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-item-id">
+      <div class="form-field"><label>Nom</label><input type="text" id="edit-item-nom"></div>
+      <div class="form-field"><label>Prix (coins)</label><input type="number" id="edit-item-prix" min="1"></div>
+      <div class="form-field"><label>Description</label><input type="text" id="edit-item-desc"></div>
+      <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="saveShopItem()">💾 Sauvegarder</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-ov" id="modal-add-faq">
+  <div class="modal">
+    <div class="modal-head"><div class="modal-title">❓ Ajouter une FAQ</div><button class="modal-x" onclick="closeModal('modal-add-faq')">×</button></div>
+    <div class="modal-body">
+      <div class="form-field"><label>Question</label><input type="text" id="faq-question" placeholder="Ex: Comment ouvrir un ticket ?"></div>
+      <div class="form-field"><label>Réponse</label><textarea id="faq-answer" rows="4" placeholder="Pour ouvrir un ticket, allez dans #support..."></textarea></div>
+      <button class="btn btn-red" style="width:100%;justify-content:center;padding:12px;font-weight:700" onclick="addFAQ()">Ajouter</button>
     </div>
   </div>
 </div>
@@ -489,27 +617,28 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <div class="toasts" id="toasts"></div>
 
 <script>
+// ─── State ────────────────────────────────────────────────────────────────────
 let token = localStorage.getItem('mb_token');
 let currentUser = JSON.parse(localStorage.getItem('mb_user') || 'null');
 let guildId = new URLSearchParams(location.search).get('guild') || '';
+let targetUserId = new URLSearchParams(location.search).get('user') || '';
+let guildData = null;
+let allCases = [], allTickets = [], allXP = [];
+let allShopItems = [], allFAQ = [];
+let ticketTypes = [], ticketWelcome = '', ticketDm = '';
+let currentLicence = { valid: true, isPremium: false };
+const API = '';
 
-// Si le guildId de l'URL ne correspond pas au guildId du token → déconnecter
+// Auto-logout si guildId change
 if (token && currentUser && guildId) {
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
     if (payload.guildId && payload.guildId !== guildId) {
       token = null; currentUser = null;
-      localStorage.removeItem('mb_token');
-      localStorage.removeItem('mb_user');
+      localStorage.removeItem('mb_token'); localStorage.removeItem('mb_user');
     }
   } catch {}
 }
-let targetUserId = new URLSearchParams(location.search).get('user') || '';
-let guildData = null;
-let allCases = [];
-let allTickets = [];
-let allXP = [];
-const API = '';
 
 const ADMIN_LEVELS = {
   1:{name:'Modérateur',color:'lvl-1',perms:'warn, mute'},
@@ -520,962 +649,421 @@ const ADMIN_LEVELS = {
 const TYPE_BADGES = {warn:'b-warn',mute:'b-mute',kick:'b-kick',ban:'b-ban',unban:'b-unban',unmute:'b-unmute'};
 const TYPE_ICONS = {warn:'⚠️',mute:'🔇',kick:'👢',ban:'🔨',unban:'✅',unmute:'🔊'};
 
-// ── Génération mot de passe ──
 function genPassword(len=12) {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
-  return Array.from({length:len}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  const c='ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789@#!';
+  return Array.from({length:len},()=>c[Math.floor(Math.random()*c.length)]).join('');
 }
 
-// ── Init ──
+// ─── Init ─────────────────────────────────────────────────────────────────────
 async function init() {
-  // Fiche publique
-  const path = location.pathname;
-  if (path.includes('/fiche') || (targetUserId && !token)) {
-    showPublicFiche();
-    return;
-  }
-
+  if (location.pathname.includes('/fiche') || (targetUserId && !token)) { showPublicFiche(); return; }
   if (guildId) {
     try {
       const r = await fetch(`${API}/api/guild/${guildId}`);
-      if (r.ok) {
-        guildData = await r.json();
-        document.getElementById('guild-name').textContent = guildData.name;
-        document.getElementById('sb-guild').textContent = guildData.name;
-        document.title = `ModBot — ${guildData.name}`;
-      }
+      if (r.ok) { guildData = await r.json(); document.getElementById('guild-name').textContent = guildData.name; document.getElementById('sb-guild').textContent = guildData.name; document.title = `ModBot — ${guildData.name}`; }
     } catch {}
   }
   if (token && currentUser) showApp();
 }
 
-// ── Fiche publique ──
+// ─── Public Fiche ─────────────────────────────────────────────────────────────
 async function showPublicFiche() {
-  document.getElementById('auth-screen').style.display = 'none';
-  document.getElementById('public-fiche').style.display = 'block';
-
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('public-fiche').style.display='block';
   const gid = new URLSearchParams(location.search).get('guild') || guildId;
   const uid = new URLSearchParams(location.search).get('user') || targetUserId;
-
-  if (!gid || !uid) {
-    document.getElementById('public-fiche-content').innerHTML = '<div class="empty"><div class="empty-ico">❌</div><div class="empty-title">Lien invalide</div></div>';
-    return;
-  }
-
+  if (!gid || !uid) { document.getElementById('public-fiche-content').innerHTML='<div class="empty"><div class="empty-ico">❌</div><div class="empty-title">Lien invalide</div></div>'; return; }
   const r = await fetch(`${API}/api/public/fiche/${gid}/${uid}`);
-  if (!r.ok) { document.getElementById('public-fiche-content').innerHTML = '<div class="empty"><div class="empty-ico">❌</div><div class="empty-title">Fiche introuvable</div></div>'; return; }
+  if (!r.ok) { document.getElementById('public-fiche-content').innerHTML='<div class="empty"><div class="empty-ico">❌</div><div class="empty-title">Introuvable</div></div>'; return; }
   const data = await r.json();
-
-  const counts = data.counts;
-  document.getElementById('public-fiche-content').innerHTML = `
-    <div class="fiche-header">
-      <div class="fiche-av">?</div>
-      <div>
-        <div style="font-family:var(--font-head);font-size:20px;font-weight:900">Mon dossier</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">ID: ${uid}</div>
-        <div style="font-size:11px;color:var(--muted)">${data.cases.length} sanction(s)</div>
-      </div>
-    </div>
+  const c = data.counts;
+  document.getElementById('public-fiche-content').innerHTML=`
+    <div class="fiche-header"><div class="fiche-av">?</div><div><div style="font-family:var(--font-head);font-size:20px;font-weight:900">Mon dossier</div><div style="font-size:11px;color:var(--muted);margin-top:4px">ID: ${uid} · ${data.cases.length} sanction(s)</div></div></div>
     <div class="fiche-counts">
-      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--yellow)">${counts.warn}</div><div class="fiche-count-label">Warns</div></div>
-      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--pink)">${counts.mute}</div><div class="fiche-count-label">Mutes</div></div>
-      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--red)">${counts.kick}</div><div class="fiche-count-label">Kicks</div></div>
-      <div class="fiche-count"><div class="fiche-count-val" style="color:#999">${counts.ban}</div><div class="fiche-count-label">Bans</div></div>
+      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--yellow)">${c.warn}</div><div class="fiche-count-label">Warns</div></div>
+      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--pink)">${c.mute}</div><div class="fiche-count-label">Mutes</div></div>
+      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--red)">${c.kick}</div><div class="fiche-count-label">Kicks</div></div>
+      <div class="fiche-count"><div class="fiche-count-val" style="color:#999">${c.ban}</div><div class="fiche-count-label">Bans</div></div>
     </div>
-    <div class="card">
-      <div class="card-head"><div class="card-title">📜 Historique</div></div>
-      <div class="card-body">
-        ${data.cases.map(c => `
-          <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start">
-            <span class="badge ${TYPE_BADGES[c.type]||''}" style="min-width:70px;justify-content:center">${TYPE_ICONS[c.type]||''} ${c.type}</span>
-            <div style="flex:1">
-              <div style="font-size:12px">${c.reason}</div>
-              <div style="font-size:10px;color:var(--muted);margin-top:3px">${new Date(c.createdAt).toLocaleDateString('fr-FR')} · #${c.caseNumber}</div>
-            </div>
-          </div>`).join('') || '<div style="text-align:center;padding:20px;color:var(--muted)">Aucune sanction 🎉</div>'}
-      </div>
-    </div>`;
+    <div class="card"><div class="card-head"><div class="card-title">📜 Historique</div></div><div class="card-body">
+      ${data.cases.map(c=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><span class="badge ${TYPE_BADGES[c.type]||''}">${TYPE_ICONS[c.type]||''} ${c.type}</span><div><div style="font-size:12px">${c.reason}</div><div style="font-size:10px;color:var(--muted);margin-top:3px">${new Date(c.createdAt).toLocaleDateString('fr-FR')} · #${c.caseNumber}</div></div></div>`).join('')||'<div style="text-align:center;padding:20px;color:var(--muted)">Aucune sanction 🎉</div>'}
+    </div></div>`;
 }
 
-// ── Auth ──
+// ─── Auth ─────────────────────────────────────────────────────────────────────
 function switchTab(t) {
-  document.getElementById('login-form').style.display = t==='login'?'block':'none';
-  document.getElementById('register-form').style.display = t==='register'?'block':'none';
-  document.querySelectorAll('.auth-tab').forEach((e,i) => e.classList.toggle('active', (t==='login'&&i===0)||(t==='register'&&i===1)));
-  document.getElementById('auth-err').style.display = 'none';
+  document.getElementById('login-form').style.display=t==='login'?'block':'none';
+  document.getElementById('register-form').style.display=t==='register'?'block':'none';
+  document.querySelectorAll('.auth-tab').forEach((e,i)=>e.classList.toggle('active',(t==='login'&&i===0)||(t==='register'&&i===1)));
+  document.getElementById('auth-err').style.display='none';
 }
-
-function showErr(m) { const e=document.getElementById('auth-err'); e.textContent=m; e.style.display='block'; }
-
-async function login() {
-  const username=document.getElementById('l-user').value.trim(), password=document.getElementById('l-pass').value;
-  if (!username||!password) return showErr('Remplissez tous les champs');
-  const r=await fetch(`${API}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,guildId})});
-  const d=await r.json(); if (!r.ok) return showErr(d.error||'Erreur');
-  token=d.token; currentUser=d.user;
-  localStorage.setItem('mb_token',token); localStorage.setItem('mb_user',JSON.stringify(currentUser));
-  showApp();
+function showErr(m){const e=document.getElementById('auth-err');e.textContent=m;e.style.display='block';}
+async function login(){
+  const u=document.getElementById('l-user').value.trim(),p=document.getElementById('l-pass').value;
+  if(!u||!p)return showErr('Remplissez tous les champs');
+  const r=await fetch(`${API}/api/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,guildId})});
+  const d=await r.json();if(!r.ok)return showErr(d.error||'Erreur');
+  token=d.token;currentUser=d.user;localStorage.setItem('mb_token',token);localStorage.setItem('mb_user',JSON.stringify(currentUser));showApp();
 }
-
-async function register() {
-  const username=document.getElementById('r-user').value.trim(), password=document.getElementById('r-pass').value, confirm=document.getElementById('r-conf').value;
-  if (!username||!password) return showErr('Remplissez tous les champs');
-  if (password!==confirm) return showErr('Mots de passe différents');
-  if (password.length<6) return showErr('Minimum 6 caractères');
-  const r=await fetch(`${API}/api/auth/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,guildId})});
-  const d=await r.json(); if (!r.ok) return showErr(d.error||'Erreur');
-  token=d.token; currentUser=d.user;
-  localStorage.setItem('mb_token',token); localStorage.setItem('mb_user',JSON.stringify(currentUser));
-  showApp();
+async function register(){
+  const u=document.getElementById('r-user').value.trim(),p=document.getElementById('r-pass').value,c=document.getElementById('r-conf').value;
+  if(!u||!p)return showErr('Remplissez tous les champs');
+  if(p!==c)return showErr('Mots de passe différents');if(p.length<6)return showErr('Minimum 6 caractères');
+  const r=await fetch(`${API}/api/auth/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u,password:p,guildId})});
+  const d=await r.json();if(!r.ok)return showErr(d.error||'Erreur');
+  token=d.token;currentUser=d.user;localStorage.setItem('mb_token',token);localStorage.setItem('mb_user',JSON.stringify(currentUser));showApp();
 }
-
-function logout() {
-  token=null; currentUser=null;
-  localStorage.removeItem('mb_token'); localStorage.removeItem('mb_user');
-  document.getElementById('app').style.display='none';
-  document.getElementById('auth-screen').style.display='flex';
-}
+function logout(){token=null;currentUser=null;localStorage.removeItem('mb_token');localStorage.removeItem('mb_user');document.getElementById('app').style.display='none';document.getElementById('auth-screen').style.display='flex';}
 
 function showApp() {
   document.getElementById('auth-screen').style.display='none';
   document.getElementById('app').style.display='block';
-  const lvl = currentUser.adminLevel||1;
-  document.getElementById('user-name').textContent = currentUser.username;
-  document.getElementById('user-av').textContent = currentUser.username[0].toUpperCase();
-  document.getElementById('user-lvl').innerHTML = `<span class="${ADMIN_LEVELS[lvl].color}">${ADMIN_LEVELS[lvl].name}</span>`;
-
-  // Masquer les pages admin si niveau insuffisant
-  if (lvl < 3) {
-    document.getElementById('nav-staff').style.display='none';
-    document.getElementById('nav-users').style.display='none';
-    document.getElementById('nav-addadmin').style.display='none';
-  }
-  // Seuls les possesseurs/admin Discord (niveau 4) peuvent créer des admins
-  if (lvl < 4) {
-    document.getElementById('nav-addadmin').style.display='none';
-  }
-  if (lvl < 3) {
-    document.getElementById('nav-ticketconfig').style.display='none';
-  }
-
+  const lvl=currentUser.adminLevel||1;
+  document.getElementById('user-name').textContent=currentUser.username;
+  document.getElementById('user-av').textContent=currentUser.username[0].toUpperCase();
+  document.getElementById('user-lvl').innerHTML=`<span class="${ADMIN_LEVELS[lvl].color}">${ADMIN_LEVELS[lvl].name}</span>`;
+  if(lvl<3){['nav-staff','nav-users','nav-addadmin','nav-ticketconfig'].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});}
+  if(lvl<4){const el=document.getElementById('nav-addadmin');if(el)el.style.display='none';}
   loadAll();
 }
 
-async function apiGet(p) {
+async function apiGet(p){
   const r=await fetch(`${API}${p}`,{headers:{Authorization:`Bearer ${token}`}});
-  if (r.status===401) { logout(); return []; }
+  if(r.status===401){logout();return[];}
   return r.json();
 }
 
-async function loadAll() {
-  allCases = await apiGet('/api/cases');
-  allTickets = await apiGet('/api/tickets');
-  allXP = await apiGet('/api/xp');
-  renderDashboard();
-  renderCases();
-  renderMembers();
-  renderTickets();
-  renderXP();
-  if (currentUser.adminLevel >= 3) { renderStaff(); renderUsers(); }
+async function loadAll(){
+  allCases=await apiGet('/api/cases');
+  allTickets=await apiGet('/api/tickets');
+  allXP=await apiGet('/api/xp');
+  // Check licence
+  try { currentLicence = await apiGet('/api/licence'); } catch {}
+  renderDashboard();renderCases();renderMembers();renderTickets();renderXP();
+  if(currentUser.adminLevel>=3){renderStaff();renderUsers();}
 }
 
-// ── Dashboard ──
-function renderDashboard() {
-  const counts = {warn:0,mute:0,kick:0,ban:0};
-  allCases.forEach(c => { if (counts[c.type]!==undefined) counts[c.type]++; });
-  document.getElementById('s-warns').textContent = counts.warn;
-  document.getElementById('s-mutes').textContent = counts.mute;
-  document.getElementById('s-kicks').textContent = counts.kick;
-  document.getElementById('s-bans').textContent = counts.ban;
-  document.getElementById('s-total').textContent = allCases.length;
-
-  const recent = [...allCases].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8);
-  document.getElementById('recent-cases').innerHTML = recent.map(c => `<tr>
-    <td><span class="badge ${TYPE_BADGES[c.type]||''}">${TYPE_ICONS[c.type]||''} ${c.type}</span></td>
-    <td style="font-family:var(--font-head);font-weight:700">${c.targetTag}</td>
-    <td style="color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.reason}</td>
-    <td style="color:var(--muted);font-size:11px">${new Date(c.createdAt).toLocaleDateString('fr-FR')}</td>
-  </tr>`).join('') || '<tr><td colspan="4"><div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune sanction</div></div></td></tr>';
-
-  // Top mods
-  const modCounts = {};
-  allCases.forEach(c => { modCounts[c.modId] = (modCounts[c.modId]||0)+1; });
-  const topMods = Object.entries(modCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const max = topMods[0]?.[1]||1;
-  document.getElementById('top-mods').innerHTML = topMods.length ? topMods.map(([id,count],i) => `
-    <div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:12px">${['🥇','🥈','🥉'][i]||`#${i+1}`} <strong>&lt;@${id}&gt;</strong></span>
-        <span style="color:var(--purple);font-weight:700;font-family:var(--font-head)">${count}</span>
-      </div>
-      <div style="background:var(--surface2);height:5px;border-radius:3px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,var(--red),var(--purple));width:${Math.round(count/max*100)}%;border-radius:3px"></div></div>
-    </div>`).join('') : '<div class="empty"><div class="empty-ico">🏆</div><div class="empty-title">Aucune donnée</div></div>';
-
-  // Dash tickets
-  const recentTickets = [...allTickets].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,4);
-  document.getElementById('dash-tickets').innerHTML = recentTickets.length ? recentTickets.map(t => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-      <div>
-        <span style="font-family:var(--font-head);font-weight:700">Ticket #${String(t.number).padStart(4,'0')}</span>
-        <span style="font-size:10px;color:var(--muted);margin-left:8px">${t.userTag||t.userId}</span>
-      </div>
-      <span class="badge ${t.status==='open'?'b-green':'b-red'}">${t.status==='open'?'Ouvert':'Fermé'}</span>
-    </div>`).join('') : '<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun ticket</div></div>';
-
-  // Dash XP
-  document.getElementById('dash-xp').innerHTML = allXP.slice(0,5).length ? allXP.slice(0,5).map((u,i) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
-      <span style="font-family:var(--font-head);font-weight:900;font-size:16px;width:28px;text-align:center">${['🥇','🥈','🥉'][i]||`#${i+1}`}</span>
-      <div style="flex:1"><div style="font-family:var(--font-head);font-weight:700;font-size:13px">${u.username}</div><div style="font-size:10px;color:var(--muted)">Niv. ${u.level||0} · ${u.xp} XP</div></div>
-    </div>`).join('') : '<div class="empty"><div class="empty-ico">⭐</div><div class="empty-title">Aucune donnée XP</div></div>';
+// ─── Dashboard ────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const counts={warn:0,mute:0,kick:0,ban:0};
+  allCases.forEach(c=>{if(counts[c.type]!==undefined)counts[c.type]++;});
+  document.getElementById('s-warns').textContent=counts.warn;
+  document.getElementById('s-mutes').textContent=counts.mute;
+  document.getElementById('s-kicks').textContent=counts.kick;
+  document.getElementById('s-bans').textContent=counts.ban;
+  document.getElementById('s-total').textContent=allCases.length;
+  const recent=[...allCases].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,8);
+  document.getElementById('recent-cases').innerHTML=recent.map(c=>`<tr><td><span class="badge ${TYPE_BADGES[c.type]||''}">${TYPE_ICONS[c.type]||''} ${c.type}</span></td><td style="font-family:var(--font-head);font-weight:700">${c.targetTag}</td><td style="color:var(--muted);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.reason}</td><td style="color:var(--muted);font-size:11px">${new Date(c.createdAt).toLocaleDateString('fr-FR')}</td></tr>`).join('')||'<tr><td colspan="4"><div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune sanction</div></div></td></tr>';
+  const modCounts={};allCases.forEach(c=>{modCounts[c.modId]=(modCounts[c.modId]||0)+1;});
+  const topMods=Object.entries(modCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);const max=topMods[0]?.[1]||1;
+  document.getElementById('top-mods').innerHTML=topMods.length?topMods.map(([id,count],i)=>`<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:12px">${['🥇','🥈','🥉'][i]||`#${i+1}`} <strong>&lt;@${id}&gt;</strong></span><span style="color:var(--purple);font-weight:700;font-family:var(--font-head)">${count}</span></div><div style="background:var(--surface2);height:5px;border-radius:3px;overflow:hidden"><div style="height:100%;background:linear-gradient(90deg,var(--red),var(--purple));width:${Math.round(count/max*100)}%;border-radius:3px"></div></div></div>`).join(''):'<div class="empty"><div class="empty-ico">🏆</div><div class="empty-title">Aucune donnée</div></div>';
+  const rt=[...allTickets].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).slice(0,4);
+  document.getElementById('dash-tickets').innerHTML=rt.length?rt.map(t=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)"><div><span style="font-family:var(--font-head);font-weight:700">Ticket #${String(t.number).padStart(4,'0')}</span><span style="font-size:10px;color:var(--muted);margin-left:8px">${t.userTag||t.userId}</span></div><span class="badge ${t.status==='open'?'b-green':'b-red'}">${t.status==='open'?'Ouvert':'Fermé'}</span></div>`).join(''):'<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun ticket</div></div>';
+  document.getElementById('dash-xp').innerHTML=allXP.slice(0,5).length?allXP.slice(0,5).map((u,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-family:var(--font-head);font-weight:900;font-size:16px;width:28px;text-align:center">${['🥇','🥈','🥉'][i]||`#${i+1}`}</span><div style="flex:1"><div style="font-family:var(--font-head);font-weight:700;font-size:13px">${u.username}</div><div style="font-size:10px;color:var(--muted)">Niv.${u.level||0} · ${u.xp} XP</div></div></div>`).join(''):'<div class="empty"><div class="empty-ico">⭐</div><div class="empty-title">Aucune donnée</div></div>';
 }
 
-// ── Cases ──
-function renderCases(list) {
-  const data = list || allCases;
-  const sorted = [...data].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
-  document.getElementById('all-cases').innerHTML = sorted.map(c => `<tr>
-    <td style="color:var(--muted)">#${c.caseNumber}</td>
-    <td><span class="badge ${TYPE_BADGES[c.type]||''}">${TYPE_ICONS[c.type]||''} ${c.type}</span></td>
-    <td style="font-family:var(--font-head);font-weight:700">${c.targetTag}</td>
-    <td style="color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.reason}">${c.reason}</td>
-    <td style="font-size:11px;color:var(--muted)">&lt;@${c.modId}&gt;</td>
-    <td style="font-size:11px;color:var(--muted)">${new Date(c.createdAt).toLocaleDateString('fr-FR')}</td>
-    <td>
-      <button class="btn btn-ghost" onclick="showFiche('${c.targetId}','${c.targetTag}')" style="padding:4px 8px;font-size:10px">Fiche</button>
-      ${currentUser.adminLevel >= 2 ? `<button class="btn btn-danger" onclick="deleteCase('${c.id}')" style="padding:4px 8px;font-size:10px;margin-left:4px">🗑️</button>` : ''}
-    </td>
-  </tr>`).join('') || '<tr><td colspan="7"><div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune sanction</div></div></td></tr>';
+// ─── Cases ────────────────────────────────────────────────────────────────────
+function renderCases(list){
+  const data=[...(list||allCases)].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  document.getElementById('all-cases').innerHTML=data.map(c=>`<tr><td style="color:var(--muted)">#${c.caseNumber}</td><td><span class="badge ${TYPE_BADGES[c.type]||''}">${TYPE_ICONS[c.type]||''} ${c.type}</span></td><td style="font-family:var(--font-head);font-weight:700">${c.targetTag}</td><td style="color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.reason}">${c.reason}</td><td style="font-size:11px;color:var(--muted)">&lt;@${c.modId}&gt;</td><td style="font-size:11px;color:var(--muted)">${new Date(c.createdAt).toLocaleDateString('fr-FR')}</td><td><button class="btn btn-ghost" onclick="showFiche('${c.targetId}','${c.targetTag}')" style="padding:4px 8px;font-size:10px">Fiche</button>${currentUser.adminLevel>=2?`<button class="btn btn-danger" onclick="deleteCase('${c.id}')" style="padding:4px 8px;font-size:10px;margin-left:4px">🗑️</button>`:''}</td></tr>`).join('')||'<tr><td colspan="7"><div class="empty"><div class="empty-ico">📋</div><div class="empty-title">Aucune sanction</div></div></td></tr>';
 }
-
-function filterCases() {
-  const search = document.getElementById('search-cases').value.toLowerCase();
-  const type = document.getElementById('filter-type').value;
-  let filtered = allCases;
-  if (type) filtered = filtered.filter(c => c.type === type);
-  if (search) filtered = filtered.filter(c => (c.targetTag||'').toLowerCase().includes(search) || (c.reason||'').toLowerCase().includes(search) || c.targetId.includes(search));
-  renderCases(filtered);
+function filterCases(){
+  const s=document.getElementById('search-cases').value.toLowerCase();
+  const t=document.getElementById('filter-type').value;
+  let f=allCases;
+  if(t)f=f.filter(c=>c.type===t);
+  if(s)f=f.filter(c=>(c.targetTag||'').toLowerCase().includes(s)||(c.reason||'').toLowerCase().includes(s)||c.targetId.includes(s));
+  renderCases(f);
 }
-
-async function deleteCase(id) {
-  if (!confirm('Supprimer cette sanction ?')) return;
+async function deleteCase(id){
+  if(!confirm('Supprimer ?'))return;
   await fetch(`${API}/api/cases/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
-  allCases = allCases.filter(c => c.id !== id);
-  renderCases(); renderDashboard(); renderMembers();
-  toast('Sanction supprimée','success');
+  allCases=allCases.filter(c=>c.id!==id);renderCases();renderDashboard();renderMembers();toast('Sanction supprimée','success');
 }
 
-// ── Members ──
-function renderMembers(filter) {
-  const memberMap = {};
-  allCases.forEach(c => {
-    if (!memberMap[c.targetId]) memberMap[c.targetId] = { id:c.targetId, tag:c.targetTag, cases:[] };
-    memberMap[c.targetId].cases.push(c);
-  });
-  let members = Object.values(memberMap);
-  if (filter) members = members.filter(m => (m.tag||'').toLowerCase().includes(filter.toLowerCase()) || m.id.includes(filter));
-  members.sort((a,b) => b.cases.length - a.cases.length);
-
-  const container = document.getElementById('members-list');
-  if (!members.length) { container.innerHTML = '<div class="empty"><div class="empty-ico">👤</div><div class="empty-title">Aucun membre avec des sanctions</div></div>'; return; }
-  container.innerHTML = members.map(m => {
-    const counts = {warn:0,mute:0,kick:0,ban:0};
-    m.cases.forEach(c => { if (counts[c.type]!==undefined) counts[c.type]++; });
-    return `<div class="user-card">
-      <div class="user-card-av">${(m.tag||'?')[0]?.toUpperCase()}</div>
-      <div class="user-card-info">
-        <div class="user-card-name">${m.tag} <span style="font-size:11px;color:var(--muted);font-weight:400">(${m.id})</span></div>
-        <div class="user-card-stats">
-          <span class="badge b-warn">⚠️ ${counts.warn}</span>
-          <span class="badge b-mute">🔇 ${counts.mute}</span>
-          <span class="badge b-kick">👢 ${counts.kick}</span>
-          <span class="badge b-ban">🔨 ${counts.ban}</span>
-          <span class="badge b-blue">${m.cases.length} total</span>
-        </div>
-      </div>
-      <div style="display:flex;gap:8px;flex-direction:column;align-items:flex-end">
-        <button class="btn btn-ghost" onclick="showFiche('${m.id}','${m.tag}')">📋 Fiche</button>
-        <a class="btn btn-blue" href="${location.origin}/fiche?guild=${guildId}&user=${m.id}" target="_blank" style="font-size:10px;padding:4px 10px">🔗 Lien public</a>
-      </div>
-    </div>`;
+// ─── Members ──────────────────────────────────────────────────────────────────
+function renderMembers(filter){
+  const map={};allCases.forEach(c=>{if(!map[c.targetId])map[c.targetId]={id:c.targetId,tag:c.targetTag,cases:[]};map[c.targetId].cases.push(c);});
+  let members=Object.values(map);
+  if(filter)members=members.filter(m=>(m.tag||'').toLowerCase().includes(filter.toLowerCase())||m.id.includes(filter));
+  members.sort((a,b)=>b.cases.length-a.cases.length);
+  const container=document.getElementById('members-list');
+  if(!members.length){container.innerHTML='<div class="empty"><div class="empty-ico">👤</div><div class="empty-title">Aucun membre avec sanctions</div></div>';return;}
+  container.innerHTML=members.map(m=>{
+    const counts={warn:0,mute:0,kick:0,ban:0};m.cases.forEach(c=>{if(counts[c.type]!==undefined)counts[c.type]++;});
+    return `<div class="user-card"><div class="user-card-av">${(m.tag||'?')[0].toUpperCase()}</div><div class="user-card-info"><div class="user-card-name">${m.tag} <span style="font-size:11px;color:var(--muted)">(${m.id})</span></div><div class="user-card-stats"><span class="badge b-warn">⚠️ ${counts.warn}</span><span class="badge b-mute">🔇 ${counts.mute}</span><span class="badge b-kick">👢 ${counts.kick}</span><span class="badge b-ban">🔨 ${counts.ban}</span><span class="badge b-blue">${m.cases.length} total</span></div></div><div style="display:flex;gap:8px;flex-direction:column;align-items:flex-end"><button class="btn btn-ghost" onclick="showFiche('${m.id}','${m.tag}')">📋 Fiche</button><a class="btn btn-blue" href="${location.origin}/fiche?guild=${guildId}&user=${m.id}" target="_blank" style="font-size:10px;padding:4px 10px">🔗 Public</a></div></div>`;
   }).join('');
 }
-
-function filterMembers() { renderMembers(document.getElementById('search-members').value); }
-
-async function showFiche(userId, userTag) {
-  const userCases = allCases.filter(c => c.targetId === userId).sort((a,b) => new Date(b.createdAt)-new Date(a.createdAt));
-  const counts = {warn:0,mute:0,kick:0,ban:0};
-  userCases.forEach(c => { if (counts[c.type]!==undefined) counts[c.type]++; });
-
-  document.getElementById('fiche-content').innerHTML = `
-    <div class="fiche-header">
-      <div class="fiche-av">${(userTag||'?')[0]?.toUpperCase()}</div>
-      <div>
-        <div style="font-family:var(--font-head);font-size:20px;font-weight:900">${userTag}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px">ID: ${userId}</div>
-        <div style="font-size:11px;color:var(--muted)">${userCases.length} sanction(s)</div>
-        <a href="${location.origin}/fiche?guild=${guildId}&user=${userId}" target="_blank" class="btn btn-blue" style="margin-top:8px;font-size:10px;padding:4px 10px">🔗 Fiche publique</a>
-      </div>
-    </div>
-    <div class="fiche-counts">
-      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--yellow)">${counts.warn}</div><div class="fiche-count-label">Warns</div></div>
-      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--pink)">${counts.mute}</div><div class="fiche-count-label">Mutes</div></div>
-      <div class="fiche-count"><div class="fiche-count-val" style="color:var(--red)">${counts.kick}</div><div class="fiche-count-label">Kicks</div></div>
-      <div class="fiche-count"><div class="fiche-count-val" style="color:#999">${counts.ban}</div><div class="fiche-count-label">Bans</div></div>
-    </div>
-    <div>
-      ${userCases.map(c => `
-        <div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start">
-          <span class="badge ${TYPE_BADGES[c.type]||''}" style="min-width:70px;justify-content:center">${TYPE_ICONS[c.type]||''} ${c.type}</span>
-          <div style="flex:1">
-            <div style="font-size:12px">${c.reason}</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:3px">Par &lt;@${c.modId}&gt; · ${new Date(c.createdAt).toLocaleDateString('fr-FR')} · #${c.caseNumber}</div>
-          </div>
-          ${currentUser.adminLevel >= 2 ? `<button class="btn btn-danger" onclick="deleteCaseFromFiche('${c.id}')" style="padding:3px 8px;font-size:10px">🗑️</button>` : ''}
-        </div>`).join('') || '<div style="padding:20px;text-align:center;color:var(--muted)">Aucune sanction 🎉</div>'}
-    </div>`;
+function filterMembers(){renderMembers(document.getElementById('search-members').value);}
+async function showFiche(userId,userTag){
+  const cases=allCases.filter(c=>c.targetId===userId).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  const counts={warn:0,mute:0,kick:0,ban:0};cases.forEach(c=>{if(counts[c.type]!==undefined)counts[c.type]++;});
+  document.getElementById('fiche-content').innerHTML=`
+    <div class="fiche-header"><div class="fiche-av">${(userTag||'?')[0].toUpperCase()}</div><div><div style="font-family:var(--font-head);font-size:20px;font-weight:900">${userTag}</div><div style="font-size:11px;color:var(--muted);margin-top:4px">ID: ${userId} · ${cases.length} sanction(s)</div><a href="${location.origin}/fiche?guild=${guildId}&user=${userId}" target="_blank" class="btn btn-blue" style="margin-top:8px;font-size:10px;padding:4px 10px">🔗 Fiche publique</a></div></div>
+    <div class="fiche-counts"><div class="fiche-count"><div class="fiche-count-val" style="color:var(--yellow)">${counts.warn}</div><div class="fiche-count-label">Warns</div></div><div class="fiche-count"><div class="fiche-count-val" style="color:var(--pink)">${counts.mute}</div><div class="fiche-count-label">Mutes</div></div><div class="fiche-count"><div class="fiche-count-val" style="color:var(--red)">${counts.kick}</div><div class="fiche-count-label">Kicks</div></div><div class="fiche-count"><div class="fiche-count-val" style="color:#999">${counts.ban}</div><div class="fiche-count-label">Bans</div></div></div>
+    <div>${cases.map(c=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);align-items:flex-start"><span class="badge ${TYPE_BADGES[c.type]||''}" style="min-width:70px;justify-content:center">${TYPE_ICONS[c.type]||''} ${c.type}</span><div style="flex:1"><div style="font-size:12px">${c.reason}</div><div style="font-size:10px;color:var(--muted);margin-top:3px">Par &lt;@${c.modId}&gt; · ${new Date(c.createdAt).toLocaleDateString('fr-FR')} · #${c.caseNumber}</div></div>${currentUser.adminLevel>=2?`<button class="btn btn-danger" onclick="deleteCaseFromFiche('${c.id}')" style="padding:3px 8px;font-size:10px">🗑️</button>`:''}</div>`).join('')||'<div style="padding:20px;text-align:center;color:var(--muted)">Aucune sanction 🎉</div>'}</div>`;
   openModal('modal-fiche');
 }
-
-async function deleteCaseFromFiche(id) {
-  if (!confirm('Supprimer ?')) return;
+async function deleteCaseFromFiche(id){
+  if(!confirm('Supprimer ?'))return;
   await fetch(`${API}/api/cases/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
-  allCases = allCases.filter(c => c.id !== id);
-  renderDashboard(); renderCases(); renderMembers();
-  toast('Sanction supprimée','success');
-  closeModal('modal-fiche');
+  allCases=allCases.filter(c=>c.id!==id);renderDashboard();renderCases();renderMembers();toast('Supprimé','success');closeModal('modal-fiche');
 }
 
-// ── Tickets ──
-function renderTickets() {
-  const filter = document.getElementById('ticket-filter')?.value || '';
-  let data = [...allTickets].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
-  if (filter) data = data.filter(t => t.status === filter);
-
-  const container = document.getElementById('tickets-list');
-  if (!data.length) { container.innerHTML = '<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun ticket</div></div>'; return; }
-  container.innerHTML = data.map(t => `
-    <div class="ticket-card">
-      <div class="ticket-info">
-        <div class="ticket-num">🎫 Ticket #${String(t.number).padStart(4,'0')}</div>
-        <div class="ticket-meta">Ouvert par ${t.userTag||t.userId} · ${new Date(t.createdAt).toLocaleDateString('fr-FR')}${t.closedAt ? ` · Fermé le ${new Date(t.closedAt).toLocaleDateString('fr-FR')}` : ''}</div>
-      </div>
-      <span class="badge ${t.status==='open'?'b-green':'b-red'}">${t.status==='open'?'✅ Ouvert':'🔒 Fermé'}</span>
-    </div>`).join('');
+// ─── Tickets ──────────────────────────────────────────────────────────────────
+function renderTickets(){
+  const f=document.getElementById('ticket-filter')?.value||'';
+  let data=[...allTickets].sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  if(f)data=data.filter(t=>t.status===f);
+  const container=document.getElementById('tickets-list');
+  if(!data.length){container.innerHTML='<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun ticket</div></div>';return;}
+  container.innerHTML=data.map(t=>`<div class="ticket-card"><div class="ticket-info"><div class="ticket-num">🎫 Ticket #${String(t.number).padStart(4,'0')} <span class="badge b-blue" style="font-size:9px">${t.type||'Support'}</span></div><div class="ticket-meta">Par ${t.userTag||t.userId} · ${new Date(t.createdAt).toLocaleDateString('fr-FR')}${t.closedAt?' · Fermé le '+new Date(t.closedAt).toLocaleDateString('fr-FR'):''}</div></div><span class="badge ${t.status==='open'?'b-green':'b-red'}">${t.status==='open'?'✅ Ouvert':'🔒 Fermé'}</span></div>`).join('');
 }
 
-// ── XP ──
-function getXPForLevel(level) { return 100 * level * level; }
-function getLevelFromXP(xp) { let l=0; while(xp>=getXPForLevel(l+1)) l++; return l; }
-
-function renderXP() {
-  const container = document.getElementById('xp-list');
-  if (!allXP.length) { container.innerHTML = '<div class="empty"><div class="empty-ico">⭐</div><div class="empty-title">Aucune donnée XP</div></div>'; return; }
-  const medals = ['🥇','🥈','🥉'];
-  container.innerHTML = allXP.map((u,i) => {
-    const level = u.level || getLevelFromXP(u.xp);
-    const currentLevelXP = getXPForLevel(level);
-    const nextLevelXP = getXPForLevel(level+1);
-    const progress = Math.min(100, Math.round(((u.xp-currentLevelXP)/(nextLevelXP-currentLevelXP))*100));
-    return `<div class="xp-rank-card">
-      <div class="xp-rank-pos">${medals[i]||`#${i+1}`}</div>
-      <div class="xp-rank-info">
-        <div class="xp-rank-name">${u.username}</div>
-        <div class="xp-rank-level">Niveau ${level} · ${u.xp} XP total</div>
-        <div class="xp-bar-wrap"><div class="xp-bar" style="width:${progress}%"></div></div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-family:var(--font-head);font-weight:900;font-size:20px;color:var(--yellow)">${level}</div>
-        <div style="font-size:10px;color:var(--muted)">niveau</div>
-      </div>
-    </div>`;
+// ─── XP ───────────────────────────────────────────────────────────────────────
+function getXPForLevel(l){return 100*l*l;}function getLevelFromXP(xp){let l=0;while(xp>=getXPForLevel(l+1))l++;return l;}
+function renderXP(){
+  const container=document.getElementById('xp-list');
+  if(!allXP.length){container.innerHTML='<div class="empty"><div class="empty-ico">⭐</div><div class="empty-title">Aucune donnée XP</div></div>';return;}
+  const medals=['🥇','🥈','🥉'];
+  container.innerHTML=allXP.map((u,i)=>{
+    const level=u.level||getLevelFromXP(u.xp);const clxp=getXPForLevel(level);const nlxp=getXPForLevel(level+1);
+    const prog=Math.min(100,Math.round(((u.xp-clxp)/(nlxp-clxp))*100));
+    return `<div class="xp-rank-card"><div style="font-family:var(--font-head);font-size:22px;font-weight:900;width:36px;text-align:center">${medals[i]||`#${i+1}`}</div><div class="xp-rank-info"><div class="xp-rank-name">${u.username}</div><div class="xp-rank-level">Niveau ${level} · ${u.xp} XP total</div><div class="xp-bar-wrap"><div class="xp-bar" style="width:${prog}%"></div></div></div><div style="text-align:right"><div style="font-family:var(--font-head);font-weight:900;font-size:20px;color:var(--yellow)">${level}</div><div style="font-size:10px;color:var(--muted)">niveau</div></div></div>`;
   }).join('');
 }
 
-// ── Staff ──
-async function renderStaff() {
-  const staff = await apiGet('/api/staff');
-  document.getElementById('staff-table').innerHTML = staff.length ? staff.sort((a,b)=>b.niveau-a.niveau).map(s => {
-    const lvl = ADMIN_LEVELS[s.niveau]||ADMIN_LEVELS[1];
-    return `<tr>
-      <td style="font-family:var(--font-head);font-weight:700">&lt;@${s.userId}&gt; <span style="font-size:10px;color:var(--muted)">(${s.tag||s.userId})</span></td>
-      <td><span class="${lvl.color}" style="font-family:var(--font-head);font-weight:700">Niv.${s.niveau} — ${lvl.name}</span></td>
-      <td style="font-size:11px;color:var(--muted)">${lvl.perms}</td>
-      <td style="font-size:11px;color:var(--muted)">${new Date(s.addedAt).toLocaleDateString('fr-FR')}</td>
-      <td>
-        <select onchange="updateStaffLevel('${s.userId}',this.value)" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:11px;outline:none">
-          ${[1,2,3,4].map(n=>`<option value="${n}" ${s.niveau===n?'selected':''}>${n} — ${ADMIN_LEVELS[n].name}</option>`).join('')}
-        </select>
-      </td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="5"><div class="empty"><div class="empty-ico">🛡️</div><div class="empty-title">Aucun staff configuré</div></div></td></tr>';
+// ─── Staff ────────────────────────────────────────────────────────────────────
+async function renderStaff(){
+  const staff=await apiGet('/api/staff');
+  document.getElementById('staff-table').innerHTML=staff.length?staff.sort((a,b)=>b.niveau-a.niveau).map(s=>{const lvl=ADMIN_LEVELS[s.niveau]||ADMIN_LEVELS[1];return `<tr><td style="font-family:var(--font-head);font-weight:700">&lt;@${s.userId}&gt; <span style="font-size:10px;color:var(--muted)">(${s.tag||s.userId})</span></td><td><span class="${lvl.color}" style="font-family:var(--font-head);font-weight:700">Niv.${s.niveau} — ${lvl.name}</span></td><td style="font-size:11px;color:var(--muted)">${lvl.perms}</td><td style="font-size:11px;color:var(--muted)">${new Date(s.addedAt).toLocaleDateString('fr-FR')}</td><td><select onchange="updateStaffLevel('${s.userId}',this.value)" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:11px;outline:none">${[1,2,3,4].map(n=>`<option value="${n}" ${s.niveau===n?'selected':''}>${n} — ${ADMIN_LEVELS[n].name}</option>`).join('')}</select></td></tr>`;}).join(''):'<tr><td colspan="5"><div class="empty"><div class="empty-ico">🛡️</div><div class="empty-title">Aucun staff</div></div></td></tr>';
 }
-
-async function updateStaffLevel(userId, niveau) {
+async function updateStaffLevel(userId,niveau){
   await fetch(`${API}/api/staff/${userId}`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({niveau:parseInt(niveau)})});
-  toast('Niveau mis à jour','success');
-  renderStaff();
+  toast('Niveau mis à jour','success');renderStaff();
 }
 
-// ── Users ──
-async function renderUsers() {
-  const users = await apiGet('/api/users');
-  document.getElementById('users-table').innerHTML = users.map(u => {
-    const lvl = ADMIN_LEVELS[u.adminLevel]||ADMIN_LEVELS[1];
-    return `<tr>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;font-family:var(--font-head)">${u.username[0].toUpperCase()}</div>
-          <span style="font-family:var(--font-head);font-weight:700">${u.username}</span>
-        </div>
-      </td>
-      <td><span class="badge ${u.role==='superadmin'?'b-blue':'b-green'}">${u.role}</span></td>
-      <td><span class="${lvl.color}" style="font-family:var(--font-head);font-weight:700">Niv.${u.adminLevel} — ${lvl.name}</span></td>
-      <td style="font-size:11px;color:var(--muted)">${new Date(u.createdAt).toLocaleDateString('fr-FR')}</td>
-      <td>
-        ${u.id!==currentUser.id ? `
-          <select onchange="updateUserLevel('${u.id}',this.value)" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:11px;outline:none">
-            ${[1,2,3,4].map(n=>`<option value="${n}" ${u.adminLevel===n?'selected':''}>${n} — ${ADMIN_LEVELS[n].name}</option>`).join('')}
-          </select>` : '<span style="font-size:11px;color:var(--muted)">Vous</span>'}
-      </td>
-    </tr>`;
-  }).join('');
+// ─── Users ────────────────────────────────────────────────────────────────────
+async function renderUsers(){
+  const users=await apiGet('/api/users');
+  document.getElementById('users-table').innerHTML=users.map(u=>{const lvl=ADMIN_LEVELS[u.adminLevel]||ADMIN_LEVELS[1];return `<tr><td><div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--red),var(--purple));display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;font-family:var(--font-head)">${u.username[0].toUpperCase()}</div><span style="font-family:var(--font-head);font-weight:700">${u.username}</span></div></td><td><span class="badge ${u.role==='superadmin'?'b-blue':'b-green'}">${u.role}</span></td><td><span class="${lvl.color}" style="font-family:var(--font-head);font-weight:700">Niv.${u.adminLevel} — ${lvl.name}</span></td><td style="font-size:11px;color:var(--muted)">${new Date(u.createdAt).toLocaleDateString('fr-FR')}</td><td>${u.id!==currentUser.id?`<select onchange="updateUserLevel('${u.id}',this.value)" style="padding:4px 8px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:4px;font-size:11px;outline:none">${[1,2,3,4].map(n=>`<option value="${n}" ${u.adminLevel===n?'selected':''}>${n} — ${ADMIN_LEVELS[n].name}</option>`).join('')}</select>`:'<span style="font-size:11px;color:var(--muted)">Vous</span>'}</td></tr>`;}).join('');
 }
-
-async function updateUserLevel(id, level) {
+async function updateUserLevel(id,level){
   await fetch(`${API}/api/users/${id}/level`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({adminLevel:parseInt(level)})});
-  toast('Niveau mis à jour','success');
-  renderUsers();
+  toast('Niveau mis à jour','success');renderUsers();
 }
 
-// ── Créer Admin (Super Admin uniquement) ──
-async function creerAdmin() {
-  if (currentUser.adminLevel < 4) {
-    toast('❌ Seuls les Super Admins peuvent créer des comptes staff.', 'error');
-    return;
-  }
+// ─── Add Admin ────────────────────────────────────────────────────────────────
+async function creerAdmin(){
+  if(currentUser.adminLevel<4){toast('❌ Seuls les Super Admins peuvent créer des comptes.','error');return;}
+  const username=document.getElementById('na-user').value.trim();
+  const passwordInput=document.getElementById('na-pass').value.trim();
+  const level=parseInt(document.getElementById('na-level').value);
+  const discordId=document.getElementById('na-discord-id').value.trim();
+  if(!username)return toast('Entrez un nom d\'utilisateur','error');
+  const password=passwordInput||genPassword();
+  const r=await fetch(`${API}/api/auth/register`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password,guildId})});
+  const data=await r.json();if(!r.ok)return toast(data.error||'Erreur','error');
+  if(level>1){await fetch(`${API}/api/users/${data.user.id}/level`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({adminLevel:level})});}
+  if(discordId){await fetch(`${API}/api/send-credentials`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({userId:discordId,username,password,level,guildId,panelUrl:location.origin})});}
+  document.getElementById('cred-result').style.display='block';
+  document.getElementById('cred-result').innerHTML=`<div class="cred-box"><h3>✅ Compte créé !</h3><div class="cred-row"><div><div class="cred-label">Identifiant</div><div class="cred-val">${username}</div></div><button class="btn btn-ghost" onclick="copyText('${username}')" style="font-size:10px">Copier</button></div><div class="cred-row"><div><div class="cred-label">Mot de passe</div><div class="cred-val">${password}</div></div><button class="btn btn-ghost" onclick="copyText('${password}')" style="font-size:10px">Copier</button></div><div class="cred-row"><div><div class="cred-label">Lien</div><div class="cred-val" style="font-size:12px">${location.origin}/?guild=${guildId}</div></div><button class="btn btn-ghost" onclick="copyText('${location.origin}/?guild=${guildId}')" style="font-size:10px">Copier</button></div><div class="cred-warn">⚠️ Ne partagez pas ces identifiants.${discordId?' MP Discord envoyé.':''}</div></div>`;
+  document.getElementById('na-user').value='';document.getElementById('na-pass').value='';document.getElementById('na-discord-id').value='';
+  toast('✅ Compte créé !','success');if(currentUser.adminLevel>=3)renderUsers();
+}
+function copyText(t){navigator.clipboard.writeText(t).then(()=>toast('Copié !','info'));}
 
-  const username = document.getElementById('na-user').value.trim();
-  const passwordInput = document.getElementById('na-pass').value.trim();
-  const level = parseInt(document.getElementById('na-level').value);
-  const discordId = document.getElementById('na-discord-id').value.trim();
-
-  if (!username) return toast('Entrez un nom d\'utilisateur', 'error');
-
-  // Générer mot de passe si vide
-  const password = passwordInput || genPassword();
-
-  // Créer le compte via l'API
-  const r = await fetch(`${API}/api/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password, guildId })
-  });
-  const data = await r.json();
-  if (!r.ok) return toast(data.error || 'Erreur lors de la création', 'error');
-
-  // Mettre à jour le niveau admin
-  if (level > 1) {
-    await fetch(`${API}/api/users/${data.user.id}/level`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ adminLevel: level })
-    });
-  }
-
-  // Envoyer les identifiants en MP via Discord si ID fourni
-  if (discordId) {
-    await fetch(`${API}/api/send-credentials`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ userId: discordId, username, password, level, guildId, panelUrl: location.origin })
-    });
-  }
-
-  // Afficher les identifiants
-  document.getElementById('cred-result').style.display = 'block';
-  document.getElementById('cred-result').innerHTML = `
-    <div class="cred-box">
-      <h3>✅ Compte créé avec succès !</h3>
-      <div class="cred-row">
-        <div>
-          <div class="cred-label">Nom d'utilisateur</div>
-          <div class="cred-val">${username}</div>
-        </div>
-        <button class="btn btn-ghost" onclick="copyText('${username}')" style="font-size:10px">Copier</button>
-      </div>
-      <div class="cred-row">
-        <div>
-          <div class="cred-label">Mot de passe</div>
-          <div class="cred-val">${password}</div>
-        </div>
-        <button class="btn btn-ghost" onclick="copyText('${password}')" style="font-size:10px">Copier</button>
-      </div>
-      <div class="cred-row">
-        <div>
-          <div class="cred-label">Niveau</div>
-          <div class="cred-val">${level} — ${ADMIN_LEVELS[level].name}</div>
-        </div>
-      </div>
-      <div class="cred-row">
-        <div>
-          <div class="cred-label">Lien du panel</div>
-          <div class="cred-val" style="font-size:12px">${location.origin}/?guild=${guildId}</div>
-        </div>
-        <button class="btn btn-ghost" onclick="copyText('${location.origin}/?guild=${guildId}')" style="font-size:10px">Copier</button>
-      </div>
-      <div class="cred-warn">⚠️ Transmettez ces identifiants de manière sécurisée.${discordId ? ' Un MP Discord a été envoyé au membre.' : ''}</div>
-    </div>`;
-
-  // Reset form
-  document.getElementById('na-user').value = '';
-  document.getElementById('na-pass').value = '';
-  document.getElementById('na-discord-id').value = '';
-
-  toast('✅ Compte créé !', 'success');
-  if (currentUser.adminLevel >= 3) renderUsers();
+// ─── Ticket Config ────────────────────────────────────────────────────────────
+async function loadTicketConfig(){
+  try{const data=await apiGet('/api/ticket-config');ticketTypes=data.ticketTypes||[];ticketWelcome=data.ticketWelcomeMessage||'';ticketDm=data.ticketDmMessage||'';document.getElementById('tc-welcome').value=ticketWelcome;document.getElementById('tc-dm').value=ticketDm;renderTicketTypes();}catch(e){console.error(e);}
+}
+function renderTicketTypes(){
+  const container=document.getElementById('ticket-types-list');
+  if(!ticketTypes.length){container.innerHTML='<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun type</div><div style="font-size:12px;color:var(--muted);margin-top:4px">Cliquez sur "+ Ajouter"</div></div>';return;}
+  container.innerHTML=ticketTypes.map((t,i)=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:12px"><div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px"><div style="flex:1;display:grid;grid-template-columns:80px 1fr 1fr;gap:10px"><div class="form-field" style="margin-bottom:0"><label>Emoji</label><input type="text" value="${t.emoji||'🎫'}" oninput="updateType(${i},'emoji',this.value)" style="padding:8px;font-size:18px;text-align:center"></div><div class="form-field" style="margin-bottom:0"><label>Nom *</label><input type="text" value="${t.label||''}" oninput="updateType(${i},'label',this.value)" placeholder="Ex: Support"></div><div class="form-field" style="margin-bottom:0"><label>Description</label><input type="text" value="${t.description||''}" oninput="updateType(${i},'description',this.value)" placeholder="Ex: Signaler un problème"></div></div><button class="btn btn-danger" onclick="removeTicketType(${i})" style="padding:6px 10px;margin-top:20px">🗑️</button></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px"><div class="form-field" style="margin-bottom:0"><label>ID Catégorie Discord</label><input type="text" value="${t.categoryId||''}" oninput="updateType(${i},'categoryId',this.value)" placeholder="ID catégorie"></div><div class="form-field" style="margin-bottom:0"><label>Couleur</label><input type="color" value="${t.color||'#5865F2'}" oninput="updateType(${i},'color',this.value)" style="height:40px;padding:4px 8px;cursor:pointer"></div></div><div class="form-field" style="margin-bottom:8px"><label>Message d'accueil ({user})</label><textarea rows="2" oninput="updateType(${i},'welcomeMessage',this.value)" placeholder="Laisser vide = message global">${t.welcomeMessage||''}</textarea></div><div class="form-field" style="margin-bottom:0"><label>MP à l'ouverture ({user}, {type}, {number}, {channel})</label><textarea rows="2" oninput="updateType(${i},'dmMessage',this.value)" placeholder="Laisser vide = MP global">${t.dmMessage||''}</textarea></div></div>`).join('');
+}
+function addTicketType(){ticketTypes.push({label:'',emoji:'🎫',description:'',categoryId:'',color:'#5865F2',welcomeMessage:'',dmMessage:''});renderTicketTypes();}
+function removeTicketType(i){ticketTypes.splice(i,1);renderTicketTypes();}
+function updateType(i,key,value){ticketTypes[i][key]=value;}
+async function saveTicketConfig(){
+  const welcome=document.getElementById('tc-welcome').value.trim();const dm=document.getElementById('tc-dm').value.trim();
+  const valid=ticketTypes.filter(t=>t.label.trim());
+  const r=await fetch('/api/ticket-config',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({ticketTypes:valid,ticketWelcomeMessage:welcome,ticketDmMessage:dm})});
+  const data=await r.json();if(data.error)return toast(data.error,'error');
+  ticketTypes=valid;toast('✅ Config tickets sauvegardée !','success');
 }
 
-function copyText(text) {
-  navigator.clipboard.writeText(text).then(() => toast('Copié !', 'info'));
+// ─── Premium Config ───────────────────────────────────────────────────────────
+async function loadPremiumConfig(){
+  try{
+    const data=await apiGet('/api/premium-config');
+    if(!data||data.error)return;
+    document.getElementById('p-welcome-enabled').value=data.welcomeEnabled?'true':'false';
+    document.getElementById('p-welcome-channel').value=data.welcomeChannel||'';
+    document.getElementById('p-welcome-msg').value=data.welcomeMessage||'';
+    document.getElementById('p-welcome-msgs').value=(data.welcomeMessages||[]).join('\n');
+    document.getElementById('p-leave-enabled').value=data.leaveEnabled?'true':'false';
+    document.getElementById('p-leave-channel').value=data.leaveChannel||'';
+    document.getElementById('p-leave-msg').value=data.leaveMessage||'';
+    document.getElementById('p-captcha-enabled').value=data.captchaEnabled?'true':'false';
+    document.getElementById('p-captcha-channel').value=data.captchaChannel||'';
+    document.getElementById('p-captcha-role').value=data.captchaRole||'';
+    document.getElementById('p-ai-mod').value=data.aiModeration?'true':'false';
+    document.getElementById('p-faq-enabled').value=data.faqEnabled?'true':'false';
+    // Show lock notice if not premium
+    if(!currentLicence.isPremium){document.getElementById('premium-lock-notice').style.display='block';}
+  }catch(e){console.error('loadPremiumConfig:',e);}
+}
+async function savePremiumConfig(){
+  if(!currentLicence.isPremium){toast('❌ Licence Premium requise pour sauvegarder ces options.','error');return;}
+  const welcomeMessages=(document.getElementById('p-welcome-msgs').value.trim()||'').split('\n').map(s=>s.trim()).filter(s=>s.length>0);
+  const config={
+    welcomeEnabled:document.getElementById('p-welcome-enabled').value==='true',
+    welcomeChannel:document.getElementById('p-welcome-channel').value.trim(),
+    welcomeMessage:document.getElementById('p-welcome-msg').value.trim(),
+    welcomeMessages,
+    leaveEnabled:document.getElementById('p-leave-enabled').value==='true',
+    leaveChannel:document.getElementById('p-leave-channel').value.trim(),
+    leaveMessage:document.getElementById('p-leave-msg').value.trim(),
+    captchaEnabled:document.getElementById('p-captcha-enabled').value==='true',
+    captchaChannel:document.getElementById('p-captcha-channel').value.trim(),
+    captchaRole:document.getElementById('p-captcha-role').value.trim(),
+    aiModeration:document.getElementById('p-ai-mod').value==='true',
+    faqEnabled:document.getElementById('p-faq-enabled').value==='true',
+  };
+  const r=await fetch(`${API}/api/premium-config`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(config)});
+  const data=await r.json();if(data.error)return toast(data.error,'error');
+  toast('✅ Config premium sauvegardée !','success');
 }
 
-// ── Navigation ──
-function showPage(name, el) {
+// ─── Boutique ─────────────────────────────────────────────────────────────────
+async function loadShop(){allShopItems=await apiGet('/api/shop');renderShop();}
+function renderShop(){
+  const tbody=document.getElementById('shop-table');
+  if(!Array.isArray(allShopItems)||!allShopItems.length){tbody.innerHTML='<tr><td colspan="5"><div class="empty"><div class="empty-ico">🏪</div><div class="empty-title">Aucun article</div></div></td></tr>';return;}
+  tbody.innerHTML=allShopItems.map(item=>`<tr><td style="font-family:var(--font-head);font-weight:700">${item.nom}</td><td><span style="color:var(--yellow);font-weight:700">${item.prix} 🪙</span></td><td><span class="badge b-blue">${item.type}</span></td><td style="font-size:11px;color:var(--muted)">${item.description||(item.roleId?'Rôle: '+item.roleId:'-')}</td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:10px" onclick="editShopItem('${item.id}')">✏️</button><button class="btn btn-danger" style="padding:4px 8px;font-size:10px;margin-left:4px" onclick="deleteShopItem('${item.id}')">🗑️</button></td></tr>`).join('');
+}
+async function addShopItem(){
+  const nom=document.getElementById('item-nom').value.trim();const prix=parseInt(document.getElementById('item-prix').value);
+  const type=document.getElementById('item-type').value;const roleId=document.getElementById('item-role-id').value.trim();const description=document.getElementById('item-desc').value.trim();
+  if(!nom||!prix)return toast('Nom et prix requis','error');
+  const r=await fetch(`${API}/api/shop`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({nom,prix,type,roleId,description})});
+  const data=await r.json();if(data.error)return toast(data.error,'error');
+  closeModal('modal-add-item');['item-nom','item-prix','item-role-id','item-desc'].forEach(id=>document.getElementById(id).value='');
+  toast('✅ Article ajouté !','success');await loadShop();
+}
+function editShopItem(id){
+  const item=allShopItems.find(i=>i.id===id);if(!item)return;
+  document.getElementById('edit-item-id').value=id;document.getElementById('edit-item-nom').value=item.nom;document.getElementById('edit-item-prix').value=item.prix;document.getElementById('edit-item-desc').value=item.description||'';
+  openModal('modal-edit-item');
+}
+async function saveShopItem(){
+  const id=document.getElementById('edit-item-id').value;const nom=document.getElementById('edit-item-nom').value.trim();const prix=parseInt(document.getElementById('edit-item-prix').value);const description=document.getElementById('edit-item-desc').value.trim();
+  if(!nom||!prix)return toast('Nom et prix requis','error');
+  await fetch(`${API}/api/shop/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({nom,prix,description})});
+  closeModal('modal-edit-item');toast('✅ Article modifié !','success');await loadShop();
+}
+async function deleteShopItem(id){
+  if(!confirm('Supprimer ?'))return;
+  await fetch(`${API}/api/shop/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
+  toast('Article supprimé','success');await loadShop();
+}
+
+// ─── Économie ─────────────────────────────────────────────────────────────────
+async function loadEconomy(){
+  const data=await apiGet('/api/economy');
+  if(!Array.isArray(data))return;
+  const medals=['🥇','🥈','🥉'];
+  document.getElementById('economy-top').innerHTML=data.slice(0,3).map((u,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:20px">${medals[i]||'#'+(i+1)}</span><div style="flex:1"><div style="font-weight:700">${u.username||u.userId}</div></div><span style="color:var(--yellow);font-weight:700">${u.coins} 🪙</span></div>`).join('')||'<div style="color:var(--muted);text-align:center;padding:20px">Aucune donnée</div>';
+  document.getElementById('economy-table').innerHTML=data.map((u,i)=>`<tr><td style="color:var(--muted)">#${i+1}</td><td><div style="font-family:var(--font-head);font-weight:700">${u.username||'?'}</div><div style="font-size:10px;color:var(--muted)">${u.userId}</div></td><td><span style="color:var(--yellow);font-weight:700">${u.coins} 🪙</span></td><td><button class="btn btn-ghost" style="padding:4px 8px;font-size:10px" onclick="document.getElementById('eco-user-id').value='${u.userId}'">Sélectionner</button></td></tr>`).join('');
+}
+async function giveCoins(){
+  const userId=document.getElementById('eco-user-id').value.trim();const amount=parseInt(document.getElementById('eco-amount').value);
+  if(!userId||!amount)return toast('Remplissez tous les champs','error');
+  const r=await fetch(`${API}/api/economy/give`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({userId,amount})});
+  const data=await r.json();if(data.error)return toast(data.error,'error');
+  toast(`✅ +${amount} 🪙 donné !`,'success');await loadEconomy();
+}
+async function removeCoinsAdmin(){
+  const userId=document.getElementById('eco-user-id').value.trim();const amount=parseInt(document.getElementById('eco-amount').value);
+  if(!userId||!amount)return toast('Remplissez tous les champs','error');
+  const r=await fetch(`${API}/api/economy/remove`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({userId,amount})});
+  const data=await r.json();if(data.error)return toast(data.error,'error');
+  toast(`✅ -${amount} 🪙 retiré !`,'success');await loadEconomy();
+}
+
+// ─── FAQ ──────────────────────────────────────────────────────────────────────
+async function loadFAQ(){allFAQ=await apiGet('/api/faq');renderFAQ();}
+function renderFAQ(){
+  const c=document.getElementById('faq-list');
+  if(!Array.isArray(allFAQ)||!allFAQ.length){c.innerHTML='<div class="empty"><div class="empty-ico">❓</div><div class="empty-title">Aucune FAQ</div></div>';return;}
+  c.innerHTML=allFAQ.map(f=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start"><div style="flex:1"><div style="font-family:var(--font-head);font-weight:700;font-size:14px;margin-bottom:6px">❓ ${f.question}</div><div style="font-size:12px;color:var(--muted)">${f.answer}</div></div><button class="btn btn-danger" style="padding:4px 8px;font-size:10px;flex-shrink:0" onclick="deleteFAQ('${f.id}')">🗑️</button></div>`).join('');
+}
+async function addFAQ(){
+  const q=document.getElementById('faq-question').value.trim();const a=document.getElementById('faq-answer').value.trim();
+  if(!q||!a)return toast('Question et réponse requises','error');
+  const r=await fetch(`${API}/api/faq`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({question:q,answer:a})});
+  const data=await r.json();if(data.error)return toast(data.error,'error');
+  closeModal('modal-add-faq');document.getElementById('faq-question').value='';document.getElementById('faq-answer').value='';
+  toast('✅ FAQ ajoutée !','success');await loadFAQ();
+}
+async function deleteFAQ(id){
+  if(!confirm('Supprimer ?'))return;
+  await fetch(`${API}/api/faq/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});
+  toast('FAQ supprimée','success');await loadFAQ();
+}
+
+// ─── Identité Bot ─────────────────────────────────────────────────────────────
+function previewAvatar(){
+  const url=document.getElementById('bot-avatar').value.trim();
+  const p=document.getElementById('bot-preview');
+  if(url){document.getElementById('bot-avatar-img').src=url;document.getElementById('bot-name-preview').textContent=document.getElementById('bot-nickname').value||'ModBot';document.getElementById('bot-bio-preview').textContent=document.getElementById('bot-bio').value||'';p.style.display='block';}
+  else{p.style.display='none';}
+}
+async function saveBotIdentity(){
+  const nickname=document.getElementById('bot-nickname').value.trim();const avatarUrl=document.getElementById('bot-avatar').value.trim();const bio=document.getElementById('bot-bio').value.trim();
+  const r=await fetch(`${API}/api/bot-identity`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({nickname,avatarUrl,bio})});
+  const data=await r.json();if(data.error)return toast(data.error,'error');
+  toast('✅ Identité mise à jour !','success');
+}
+
+// ─── Sanctions Panel ──────────────────────────────────────────────────────────
+async function executerSanction(){
+  const targetId=document.getElementById('s-target-id').value.trim();const type=document.getElementById('s-type').value;const reason=document.getElementById('s-reason').value.trim();
+  if(!targetId)return toast('Entrez un ID Discord','error');
+  const r=await fetch(`${API}/api/cases`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({targetId,targetTag:targetId,type,reason})});
+  const data=await r.json();if(data.error)return toast(data.error,'error');
+  closeModal('modal-sanction');document.getElementById('s-target-id').value='';document.getElementById('s-reason').value='';
+  toast(`✅ Sanction ${type} appliquée !`,'success');await loadAll();
+}
+
+// ─── Navigation ───────────────────────────────────────────────────────────────
+function showPage(name,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById(`page-${name}`).classList.add('active');
-  if (el) el.classList.add('active');
-  if (name === 'tickets') renderTickets();
-  if (name === 'ticketconfig') loadTicketConfig();
-  if (name === 'xp') renderXP();
-  if (name === 'staff') renderStaff();
-  if (name === 'users') renderUsers();
+  const page=document.getElementById(`page-${name}`);
+  if(page)page.classList.add('active');
+  if(el)el.classList.add('active');
+  if(name==='ticketconfig')loadTicketConfig();
+  if(name==='premium')loadPremiumConfig();
+  if(name==='shop')loadShop();
+  if(name==='economy')loadEconomy();
+  if(name==='faq')loadFAQ();
 }
 
-// ── Modal ──
-function openModal(id){document.getElementById(id).classList.add('open')}
-function closeModal(id){document.getElementById(id).classList.remove('open')}
-document.addEventListener('click',e=>{if(e.target.classList.contains('modal-ov'))closeModal(e.target.id)});
+// ─── Modal ────────────────────────────────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.addEventListener('click',e=>{if(e.target.classList.contains('modal-ov'))closeModal(e.target.id);});
 
-// ── Toast ──
+// ─── Toast ────────────────────────────────────────────────────────────────────
 function toast(msg,type='success'){
-  const el=document.createElement('div');
-  el.className=`toast ${type}`;
+  const el=document.createElement('div');el.className=`toast ${type}`;
   el.innerHTML=`<span>${type==='success'?'✅':type==='error'?'❌':'ℹ️'}</span><span>${msg}</span>`;
-  document.getElementById('toasts').appendChild(el);
-  setTimeout(()=>el.remove(),3500);
-}
-
-// ── Sanctionner depuis le panel ──
-async function executerSanction() {
-  const targetId = document.getElementById('s-target-id').value.trim();
-  const type = document.getElementById('s-type').value;
-  const reason = document.getElementById('s-reason').value.trim();
-  if (!targetId) return toast('Entrez un ID Discord valide', 'error');
-  const res = await fetch(`${API}/api/cases`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ targetId, targetTag: targetId, type, reason })
-  });
-  const data = await res.json();
-  if (data.error) return toast(data.error, 'error');
-  closeModal('modal-sanction');
-  document.getElementById('s-target-id').value = '';
-  document.getElementById('s-reason').value = '';
-  toast(`✅ Sanction ${type} appliquée !`, 'success');
-  await loadAll();
-}
-
-// ── Ticket Config ──
-let ticketTypes = [];
-let ticketWelcome = '';
-let ticketDm = '';
-
-async function loadTicketConfig() {
-  try {
-    const data = await apiGet('/api/ticket-config');
-    ticketTypes = data.ticketTypes || [];
-    ticketWelcome = data.ticketWelcomeMessage || '';
-    ticketDm = data.ticketDmMessage || '';
-    document.getElementById('tc-welcome').value = ticketWelcome;
-    document.getElementById('tc-dm').value = ticketDm;
-    renderTicketTypes();
-  } catch {}
-}
-
-function renderTicketTypes() {
-  const container = document.getElementById('ticket-types-list');
-  if (!ticketTypes.length) {
-    container.innerHTML = '<div class="empty"><div class="empty-ico">🎫</div><div class="empty-title">Aucun type configuré</div><div style="font-size:12px;color:var(--muted);margin-top:4px">Cliquez sur "+ Ajouter un type" pour commencer</div></div>';
-    return;
-  }
-  container.innerHTML = ticketTypes.map((t, i) => `
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:12px">
-      <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:12px">
-        <div style="flex:1;display:grid;grid-template-columns:80px 1fr 1fr;gap:10px">
-          <div class="form-field" style="margin-bottom:0">
-            <label>Emoji</label>
-            <input type="text" value="${t.emoji||'🎫'}" oninput="updateType(${i},'emoji',this.value)" placeholder="🎫" style="padding:8px;font-size:18px;text-align:center">
-          </div>
-          <div class="form-field" style="margin-bottom:0">
-            <label>Nom du type *</label>
-            <input type="text" value="${t.label||''}" oninput="updateType(${i},'label',this.value)" placeholder="Ex: Support, Bug, Aide...">
-          </div>
-          <div class="form-field" style="margin-bottom:0">
-            <label>Description (menu)</label>
-            <input type="text" value="${t.description||''}" oninput="updateType(${i},'description',this.value)" placeholder="Ex: Signaler un problème">
-          </div>
-        </div>
-        <button class="btn btn-danger" onclick="removeTicketType(${i})" style="padding:6px 10px;margin-top:20px">🗑️</button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div class="form-field" style="margin-bottom:0">
-          <label>ID Catégorie Discord (optionnel)</label>
-          <input type="text" value="${t.categoryId||''}" oninput="updateType(${i},'categoryId',this.value)" placeholder="ID de la catégorie Discord">
-        </div>
-        <div class="form-field" style="margin-bottom:0">
-          <label>Couleur</label>
-          <input type="color" value="${t.color||'#5865F2'}" oninput="updateType(${i},'color',this.value)" style="height:40px;padding:4px 8px;cursor:pointer">
-        </div>
-      </div>
-      <div class="form-field" style="margin-bottom:8px">
-        <label>Message d'accueil spécifique (remplace le message global — variable: {user})</label>
-        <textarea rows="2" oninput="updateType(${i},'welcomeMessage',this.value)" placeholder="Laisser vide pour utiliser le message global...">${t.welcomeMessage||''}</textarea>
-      </div>
-      <div class="form-field" style="margin-bottom:0">
-        <label>MP spécifique à l'ouverture (remplace le MP global — variables: {user}, {type}, {number}, {channel})</label>
-        <textarea rows="2" oninput="updateType(${i},'dmMessage',this.value)" placeholder="Laisser vide pour utiliser le MP global...">${t.dmMessage||''}</textarea>
-      </div>
-    </div>`).join('');
-}
-
-function addTicketType() {
-  ticketTypes.push({ label: '', emoji: '🎫', description: '', categoryId: '', color: '#5865F2', welcomeMessage: '', dmMessage: '' });
-  renderTicketTypes();
-}
-
-function removeTicketType(i) {
-  ticketTypes.splice(i, 1);
-  renderTicketTypes();
-}
-
-function updateType(i, key, value) {
-  ticketTypes[i][key] = value;
-}
-
-async function saveTicketConfig() {
-  const welcome = document.getElementById('tc-welcome').value.trim();
-  const dm = document.getElementById('tc-dm').value.trim();
-  const validTypes = ticketTypes.filter(t => t.label.trim());
-  if (validTypes.length < ticketTypes.length) {
-    toast('⚠️ Certains types sans nom ont été ignorés', 'info');
-  }
-  const r = await fetch('/api/ticket-config', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ ticketTypes: validTypes, ticketWelcomeMessage: welcome, ticketDmMessage: dm })
-  });
-  const data = await r.json();
-  if (data.error) return toast(data.error, 'error');
-  ticketTypes = validTypes;
-  toast('✅ Configuration tickets sauvegardée !', 'success');
+  document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),3500);
 }
 
 init();
-  // FONCTION POUR ENVOYER LA CONFIG PREMIUM AU BOT
-async function savePremiumConfig() {
-  const body = {
-    welcomeEnabled: document.getElementById('p-welcome-enabled').value === 'true',
-    welcomeChannel: document.getElementById('p-welcome-channel').value,
-    welcomeMessage: document.getElementById('p-welcome-msg').value,
-    leaveEnabled: document.getElementById('p-leave-enabled').value === 'true',
-    leaveChannel: document.getElementById('p-leave-channel').value,
-    leaveMessage: document.getElementById('p-leave-msg').value,
-    botNickname: document.getElementById('p-bot-nick').value
-  };
-
-  try {
-    const response = await fetch('/api/premium-config', {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('token')}` // Sécurité
-      },
-      body: JSON.stringify(body)
-    });
-
-    const result = await response.json();
-    
-    if (result.success) {
-      alert('✅ Configuration Premium mise à jour !');
-    } else {
-      alert('❌ Erreur : ' + (result.error || 'Impossible de sauvegarder'));
-    }
-  } catch (error) {
-    console.error('Erreur Premium:', error);
-    alert('❌ Le serveur ne répond pas. Vérifie si le bot est ON.');
-  }
-}
-// Fonction pour afficher la page (indispensable)
-function showPage(pageId, el) {
-    document.querySelectorAll('.page').forEach(p => p.style.display = 'none');
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById('page-' + pageId).style.display = 'block';
-    el.classList.add('active');
-}
-
-// Fonction pour sauvegarder vers le BOT
-async function savePremiumConfig() {
-    const config = {
-        welcomeEnabled: document.getElementById('p-welcome-enabled').value === 'true',
-        welcomeChannel: document.getElementById('p-welcome-channel').value,
-        welcomeMessage: document.getElementById('p-welcome-msg').value,
-        leaveEnabled: document.getElementById('p-leave-enabled').value === 'true',
-        leaveChannel: document.getElementById('p-leave-channel').value,
-        leaveMessage: document.getElementById('p-leave-msg').value,
-        botNickname: document.getElementById('p-bot-nick').value
-    };
-
-    const res = await fetch('/api/premium-config', {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + localStorage.getItem('token') 
-        },
-        body: JSON.stringify(config)
-    });
-
-    if (res.ok) alert('✅ Config enregistrée !');
-    else alert('❌ Erreur de sauvegarde');
-}
-</script>
-</body>
-</html>
-
-// ── Licence check ──
-let currentLicence = { valid: true, isPremium: false };
-async function checkLicenceStatus() {
-  try {
-    const data = await apiGet('/api/licence');
-    currentLicence = data;
-  } catch {}
-}
-
-// ── Premium Config ──
-async function loadPremiumConfig() {
-  try {
-    const data = await apiGet('/api/premium-config');
-    if (!data || data.error) return;
-    document.getElementById('p-welcome-enabled').value = data.welcomeEnabled ? 'true' : 'false';
-    document.getElementById('p-welcome-channel').value = data.welcomeChannel || '';
-    document.getElementById('p-welcome-msg').value = data.welcomeMessage || '';
-    document.getElementById('p-welcome-msgs').value = (data.welcomeMessages || []).join('\n');
-    document.getElementById('p-leave-enabled').value = data.leaveEnabled ? 'true' : 'false';
-    document.getElementById('p-leave-channel').value = data.leaveChannel || '';
-    document.getElementById('p-leave-msg').value = data.leaveMessage || '';
-    document.getElementById('p-captcha-enabled').value = data.captchaEnabled ? 'true' : 'false';
-    document.getElementById('p-captcha-channel').value = data.captchaChannel || '';
-    document.getElementById('p-captcha-role').value = data.captchaRole || '';
-    document.getElementById('p-ai-mod').value = data.aiModeration ? 'true' : 'false';
-    document.getElementById('p-faq-enabled').value = data.faqEnabled ? 'true' : 'false';
-  } catch(e) { console.error('loadPremiumConfig error:', e); }
-}
-
-async function savePremiumConfig() {
-  const welcomeMessages = (document.getElementById('p-welcome-msgs').value.trim() || '')
-    .split('\n').map(s => s.trim()).filter(s => s.length > 0);
-  const config = {
-    welcomeEnabled: document.getElementById('p-welcome-enabled').value === 'true',
-    welcomeChannel: document.getElementById('p-welcome-channel').value.trim(),
-    welcomeMessage: document.getElementById('p-welcome-msg').value.trim(),
-    welcomeMessages,
-    leaveEnabled: document.getElementById('p-leave-enabled').value === 'true',
-    leaveChannel: document.getElementById('p-leave-channel').value.trim(),
-    leaveMessage: document.getElementById('p-leave-msg').value.trim(),
-    captchaEnabled: document.getElementById('p-captcha-enabled').value === 'true',
-    captchaChannel: document.getElementById('p-captcha-channel').value.trim(),
-    captchaRole: document.getElementById('p-captcha-role').value.trim(),
-    aiModeration: document.getElementById('p-ai-mod').value === 'true',
-    faqEnabled: document.getElementById('p-faq-enabled').value === 'true',
-  };
-  const r = await fetch(`${API}/api/premium-config`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify(config)
-  });
-  const data = await r.json();
-  if (data.error) return toast(data.error, 'error');
-  toast('✅ Configuration premium sauvegardée !', 'success');
-}
-
-// ── Boutique ──
-let allShopItems = [];
-async function loadShop() {
-  allShopItems = await apiGet('/api/shop');
-  renderShop();
-}
-function renderShop() {
-  const tbody = document.getElementById('shop-table');
-  if (!allShopItems || !allShopItems.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty"><div class="empty-ico">🏪</div><div class="empty-title">Aucun article</div></div></td></tr>'; return; }
-  tbody.innerHTML = allShopItems.map(item => `<tr>
-    <td style="font-family:var(--font-head);font-weight:700">${item.nom}</td>
-    <td><span style="color:var(--yellow);font-weight:700">${item.prix} 🪙</span></td>
-    <td><span class="badge b-blue">${item.type}</span></td>
-    <td style="font-size:11px;color:var(--muted)">${item.description || (item.roleId ? 'Rôle: ' + item.roleId : '-')}</td>
-    <td>
-      <button class="btn btn-ghost" style="padding:4px 8px;font-size:10px" onclick="editShopItem('${item.id}')">✏️</button>
-      <button class="btn btn-danger" style="padding:4px 8px;font-size:10px;margin-left:4px" onclick="deleteShopItem('${item.id}')">🗑️</button>
-    </td>
-  </tr>`).join('');
-}
-async function addShopItem() {
-  const nom = document.getElementById('item-nom').value.trim();
-  const prix = parseInt(document.getElementById('item-prix').value);
-  const type = document.getElementById('item-type').value;
-  const roleId = document.getElementById('item-role-id').value.trim();
-  const description = document.getElementById('item-desc').value.trim();
-  if (!nom || !prix) return toast('Nom et prix requis', 'error');
-  const r = await fetch(`${API}/api/shop`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ nom, prix, type, roleId, description }) });
-  const data = await r.json();
-  if (data.error) return toast(data.error, 'error');
-  closeModal('modal-add-item');
-  ['item-nom','item-prix','item-role-id','item-desc'].forEach(id => document.getElementById(id).value = '');
-  toast('✅ Article ajouté !', 'success');
-  await loadShop();
-}
-function editShopItem(id) {
-  const item = allShopItems.find(i => i.id === id);
-  if (!item) return;
-  document.getElementById('edit-item-id').value = id;
-  document.getElementById('edit-item-nom').value = item.nom;
-  document.getElementById('edit-item-prix').value = item.prix;
-  document.getElementById('edit-item-desc').value = item.description || '';
-  openModal('modal-edit-item');
-}
-async function saveShopItem() {
-  const id = document.getElementById('edit-item-id').value;
-  const nom = document.getElementById('edit-item-nom').value.trim();
-  const prix = parseInt(document.getElementById('edit-item-prix').value);
-  const description = document.getElementById('edit-item-desc').value.trim();
-  if (!nom || !prix) return toast('Nom et prix requis', 'error');
-  await fetch(`${API}/api/shop/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ nom, prix, description }) });
-  closeModal('modal-edit-item');
-  toast('✅ Article modifié !', 'success');
-  await loadShop();
-}
-async function deleteShopItem(id) {
-  if (!confirm('Supprimer cet article ?')) return;
-  await fetch(`${API}/api/shop/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-  toast('Article supprimé', 'success');
-  await loadShop();
-}
-
-// ── Économie ──
-async function loadEconomy() {
-  const data = await apiGet('/api/economy');
-  if (!Array.isArray(data)) return;
-  const medals = ['🥇','🥈','🥉'];
-  document.getElementById('economy-top').innerHTML = data.slice(0,3).map((u,i) =>
-    `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:20px">${medals[i]||'#'+(i+1)}</span>
-      <div style="flex:1"><div style="font-weight:700">${u.username||u.userId}</div></div>
-      <span style="color:var(--yellow);font-weight:700">${u.coins} 🪙</span>
-    </div>`).join('') || '<div style="color:var(--muted);text-align:center;padding:20px">Aucune donnée</div>';
-  document.getElementById('economy-table').innerHTML = data.map((u,i) => `<tr>
-    <td style="color:var(--muted)">#${i+1}</td>
-    <td><div style="font-family:var(--font-head);font-weight:700">${u.username||'?'}</div><div style="font-size:10px;color:var(--muted)">${u.userId}</div></td>
-    <td><span style="color:var(--yellow);font-weight:700">${u.coins} 🪙</span></td>
-    <td><button class="btn btn-ghost" style="padding:4px 8px;font-size:10px" onclick="document.getElementById('eco-user-id').value='${u.userId}'">Sélectionner</button></td>
-  </tr>`).join('');
-}
-async function giveCoins() {
-  const userId = document.getElementById('eco-user-id').value.trim();
-  const amount = parseInt(document.getElementById('eco-amount').value);
-  if (!userId || !amount) return toast('Remplissez tous les champs', 'error');
-  const r = await fetch(`${API}/api/economy/give`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ userId, amount }) });
-  const data = await r.json();
-  if (data.error) return toast(data.error, 'error');
-  toast(`✅ +${amount} 🪙 donné !`, 'success');
-  await loadEconomy();
-}
-async function removeCoinsAdmin() {
-  const userId = document.getElementById('eco-user-id').value.trim();
-  const amount = parseInt(document.getElementById('eco-amount').value);
-  if (!userId || !amount) return toast('Remplissez tous les champs', 'error');
-  const r = await fetch(`${API}/api/economy/remove`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ userId, amount }) });
-  const data = await r.json();
-  if (data.error) return toast(data.error, 'error');
-  toast(`✅ -${amount} 🪙 retiré !`, 'success');
-  await loadEconomy();
-}
-
-// ── FAQ ──
-let allFAQ = [];
-async function loadFAQ() {
-  allFAQ = await apiGet('/api/faq');
-  renderFAQ();
-}
-function renderFAQ() {
-  const container = document.getElementById('faq-list');
-  if (!Array.isArray(allFAQ) || !allFAQ.length) { container.innerHTML = '<div class="empty"><div class="empty-ico">❓</div><div class="empty-title">Aucune FAQ configurée</div></div>'; return; }
-  container.innerHTML = allFAQ.map(f => `
-    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start">
-      <div style="flex:1">
-        <div style="font-family:var(--font-head);font-weight:700;font-size:14px;margin-bottom:6px">❓ ${f.question}</div>
-        <div style="font-size:12px;color:var(--muted)">${f.answer}</div>
-      </div>
-      <button class="btn btn-danger" style="padding:4px 8px;font-size:10px;flex-shrink:0" onclick="deleteFAQ('${f.id}')">🗑️</button>
-    </div>`).join('');
-}
-async function addFAQ() {
-  const question = document.getElementById('faq-question').value.trim();
-  const answer = document.getElementById('faq-answer').value.trim();
-  if (!question || !answer) return toast('Question et réponse requises', 'error');
-  const r = await fetch(`${API}/api/faq`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ question, answer }) });
-  const data = await r.json();
-  if (data.error) return toast(data.error, 'error');
-  closeModal('modal-add-faq');
-  document.getElementById('faq-question').value = '';
-  document.getElementById('faq-answer').value = '';
-  toast('✅ FAQ ajoutée !', 'success');
-  await loadFAQ();
-}
-async function deleteFAQ(id) {
-  if (!confirm('Supprimer cette FAQ ?')) return;
-  await fetch(`${API}/api/faq/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-  toast('FAQ supprimée', 'success');
-  await loadFAQ();
-}
-
-// ── Identité Bot ──
-document.addEventListener('DOMContentLoaded', () => {
-  const av = document.getElementById('bot-avatar');
-  if (av) {
-    av.addEventListener('input', () => {
-      const url = av.value.trim();
-      const preview = document.getElementById('bot-preview');
-      if (url) {
-        document.getElementById('bot-avatar-preview').src = url;
-        document.getElementById('bot-name-preview').textContent = document.getElementById('bot-nickname').value || 'ModBot';
-        document.getElementById('bot-bio-preview').textContent = document.getElementById('bot-bio').value || '';
-        preview.style.display = 'block';
-      } else { preview.style.display = 'none'; }
-    });
-  }
-});
-async function saveBotIdentity() {
-  const nickname = document.getElementById('bot-nickname').value.trim();
-  const avatarUrl = document.getElementById('bot-avatar').value.trim();
-  const bio = document.getElementById('bot-bio').value.trim();
-  const r = await fetch(`${API}/api/bot-identity`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ nickname, avatarUrl, bio }) });
-  const data = await r.json();
-  if (data.error) return toast(data.error, 'error');
-  toast('✅ Identité du bot mise à jour !', 'success');
-}
-
-
 </script>
 </body>
 </html>

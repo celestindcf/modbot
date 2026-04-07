@@ -8,43 +8,16 @@ const { v4: uuidv4 } = require('uuid');
 const { MongoClient } = require('mongodb');
 const path = require('path');
 
-const { GoogleGenerativeAI } = require("@google/generative-ai"); // Assure-toi que c'est bien importé !
-
 // ─── Config ───────────────────────────────────────────────────────────────────
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const CLIENT_ID = process.env.CLIENT_ID;
+const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN';
+const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_CLIENT_ID';
 const JWT_SECRET = process.env.JWT_SECRET || 'secret-key';
 const PANEL_URL = process.env.PANEL_URL || 'http://localhost:1000';
 const PORT = process.env.PORT || 3000;
-const MONGO_URL = process.env.MONGO_URL;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY; // Ta clé Render
+const MONGO_URL = process.env.MONGO_URL || 'YOUR_MONGODB_URL';
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const ACTIVITY_WEBHOOK = 'https://discord.com/api/webhooks/1489280601683922954/hD3sNwiIflznrj5fU1RxKbbf55IZIDqJnJN4JImpK1RCbq0aiudZ5bQD9tRcXDR7itu8';
 
-
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-
-// On force le modèle "-latest" pour éviter l'erreur 404 que tu as eue
-const aiModel = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash-latest" 
-});
-
-async function callAI(prompt, systemPrompt = '') {
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === '') {
-        console.error("[IA] Erreur : Clé API manquante dans les variables d'environnement.");
-        return "L'IA n'est pas configurée (Clé manquante).";
-    }
-
-    try {
-        const fullPrompt = systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt;
-        const result = await aiModel.generateContent(fullPrompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("[IA] Erreur Gemini:", error.message);
-        // Si ça dit encore 404, c'est que la bibliothèque n'est pas à jour
-        return "❌ L'IA a rencontré une erreur technique.";
-    }
-}
 // ─── MongoDB ──────────────────────────────────────────────────────────────────
 let db;
 async function connectDB() {
@@ -271,7 +244,7 @@ async function sendActivityWebhook(content) {
 }
 
 // ─── PREMIUM: IA (Gemini API) ─────────────────────────────────────────────────
-const GEMINI_MODEL = 'gemini-1.5-flash'; // Modèle stable et rapide
+const GEMINI_MODEL = 'gemini-2.0-flash'; // Modèle stable et rapide
 
 async function callAI(prompt, systemPrompt = '') {
   if (!GEMINI_API_KEY) { console.log('[IA] GEMINI_API_KEY non configurée'); return null; }
@@ -290,7 +263,7 @@ async function callAI(prompt, systemPrompt = '') {
       ]
     };
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
       { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
     );
     if (!res.ok) {

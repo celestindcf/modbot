@@ -244,28 +244,54 @@ async function sendActivityWebhook(content) {
 }
 
 // ─── PREMIUM: IA (Gemini API) ─────────────────────────────────────────────────
+const GEMINI_MODEL = 'gemini-1.5-flash'; // Modèle stable et rapide
+
 async function callAI(prompt, systemPrompt = '') {
-  if (!GEMINI_API_KEY) return null;
+  if (!GEMINI_API_KEY) { console.log('[IA] GEMINI_API_KEY non configurée'); return null; }
   try {
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt }] }],
-        generationConfig: { maxOutputTokens: 1000, temperature: 0.3 }
-      })
-    });
+    const body = {
+      contents: [{
+        role: 'user',
+        parts: [{ text: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt }]
+      }],
+      generationConfig: { maxOutputTokens: 1500, temperature: 0.3, topP: 0.8 },
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
+      ]
+    };
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+    );
+    if (!res.ok) {
+      const err = await res.json();
+      console.error('[IA] Erreur Gemini:', res.status, JSON.stringify(err));
+      return null;
+    }
     const data = await res.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || null;
-  } catch { return null; }
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) { console.error('[IA] Pas de texte dans la réponse:', JSON.stringify(data)); return null; }
+    return text;
+  } catch (e) {
+    console.error('[IA] Exception callAI:', e.message);
+    return null;
+  }
 }
 
 async function checkAIModeration(message, config) {
   if (!config.aiModeration || !GEMINI_API_KEY) return false;
-  const response = await callAI(
-    `Tu es un modérateur Discord. Analyse si ce message est une insulte déguisée, du harcèlement ou du contenu toxique. Réponds UNIQUEMENT par OUI ou NON.\n\nMessage: "${message.content}"`
-  );
-  return response?.trim().toUpperCase().startsWith('OUI');
+  // Ne pas analyser les messages très courts ou ceux des bots
+  if (message.content.length < 5) return false;
+  try {
+    const response = await callAI(
+      `Analyse ce message Discord et dis si c'est du harcèlement, une insulte déguisée, du contenu toxique ou de la discrimination. Réponds UNIQUEMENT par OUI ou NON, rien d'autre.\n\nMessage à analyser: "${message.content.slice(0, 500)}"`
+    );
+    if (!response) return false;
+    return response.trim().toUpperCase().startsWith('OUI');
+  } catch { return false; }
 }
 
 // ─── PREMIUM: Captcha ─────────────────────────────────────────────────────────
@@ -602,11 +628,13 @@ client.on('messageCreate', async message => {
     if (faqs.length > 0 && GEMINI_API_KEY) {
       const faqText = faqs.map(f => `Q: ${f.question}\nR: ${f.answer}`).join('\n\n');
       const answer = await callAI(
-        `Message d'un membre: "${message.content}"\n\nFAQ du serveur:\n${faqText}\n\nY a-t-il une réponse pertinente dans la FAQ? Si oui, réponds avec la réponse. Sinon réponds AUCUNE.`,
-        'Tu es un assistant de support. Réponds à la question du membre si la FAQ contient une réponse pertinente. Sois concis et naturel.'
+        `Tu es un bot de support Discord. Un membre a envoyé ce message: "${message.content.slice(0, 300)}"\n\nVoici la FAQ du serveur:\n${faqText}\n\nSi ce message est une question à laquelle la FAQ répond, donne la réponse de façon naturelle et courte. Sinon, réponds uniquement le mot AUCUNE.`,
+        'Tu es un assistant de support Discord. Réponds uniquement si la FAQ contient une réponse pertinente. Sois naturel et concis.'
       );
-      if (answer && !answer.includes('AUCUNE')) {
-        await message.reply({ content: `🤖 **Support Auto:** ${answer}`, allowedMentions: { repliedUser: false } });
+      if (answer && !answer.trim().toUpperCase().startsWith('AUCUNE') && answer.trim().length > 5) {
+        const replyMsg = await message.reply({ content: `🤖 **Support Auto:** ${answer.slice(0, 1900)}`, allowedMentions: { repliedUser: false } });
+        // Auto-suppression après 30s si pas de suite
+        setTimeout(() => replyMsg.delete().catch(() => {}), 30000);
       }
     }
   }
@@ -1018,8 +1046,18 @@ async function handleCommand(interaction, licence) {
     const nombre = options.getInteger('nombre') || 50;
     const messages = await interaction.channel.messages.fetch({ limit: nombre });
     const text = messages.reverse().filter(m => !m.author.bot).map(m => `${m.author.username}: ${m.content}`).join('\n');
-    const resume = await callAI(`Résume ces messages Discord de façon concise et structurée (max 500 mots):\n\n${text}`, 'Tu es un assistant qui résume des conversations Discord pour le staff. Sois concis et mets en avant les sujets importants.');
-    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle(`📋 Résumé — ${nombre} derniers messages`).setColor(0x5352ed).setDescription(resume || 'Impossible de générer un résumé.').setTimestamp()] });
+    if (!text.trim()) { await interaction.editReply({ content: '❌ Pas assez de messages à résumer.' }); return; }
+    const resume = await callAI(
+      `Voici une conversation Discord. Résume les points importants en français, de façon claire et structurée (maximum 600 mots). Mets en avant les sujets discutés, les décisions prises et les points importants.\n\n${text.slice(0, 8000)}`,
+      'Tu es un assistant de modération Discord. Résume les conversations de façon concise et utile pour le staff.'
+    );
+    if (!resume) {
+      await interaction.editReply({ content: '❌ Impossible de générer un résumé. Vérifiez que GEMINI_API_KEY est bien configurée dans Render.' });
+      return;
+    }
+    // Split if too long for Discord embed
+    const desc = resume.length > 4000 ? resume.slice(0, 3997) + '...' : resume;
+    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle(`📋 Résumé — ${nombre} derniers messages`).setColor(0x5352ed).setDescription(desc).setTimestamp().setFooter({ text: `Généré par Gemini AI` })] });
     return;
   }
 

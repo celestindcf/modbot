@@ -329,6 +329,20 @@ async function callAI(prompt, systemPrompt = '') {
   }
 }
 
+async function checkAIModeration(message, config) {
+  if (!config.aiModeration || !GROQ_API_KEY) return false;
+  if (!isAIAvailable()) return false;
+  if (message.content.length < 20) return false;
+  
+  try {
+    const response = await callAI(
+      `Analyse ce message Discord et dis si c'est du harcèlement, une insulte déguisée, du contenu toxique ou de la discrimination. Réponds UNIQUEMENT par OUI ou NON, rien d'autre.\n\nMessage à analyser: "${message.content.slice(0, 200)}"`
+    );
+    if (!response) return false;
+    return response.trim().toUpperCase().startsWith('OUI');
+  } catch { return false; }
+}
+
 // ─── PREMIUM: Captcha ─────────────────────────────────────────────────────────
 function generateCaptchaCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';

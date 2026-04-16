@@ -58,6 +58,16 @@ const joinMap = new Map(); // guildId -> { timestamps: [] }
 const captchaMap = new Map(); // userId -> { code, guildId, roleId }
 const xpCooldowns = new Map();
 const coinCooldowns = new Map();
+// ─── In-Memory Maps ───────────────────────────────────────────────────────────
+const spamMap = new Map();
+const selfbotMap = new Map(); // userId -> { timestamps: [] }
+const joinMap = new Map(); // guildId -> { timestamps: [] }
+const captchaMap = new Map(); // userId -> { code, guildId, roleId }
+const xpCooldowns = new Map();
+const coinCooldowns = new Map();
+// AJOUTER ICI :
+const aiRateLimitMap = new Map(); // Pour limiter les appels IA
+const faqCache = new Map(); // Cache pour les réponses FAQ
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDuration(ms) {
@@ -246,15 +256,52 @@ async function sendActivityWebhook(content) {
 // ─── PREMIUM: IA (Gemini API) ─────────────────────────────────────────────────
 const GEMINI_MODEL = 'gemini-2.0-flash'; // Modèle stable et rapide
 
+// Fonction pour vérifier si l'IA est disponible
+function isAIAvailable() {
+  const disabledUntil = aiRateLimitMap.get('disabled_until');
+  if (disabledUntil && Date.now() < disabledUntil) {
+    return false;
+  }
+  return true;
+}
+
 async function callAI(prompt, systemPrompt = '') {
-  if (!GEMINI_API_KEY) { console.log('[IA] GEMINI_API_KEY non configurée'); return null; }
+  if (!GEMINI_API_KEY) { 
+    console.log('[IA] GEMINI_API_KEY non configurée'); 
+    return null; 
+  }
+  
+  // Vérifier si l'IA est temporairement désactivée
+  if (!isAIAvailable()) {
+    console.log('[IA] IA temporairement désactivée (quota)');
+    return null;
+  }
+  
+  // Rate limiting local (5 requêtes par minute maximum)
+  const now = Date.now();
+  const rateKey = 'gemini_requests';
+  const requests = aiRateLimitMap.get(rateKey) || [];
+  const recentRequests = requests.filter(t => now - t < 60000);
+  
+  if (recentRequests.length >= 5) {
+    console.log('[IA] Rate limit local atteint, attente...');
+    return null;
+  }
+  
+  recentRequests.push(now);
+  aiRateLimitMap.set(rateKey, recentRequests);
+  
   try {
     const body = {
       contents: [{
         role: 'user',
         parts: [{ text: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt }]
       }],
-      generationConfig: { maxOutputTokens: 1500, temperature: 0.3, topP: 0.8 },
+      generationConfig: { 
+        maxOutputTokens: 500, // Réduire pour économiser les tokens
+        temperature: 0.3, 
+        topP: 0.8 
+      },
       safetySettings: [
         { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
         { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -262,18 +309,37 @@ async function callAI(prompt, systemPrompt = '') {
         { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
       ]
     };
+    
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+      { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(body) 
+      }
     );
+    
     if (!res.ok) {
       const err = await res.json();
       console.error('[IA] Erreur Gemini:', res.status, JSON.stringify(err));
+      
+      // Gestion spécifique des erreurs de quota
+      if (res.status === 429) {
+        console.log('[IA] Quota dépassé, désactivation temporaire de l\'IA pour 5 minutes');
+        // Désactiver l'IA pendant 5 minutes
+        aiRateLimitMap.set('disabled_until', now + 300000);
+        return null;
+      }
+      
       return null;
     }
+    
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) { console.error('[IA] Pas de texte dans la réponse:', JSON.stringify(data)); return null; }
+    if (!text) { 
+      console.error('[IA] Pas de texte dans la réponse:', JSON.stringify(data)); 
+      return null; 
+    }
     return text;
   } catch (e) {
     console.error('[IA] Exception callAI:', e.message);
@@ -283,17 +349,19 @@ async function callAI(prompt, systemPrompt = '') {
 
 async function checkAIModeration(message, config) {
   if (!config.aiModeration || !GEMINI_API_KEY) return false;
+  if (!isAIAvailable()) return false; // Vérifier la disponibilité
+  
   // Ne pas analyser les messages très courts ou ceux des bots
-  if (message.content.length < 5) return false;
+  if (message.content.length < 20) return false; // Augmenté à 20 caractères minimum
+  
   try {
     const response = await callAI(
-      `Analyse ce message Discord et dis si c'est du harcèlement, une insulte déguisée, du contenu toxique ou de la discrimination. Réponds UNIQUEMENT par OUI ou NON, rien d'autre.\n\nMessage à analyser: "${message.content.slice(0, 500)}"`
+      `Analyse ce message Discord et dis si c'est du harcèlement, une insulte déguisée, du contenu toxique ou de la discrimination. Réponds UNIQUEMENT par OUI ou NON, rien d'autre.\n\nMessage à analyser: "${message.content.slice(0, 200)}"`
     );
     if (!response) return false;
     return response.trim().toUpperCase().startsWith('OUI');
   } catch { return false; }
 }
-
 // ─── PREMIUM: Captcha ─────────────────────────────────────────────────────────
 function generateCaptchaCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -399,6 +467,7 @@ const commands = [
   // PREMIUM: IA
   new SlashCommandBuilder().setName('resume').setDescription('[PREMIUM] Résumer les derniers messages').addIntegerOption(o=>o.setName('nombre').setDescription('Nombre de messages (max 100)').setMinValue(10).setMaxValue(100)),
   new SlashCommandBuilder().setName('faq').setDescription('[PREMIUM] Configurer la FAQ du serveur pour le support auto').addStringOption(o=>o.setName('question').setDescription('Question').setRequired(true)).addStringOption(o=>o.setName('reponse').setDescription('Réponse').setRequired(true)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('iastatus').setDescription('[PREMIUM] Vérifier le statut de l\'IA Gemini'),
   // PREMIUM: Économie
   new SlashCommandBuilder().setName('solde').setDescription('Voir votre solde de coins').addUserOption(o=>o.setName('membre').setDescription('Membre')),
   new SlashCommandBuilder().setName('classementcoins').setDescription('[PREMIUM] Classement des coins'),
@@ -1039,23 +1108,41 @@ async function handleCommand(interaction, licence) {
     return;
   }
 
-  // ── PREMIUM: resume ──
+   // ── PREMIUM: resume ──
   if (commandName === 'resume') {
     if (!await requirePremium()) return;
-    if (!GEMINI_API_KEY) { await interaction.editReply({ content: '❌ Clé API Gemini non configurée. Ajoutez GEMINI_API_KEY dans les variables Render.' }); return; }
+    if (!GEMINI_API_KEY) { 
+      await interaction.editReply({ content: '❌ Clé API Gemini non configurée. Ajoutez GEMINI_API_KEY dans les variables Render.' }); 
+      return; 
+    }
+    
+    if (!isAIAvailable()) {
+      const timeLeft = Math.ceil((aiRateLimitMap.get('disabled_until') - Date.now()) / 60000);
+      await interaction.editReply({ 
+        content: `❌ L'IA est temporairement indisponible (quota dépassé). Réessayez dans ${timeLeft} minutes.` 
+      });
+      return;
+    }
+    
     const nombre = options.getInteger('nombre') || 50;
     const messages = await interaction.channel.messages.fetch({ limit: nombre });
-    const text = messages.reverse().filter(m => !m.author.bot).map(m => `${m.author.username}: ${m.content}`).join('\n');
-    if (!text.trim()) { await interaction.editReply({ content: '❌ Pas assez de messages à résumer.' }); return; }
+    const text = messages.reverse().filter(m => !m.author.bot && m.content.length > 5).map(m => `${m.author.username}: ${m.content}`).join('\n');
+    
+    if (!text.trim() || text.length < 50) { 
+      await interaction.editReply({ content: '❌ Pas assez de messages à résumer (minimum 50 caractères de texte).' }); 
+      return; 
+    }
+    
     const resume = await callAI(
       `Voici une conversation Discord. Résume les points importants en français, de façon claire et structurée (maximum 600 mots). Mets en avant les sujets discutés, les décisions prises et les points importants.\n\n${text.slice(0, 8000)}`,
       'Tu es un assistant de modération Discord. Résume les conversations de façon concise et utile pour le staff.'
     );
+    
     if (!resume) {
-      await interaction.editReply({ content: '❌ Impossible de générer un résumé. Vérifiez que GEMINI_API_KEY est bien configurée dans Render.' });
+      await interaction.editReply({ content: '❌ Impossible de générer un résumé. Vérifiez que GEMINI_API_KEY est bien configurée dans Render ou réessayez plus tard (quota peut-être dépassé).' });
       return;
     }
-    // Split if too long for Discord embed
+    
     const desc = resume.length > 4000 ? resume.slice(0, 3997) + '...' : resume;
     await interaction.editReply({ embeds: [new EmbedBuilder().setTitle(`📋 Résumé — ${nombre} derniers messages`).setColor(0x5352ed).setDescription(desc).setTimestamp().setFooter({ text: `Généré par Gemini AI` })] });
     return;
@@ -1072,6 +1159,34 @@ async function handleCommand(interaction, licence) {
     return;
   }
 
+  // ── PREMIUM: iastatus ── AJOUTER CE BLOC ICI
+  if (commandName === 'iastatus') {
+    if (!await requirePremium()) return;
+    
+    const available = isAIAvailable();
+    const disabledUntil = aiRateLimitMap.get('disabled_until');
+    const timeLeft = disabledUntil ? Math.max(0, Math.floor((disabledUntil - Date.now()) / 1000)) : 0;
+    const recentRequests = (aiRateLimitMap.get('gemini_requests') || []).filter(t => Date.now() - t < 60000).length;
+    
+    const embed = new EmbedBuilder()
+      .setTitle('🤖 Statut IA Gemini')
+      .setColor(available ? 0x57F287 : 0xED4245)
+      .addFields(
+        { name: '📊 Status', value: available ? '✅ Disponible' : '❌ Indisponible', inline: true },
+        { name: '🔑 API Key', value: GEMINI_API_KEY ? '✅ Configurée' : '❌ Manquante', inline: true },
+        { name: '📈 Requêtes/min', value: `${recentRequests}/5`, inline: true }
+      );
+    
+    if (!available && timeLeft > 0) {
+      embed.addFields({ name: '⏰ Disponible dans', value: `${Math.ceil(timeLeft / 60)} minutes` });
+    }
+    
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+
+  // ── PREMIUM: solde ──
+  if (commandName === 'solde') {
   // ── PREMIUM: solde ──
   if (commandName === 'solde') {
     const target = options.getUser('membre') || user;

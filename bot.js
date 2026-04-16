@@ -245,8 +245,9 @@ async function sendActivityWebhook(content) {
   } catch {}
 }
 
-// ─── PREMIUM: IA (Gemini API) ─────────────────────────────────────────────────
-const GEMINI_MODEL = 'gemini-1.5-flash'; // Gratuit - 1 500 requêtes/jour
+// ─── PREMIUM: IA (Groq API - Gratuit 14 400 req/jour) ─────────────────────────
+const GROQ_MODEL = 'llama-3.3-70b-versatile';
+const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
 
 // Fonction pour vérifier si l'IA est disponible
 function isAIAvailable() {
@@ -258,8 +259,8 @@ function isAIAvailable() {
 }
 
 async function callAI(prompt, systemPrompt = '') {
-  if (!GEMINI_API_KEY) { 
-    console.log('[IA] GEMINI_API_KEY non configurée'); 
+  if (!GROQ_API_KEY) { 
+    console.log('[IA] GROQ_API_KEY non configurée'); 
     return null; 
   }
   
@@ -269,14 +270,14 @@ async function callAI(prompt, systemPrompt = '') {
     return null;
   }
   
-  // Rate limiting local (5 requêtes par minute maximum)
+  // Rate limiting local (30 requêtes par minute maximum)
   const now = Date.now();
-  const rateKey = 'gemini_requests';
+  const rateKey = 'groq_requests';
   const requests = aiRateLimitMap.get(rateKey) || [];
   const recentRequests = requests.filter(t => now - t < 60000);
   
-  if (recentRequests.length >= 5) {
-    console.log('[IA] Rate limit local atteint, attente...');
+  if (recentRequests.length >= 30) {
+    console.log('[IA] Rate limit local Groq atteint, attente...');
     return null;
   }
   
@@ -284,41 +285,30 @@ async function callAI(prompt, systemPrompt = '') {
   aiRateLimitMap.set(rateKey, recentRequests);
   
   try {
-    const body = {
-      contents: [{
-        role: 'user',
-        parts: [{ text: systemPrompt ? `${systemPrompt}\n\n${prompt}` : prompt }]
-      }],
-      generationConfig: { 
-        maxOutputTokens: 500, // Réduire pour économiser les tokens
-        temperature: 0.3, 
-        topP: 0.8 
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
+        'Content-Type': 'application/json'
       },
-      safetySettings: [
-        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' },
-        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
-      ]
-    };
-    
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
-      { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify(body) 
-      }
-    );
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt || 'Tu es un assistant de modération Discord.' },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 500,
+        temperature: 0.3
+      })
+    });
     
     if (!res.ok) {
-      const err = await res.json();
-      console.error('[IA] Erreur Gemini:', res.status, JSON.stringify(err));
+      const err = await res.json().catch(() => ({}));
+      console.error('[IA] Erreur Groq:', res.status, JSON.stringify(err));
       
       // Gestion spécifique des erreurs de quota
       if (res.status === 429) {
-        console.log('[IA] Quota dépassé, désactivation temporaire de l\'IA pour 5 minutes');
-        // Désactiver l'IA pendant 5 minutes
+        console.log('[IA] Quota Groq dépassé, désactivation temporaire pour 5 minutes');
         aiRateLimitMap.set('disabled_until', now + 300000);
         return null;
       }
@@ -327,9 +317,9 @@ async function callAI(prompt, systemPrompt = '') {
     }
     
     const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    const text = data.choices?.[0]?.message?.content;
     if (!text) { 
-      console.error('[IA] Pas de texte dans la réponse:', JSON.stringify(data)); 
+      console.error('[IA] Pas de texte dans la réponse Groq:', JSON.stringify(data)); 
       return null; 
     }
     return text;
@@ -339,21 +329,6 @@ async function callAI(prompt, systemPrompt = '') {
   }
 }
 
-async function checkAIModeration(message, config) {
-  if (!config.aiModeration || !GEMINI_API_KEY) return false;
-  if (!isAIAvailable()) return false; // Vérifier la disponibilité
-  
-  // Ne pas analyser les messages très courts ou ceux des bots
-  if (message.content.length < 20) return false; // Augmenté à 20 caractères minimum
-  
-  try {
-    const response = await callAI(
-      `Analyse ce message Discord et dis si c'est du harcèlement, une insulte déguisée, du contenu toxique ou de la discrimination. Réponds UNIQUEMENT par OUI ou NON, rien d'autre.\n\nMessage à analyser: "${message.content.slice(0, 200)}"`
-    );
-    if (!response) return false;
-    return response.trim().toUpperCase().startsWith('OUI');
-  } catch { return false; }
-}
 // ─── PREMIUM: Captcha ─────────────────────────────────────────────────────────
 function generateCaptchaCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -1151,31 +1126,32 @@ async function handleCommand(interaction, licence) {
     return;
   }
 
-  // ── PREMIUM: iastatus ── AJOUTER CE BLOC ICI
-  if (commandName === 'iastatus') {
-    if (!await requirePremium()) return;
-    
-    const available = isAIAvailable();
-    const disabledUntil = aiRateLimitMap.get('disabled_until');
-    const timeLeft = disabledUntil ? Math.max(0, Math.floor((disabledUntil - Date.now()) / 1000)) : 0;
-    const recentRequests = (aiRateLimitMap.get('gemini_requests') || []).filter(t => Date.now() - t < 60000).length;
-    
-    const embed = new EmbedBuilder()
-      .setTitle('🤖 Statut IA Gemini')
-      .setColor(available ? 0x57F287 : 0xED4245)
-      .addFields(
-        { name: '📊 Status', value: available ? '✅ Disponible' : '❌ Indisponible', inline: true },
-        { name: '🔑 API Key', value: GEMINI_API_KEY ? '✅ Configurée' : '❌ Manquante', inline: true },
-        { name: '📈 Requêtes/min', value: `${recentRequests}/5`, inline: true }
-      );
-    
-    if (!available && timeLeft > 0) {
-      embed.addFields({ name: '⏰ Disponible dans', value: `${Math.ceil(timeLeft / 60)} minutes` });
-    }
-    
-    await interaction.editReply({ embeds: [embed] });
-    return;
+  // ── PREMIUM: iastatus ──
+if (commandName === 'iastatus') {
+  if (!await requirePremium()) return;
+  
+  const available = isAIAvailable();
+  const disabledUntil = aiRateLimitMap.get('disabled_until');
+  const timeLeft = disabledUntil ? Math.max(0, Math.floor((disabledUntil - Date.now()) / 1000)) : 0;
+  const recentRequests = (aiRateLimitMap.get('groq_requests') || []).filter(t => Date.now() - t < 60000).length;
+  
+  const embed = new EmbedBuilder()
+    .setTitle('🤖 Statut IA (Groq)')
+    .setColor(available ? 0x57F287 : 0xED4245)
+    .addFields(
+      { name: '📊 Status', value: available ? '✅ Disponible' : '❌ Indisponible', inline: true },
+      { name: '🔑 API Key', value: GROQ_API_KEY ? '✅ Configurée' : '❌ Manquante', inline: true },
+      { name: '📈 Requêtes/min', value: `${recentRequests}/30`, inline: true },
+      { name: '🧠 Modèle', value: 'Llama 3.3 70B', inline: true }
+    );
+  
+  if (!available && timeLeft > 0) {
+    embed.addFields({ name: '⏰ Disponible dans', value: `${Math.ceil(timeLeft / 60)} minutes` });
   }
+  
+  await interaction.editReply({ embeds: [embed] });
+  return;
+}
   
   // ── PREMIUM: solde ──
   if (commandName === 'solde') {

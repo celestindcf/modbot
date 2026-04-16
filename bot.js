@@ -246,7 +246,7 @@ async function sendActivityWebhook(content) {
 }
 
 // ─── PREMIUM: IA (Gemini API) ─────────────────────────────────────────────────
-const GEMINI_MODEL = 'gemma-4-26b'; // Modèle gratuit avec 1500 req/jour
+const GEMINI_MODEL = 'gemini-1.5-flash'; // Gratuit - 1 500 requêtes/jour
 
 // Fonction pour vérifier si l'IA est disponible
 function isAIAvailable() {

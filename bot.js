@@ -58,14 +58,6 @@ const joinMap = new Map(); // guildId -> { timestamps: [] }
 const captchaMap = new Map(); // userId -> { code, guildId, roleId }
 const xpCooldowns = new Map();
 const coinCooldowns = new Map();
-// ─── In-Memory Maps ───────────────────────────────────────────────────────────
-const spamMap = new Map();
-const selfbotMap = new Map(); // userId -> { timestamps: [] }
-const joinMap = new Map(); // guildId -> { timestamps: [] }
-const captchaMap = new Map(); // userId -> { code, guildId, roleId }
-const xpCooldowns = new Map();
-const coinCooldowns = new Map();
-// AJOUTER ICI :
 const aiRateLimitMap = new Map(); // Pour limiter les appels IA
 const faqCache = new Map(); // Cache pour les réponses FAQ
 

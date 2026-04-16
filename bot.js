@@ -658,10 +658,13 @@ client.on('messageCreate', async message => {
     }
   }
 
-  // Support Auto FAQ (PREMIUM)
+    // Support Auto FAQ (PREMIUM)
   if (licence.isPremium && config.faqEnabled) {
     const faqs = await col('faq').find({ guildId: message.guild.id }).toArray();
-    if (faqs.length > 0 && GEMINI_API_KEY) {
+    if (faqs.length > 0 && GROQ_API_KEY) {  // ← Changé GEMINI_API_KEY → GROQ_API_KEY
+      // Vérifier si l'IA est disponible
+      if (!isAIAvailable()) return; // ← Ajouté
+      
       const faqText = faqs.map(f => `Q: ${f.question}\nR: ${f.answer}`).join('\n\n');
       const answer = await callAI(
         `Tu es un bot de support Discord. Un membre a envoyé ce message: "${message.content.slice(0, 300)}"\n\nVoici la FAQ du serveur:\n${faqText}\n\nSi ce message est une question à laquelle la FAQ répond, donne la réponse de façon naturelle et courte. Sinon, réponds uniquement le mot AUCUNE.`,
@@ -669,12 +672,11 @@ client.on('messageCreate', async message => {
       );
       if (answer && !answer.trim().toUpperCase().startsWith('AUCUNE') && answer.trim().length > 5) {
         const replyMsg = await message.reply({ content: `🤖 **Support Auto:** ${answer.slice(0, 1900)}`, allowedMentions: { repliedUser: false } });
-        // Auto-suppression après 30s si pas de suite
         setTimeout(() => replyMsg.delete().catch(() => {}), 30000);
       }
     }
   }
-
+  
   // Anti-spam
   const spamType = await checkSpam(message);
   if (spamType) {

@@ -1176,9 +1176,7 @@ async function handleCommand(interaction, licence) {
     await interaction.editReply({ embeds: [embed] });
     return;
   }
-
-  // ── PREMIUM: solde ──
-  if (commandName === 'solde') {
+  
   // ── PREMIUM: solde ──
   if (commandName === 'solde') {
     const target = options.getUser('membre') || user;

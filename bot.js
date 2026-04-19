@@ -1581,6 +1581,17 @@ app.get('*', (req, res) => {
 async function start() {
   await connectDB();
   app.listen(PORT, () => console.log(`🌐 Panel: http://localhost:${PORT}`));
-  client.login(BOT_TOKEN);
+  
+  console.log('🔑 Tentative de connexion à Discord...');
+  console.log('Token présent :', BOT_TOKEN ? '✅ Oui' : '❌ Non');
+  
+  client.login(BOT_TOKEN)
+    .then(() => {
+      console.log('✅ Connexion Discord réussie !');
+    })
+    .catch(err => {
+      console.error('❌ Erreur de connexion Discord:', err.message);
+    });
 }
+
 start();

@@ -494,6 +494,19 @@ client.on('guildMemberAdd', async member => {
   const licence = await checkLicence(guild.id);
   const config = await col('mod_configs').findOne({ guildId: guild.id }) || {};
 
+  // 🔒 AJOUT : Donner le rôle "Non vérifié" automatiquement
+  if (config.unverifiedRole) {
+    const unverifiedRole = guild.roles.cache.get(config.unverifiedRole);
+    if (unverifiedRole) {
+      await member.roles.add(unverifiedRole).catch(err => {
+        console.error('❌ Erreur rôle Non vérifié:', err.message);
+      });
+      console.log(`✅ Rôle Non vérifié donné à ${member.user.tag}`);
+    } else {
+      console.error('❌ Rôle Non vérifié introuvable. ID configuré:', config.unverifiedRole);
+    }
+  }
+
   // Log de base (tous)
   await logEvent(guild, new EmbedBuilder().setTitle('👋 Nouveau membre').setColor(0x57F287).setThumbnail(member.user.displayAvatarURL()).addFields({ name: '👤 Membre', value: `<@${member.id}> (${member.user.tag})`, inline: true }, { name: '📅 Compte créé', value: `<t:${Math.floor(member.user.createdTimestamp/1000)}:R>`, inline: true }, { name: '👥 Total', value: `${guild.memberCount}`, inline: true }).setTimestamp());
 
@@ -505,7 +518,6 @@ client.on('guildMemberAdd', async member => {
     if (config.captchaEnabled && config.captchaChannel && config.captchaRole) {
       const code = generateCaptchaCode();
       captchaMap.set(member.id, { code, guildId: guild.id, roleId: config.captchaRole });
-      // Retirer tous les rôles sauf @everyone et donner accès uniquement au salon captcha
       const captchaChannel = guild.channels.cache.get(config.captchaChannel);
       if (captchaChannel) {
         const embed = new EmbedBuilder().setTitle('🔐 Vérification requise').setColor(0x5865F2)
@@ -531,7 +543,6 @@ client.on('guildMemberAdd', async member => {
     }
   }
 });
-
 // ─── Member Leave ─────────────────────────────────────────────────────────────
 client.on('guildMemberRemove', async member => {
   const { guild } = member;
@@ -629,24 +640,33 @@ client.on('messageCreate', async message => {
   const config = await col('mod_configs').findOne({ guildId: message.guild.id }) || {};
   const licence = await checkLicence(message.guild.id);
 
-  // Captcha check (PREMIUM)
-  if (licence.isPremium && captchaMap.has(message.author.id)) {
-    const captcha = captchaMap.get(message.author.id);
-    if (captcha.guildId === message.guild.id) {
-      if (message.content.trim().toUpperCase() === captcha.code) {
-        captchaMap.delete(message.author.id);
-        await message.member.roles.add(captcha.roleId).catch(() => {});
-        const successMsg = await message.reply('✅ Vérification réussie ! Bienvenue !');
-        setTimeout(() => successMsg.delete().catch(() => {}), 5000);
-        await message.delete().catch(() => {});
-      } else {
-        const failMsg = await message.reply('❌ Code incorrect. Réessayez !');
-        setTimeout(() => failMsg.delete().catch(() => {}), 3000);
-        await message.delete().catch(() => {});
+// Captcha check (PREMIUM)
+if (licence.isPremium && captchaMap.has(message.author.id)) {
+  const captcha = captchaMap.get(message.author.id);
+  if (captcha.guildId === message.guild.id) {
+    if (message.content.trim().toUpperCase() === captcha.code) {
+      captchaMap.delete(message.author.id);
+      
+      // ✅ Ajouter le rôle Membre
+      await message.member.roles.add(captcha.roleId).catch(() => {});
+      
+      // 🔓 AJOUT : Retirer le rôle Non vérifié
+      const config = await col('mod_configs').findOne({ guildId: message.guild.id }) || {};
+      if (config.unverifiedRole) {
+        await message.member.roles.remove(config.unverifiedRole).catch(() => {});
       }
-      return;
+      
+      const successMsg = await message.reply('✅ Vérification réussie ! Bienvenue !');
+      setTimeout(() => successMsg.delete().catch(() => {}), 5000);
+      await message.delete().catch(() => {});
+    } else {
+      const failMsg = await message.reply('❌ Code incorrect. Réessayez !');
+      setTimeout(() => failMsg.delete().catch(() => {}), 3000);
+      await message.delete().catch(() => {});
     }
+    return;
   }
+}
 
   // Self-bot detection (PREMIUM)
   if (licence.isPremium && !message.author.bot) {
@@ -1476,6 +1496,7 @@ app.get('/api/premium-config', authMiddleware, async (req, res) => {
     captchaEnabled: config.captchaEnabled || false,
     captchaChannel: config.captchaChannel || '',
     captchaRole: config.captchaRole || '',
+     unverifiedRole: config.unverifiedRole || '',
     aiModeration: config.aiModeration || false,
     faqEnabled: config.faqEnabled || false,
   });
@@ -1484,8 +1505,8 @@ app.get('/api/premium-config', authMiddleware, async (req, res) => {
 app.post('/api/premium-config', authMiddleware, async (req, res) => {
   if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' });
   const { guildId } = req.user;
-  const { welcomeEnabled, welcomeChannel, welcomeMessage, welcomeMessages, leaveEnabled, leaveChannel, leaveMessage, captchaEnabled, captchaChannel, captchaRole, aiModeration, faqEnabled } = req.body;
-  await col('mod_configs').updateOne({ guildId }, { $set: { welcomeEnabled, welcomeChannel, welcomeMessage, welcomeMessages, leaveEnabled, leaveChannel, leaveMessage, captchaEnabled, captchaChannel, captchaRole, aiModeration, faqEnabled } }, { upsert: true });
+  const { welcomeEnabled, welcomeChannel, welcomeMessage, welcomeMessages, leaveEnabled, leaveChannel, leaveMessage, unverifiedRole, captchaEnabled, captchaChannel, captchaRole, aiModeration, faqEnabled } = req.body;
+  await col('mod_configs').updateOne({ guildId }, { $set: { welcomeEnabled, welcomeChannel, welcomeMessage, welcomeMessages, leaveEnabled, leaveChannel, leaveMessage, unverifiedRole, captchaEnabled, captchaChannel, captchaRole, aiModeration, faqEnabled } }, { upsert: true });
   res.json({ success: true });
 });
 

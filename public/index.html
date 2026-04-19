@@ -467,6 +467,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
             <div class="form-field"><label>Activer le captcha à l'arrivée</label><select id="p-captcha-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
             <div class="form-field"><label>ID du salon captcha</label><input type="text" id="p-captcha-channel" placeholder="ID du salon de vérification"></div>
             <div class="form-field"><label>ID du rôle donné après vérification</label><input type="text" id="p-captcha-role" placeholder="ID du rôle membre"></div>
+             <div class="form-field"><label>ID du rôle donné à l'arrivée (@Non vérifié)</label><input type="text" id="p-unverified-role" placeholder="ID du rôle non vérifié (optionnel)"></div>
+    <p style="font-size:11px;color:var(--muted);margin-top:8px">Le rôle "Non vérifié" est donné immédiatement et retiré après validation du captcha.</p>
+  </div>
+</div>
           </div>
         </div>
         <div class="card">
@@ -908,6 +912,7 @@ async function loadPremiumConfig(){
     document.getElementById('p-captcha-enabled').value=data.captchaEnabled?'true':'false';
     document.getElementById('p-captcha-channel').value=data.captchaChannel||'';
     document.getElementById('p-captcha-role').value=data.captchaRole||'';
+    document.getElementById('p-unverified-role').value = data.unverifiedRole || '';
     document.getElementById('p-ai-mod').value=data.aiModeration?'true':'false';
     document.getElementById('p-faq-enabled').value=data.faqEnabled?'true':'false';
     // Show lock notice if not premium
@@ -928,6 +933,7 @@ async function savePremiumConfig(){
     captchaEnabled:document.getElementById('p-captcha-enabled').value==='true',
     captchaChannel:document.getElementById('p-captcha-channel').value.trim(),
     captchaRole:document.getElementById('p-captcha-role').value.trim(),
+    unverifiedRole: document.getElementById('p-unverified-role').value.trim(),
     aiModeration:document.getElementById('p-ai-mod').value==='true',
     faqEnabled:document.getElementById('p-faq-enabled').value==='true',
   };

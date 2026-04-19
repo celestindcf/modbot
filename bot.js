@@ -1580,18 +1580,38 @@ app.get('*', (req, res) => {
 // ─── Start ────────────────────────────────────────────────────────────────────
 async function start() {
   await connectDB();
+  console.log('✅ MongoDB connecté !');
+  
   app.listen(PORT, () => console.log(`🌐 Panel: http://localhost:${PORT}`));
   
   console.log('🔑 Tentative de connexion à Discord...');
   console.log('Token présent :', BOT_TOKEN ? '✅ Oui' : '❌ Non');
   
-  client.login(BOT_TOKEN)
-    .then(() => {
-      console.log('✅ Connexion Discord réussie !');
-    })
-    .catch(err => {
-      console.error('❌ Erreur de connexion Discord:', err.message);
-    });
+  if (!BOT_TOKEN || BOT_TOKEN === 'YOUR_BOT_TOKEN') {
+    console.error('❌ ERREUR FATALE : BOT_TOKEN est la valeur par défaut !');
+    console.error('⚠️ Tu dois définir BOT_TOKEN dans les variables d\'environnement Render.');
+    return;
+  }
+  
+  console.log('Token (premiers caractères) :', BOT_TOKEN.substring(0, 20) + '...');
+  
+  // Ajouter un timeout de sécurité
+  const loginTimeout = setTimeout(() => {
+    console.error('❌ TIMEOUT : La connexion Discord a pris plus de 30 secondes.');
+    console.error('⚠️ Vérifie que le token est valide et que Discord n\'est pas en panne.');
+  }, 30000);
+  
+  try {
+    console.log('⏳ Envoi de la requête de login à Discord...');
+    await client.login(BOT_TOKEN);
+    clearTimeout(loginTimeout);
+    console.log('✅ Connexion Discord réussie !');
+  } catch (error) {
+    clearTimeout(loginTimeout);
+    console.error('❌ Erreur de connexion Discord :', error.message);
+    console.error('Code d\'erreur :', error.code);
+    console.error('Stack :', error.stack);
+  }
 }
 
 start();

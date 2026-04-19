@@ -412,7 +412,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
 
-    <!-- TICKET CONFIG -->
+ <!-- TICKET CONFIG -->
     <div class="page" id="page-ticketconfig">
       <div class="ph">
         <div class="ph-title">Config Tickets <small>Types & messages</small></div>
@@ -431,7 +431,36 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       </div>
     </div>
 
-       <div class="grid2">
+    <!-- ══ PREMIUM CONFIG ══ -->
+    <div class="page" id="page-premium">
+      <div class="ph">
+        <div class="ph-title">⭐ Config Premium <small>Fonctionnalités exclusives</small></div>
+        <button class="btn btn-gold" onclick="savePremiumConfig()">💾 Sauvegarder</button>
+      </div>
+      <div id="premium-lock-notice" style="display:none" class="premium-lock">
+        <span style="font-size:24px">🔒</span>
+        <p>Ce serveur n'a pas de licence Premium. Ces options sont visibles mais non sauvegardées.</p>
+      </div>
+      <div class="grid2" style="margin-bottom:18px">
+        <div class="card">
+          <div class="card-head"><div class="card-title">✨ Message d'Arrivée <span class="premium-badge">⭐ Premium</span></div></div>
+          <div class="card-body">
+            <div class="form-field"><label>Activer</label><select id="p-welcome-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
+            <div class="form-field"><label>ID du salon</label><input type="text" id="p-welcome-channel" placeholder="ID du salon de bienvenue"></div>
+            <div class="form-field"><label>Message ({user}, {server}, {count})</label><textarea id="p-welcome-msg" rows="2" placeholder="Bienvenue {user} sur {server} !"></textarea></div>
+            <div class="form-field"><label>Messages aléatoires — 1 par ligne (remplace le message unique)</label><textarea id="p-welcome-msgs" rows="4" placeholder="Bienvenue {user} !&#10;Hey {user}, content de te voir !&#10;{user} vient de rejoindre !"></textarea></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head"><div class="card-title">👋 Message de Départ <span class="premium-badge">⭐ Premium</span></div></div>
+          <div class="card-body">
+            <div class="form-field"><label>Activer</label><select id="p-leave-enabled"><option value="false">❌ Désactivé</option><option value="true">✅ Activé</option></select></div>
+            <div class="form-field"><label>ID du salon</label><input type="text" id="p-leave-channel" placeholder="ID du salon"></div>
+            <div class="form-field"><label>Message ({user}, {server}, {count})</label><textarea id="p-leave-msg" rows="3" placeholder="{user} a quitté {server}. Il reste {count} membres."></textarea></div>
+          </div>
+        </div>
+      </div>
+      <div class="grid2">
         <div class="card">
           <div class="card-head"><div class="card-title">🔐 Captcha <span class="premium-badge">⭐ Premium</span></div></div>
           <div class="card-body">

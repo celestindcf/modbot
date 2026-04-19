@@ -1496,7 +1496,7 @@ app.get('/api/premium-config', authMiddleware, async (req, res) => {
     captchaEnabled: config.captchaEnabled || false,
     captchaChannel: config.captchaChannel || '',
     captchaRole: config.captchaRole || '',
-     unverifiedRole: config.unverifiedRole || '',
+    unverifiedRole: config.unverifiedRole || '',
     aiModeration: config.aiModeration || false,
     faqEnabled: config.faqEnabled || false,
   });

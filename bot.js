@@ -8,6 +8,12 @@ const { v4: uuidv4 } = require('uuid');
 const { MongoClient } = require('mongodb');
 const path = require('path');
 
+// ─── Modules ──────────────────────────────────────────────────────────────────
+const wantedModule = require('./modules/wanted');
+const reputationModule = require('./modules/reputation');
+const tribunalModule = require('./modules/tribunal');
+const statsModule = require('./modules/stats');
+
 // ─── Config ───────────────────────────────────────────────────────────────────
 const BOT_TOKEN = process.env.BOT_TOKEN || 'YOUR_BOT_TOKEN';
 const CLIENT_ID = process.env.CLIENT_ID || 'YOUR_CLIENT_ID';
@@ -20,6 +26,8 @@ const ACTIVITY_WEBHOOK = 'https://discord.com/api/webhooks/1489280601683922954/h
 
 // ─── MongoDB ──────────────────────────────────────────────────────────────────
 let db;
+let wanted, reputation, tribunal, stats;
+
 async function connectDB() {
   const mongoClient = new MongoClient(MONGO_URL);
   await mongoClient.connect();
@@ -53,13 +61,13 @@ const client = new Client({
 
 // ─── In-Memory Maps ───────────────────────────────────────────────────────────
 const spamMap = new Map();
-const selfbotMap = new Map(); // userId -> { timestamps: [] }
-const joinMap = new Map(); // guildId -> { timestamps: [] }
-const captchaMap = new Map(); // userId -> { code, guildId, roleId }
+const selfbotMap = new Map();
+const joinMap = new Map();
+const captchaMap = new Map();
 const xpCooldowns = new Map();
 const coinCooldowns = new Map();
-const aiRateLimitMap = new Map(); // Pour limiter les appels IA
-const faqCache = new Map(); // Cache pour les réponses FAQ
+const aiRateLimitMap = new Map();
+const faqCache = new Map();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function formatDuration(ms) {
@@ -245,101 +253,45 @@ async function sendActivityWebhook(content) {
   } catch {}
 }
 
-// ─── PREMIUM: IA (Groq API - Gratuit 14 400 req/jour) ─────────────────────────
+// ─── PREMIUM: IA (Groq API) ───────────────────────────────────────────────────
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
 
-// Fonction pour vérifier si l'IA est disponible
 function isAIAvailable() {
   const disabledUntil = aiRateLimitMap.get('disabled_until');
-  if (disabledUntil && Date.now() < disabledUntil) {
-    return false;
-  }
+  if (disabledUntil && Date.now() < disabledUntil) return false;
   return true;
 }
 
 async function callAI(prompt, systemPrompt = '') {
-  if (!GROQ_API_KEY) { 
-    console.log('[IA] GROQ_API_KEY non configurée'); 
-    return null; 
-  }
-  
-  // Vérifier si l'IA est temporairement désactivée
-  if (!isAIAvailable()) {
-    console.log('[IA] IA temporairement désactivée (quota)');
-    return null;
-  }
-  
-  // Rate limiting local (30 requêtes par minute maximum)
+  if (!GROQ_API_KEY || !isAIAvailable()) return null;
   const now = Date.now();
   const rateKey = 'groq_requests';
   const requests = aiRateLimitMap.get(rateKey) || [];
   const recentRequests = requests.filter(t => now - t < 60000);
-  
-  if (recentRequests.length >= 30) {
-    console.log('[IA] Rate limit local Groq atteint, attente...');
-    return null;
-  }
-  
+  if (recentRequests.length >= 30) return null;
   recentRequests.push(now);
   aiRateLimitMap.set(rateKey, recentRequests);
-  
   try {
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          { role: 'system', content: systemPrompt || 'Tu es un assistant de modération Discord.' },
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 500,
-        temperature: 0.3
-      })
+      headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: GROQ_MODEL, messages: [{ role: 'system', content: systemPrompt || 'Tu es un assistant de modération Discord.' }, { role: 'user', content: prompt }], max_tokens: 500, temperature: 0.3 })
     });
-    
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.error('[IA] Erreur Groq:', res.status, JSON.stringify(err));
-      
-      // Gestion spécifique des erreurs de quota
-      if (res.status === 429) {
-        console.log('[IA] Quota Groq dépassé, désactivation temporaire pour 5 minutes');
-        aiRateLimitMap.set('disabled_until', now + 300000);
-        return null;
-      }
-      
+      if (res.status === 429) aiRateLimitMap.set('disabled_until', now + 300000);
       return null;
     }
-    
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content;
-    if (!text) { 
-      console.error('[IA] Pas de texte dans la réponse Groq:', JSON.stringify(data)); 
-      return null; 
-    }
-    return text;
-  } catch (e) {
-    console.error('[IA] Exception callAI:', e.message);
-    return null;
-  }
+    return data.choices?.[0]?.message?.content || null;
+  } catch (e) { return null; }
 }
 
 async function checkAIModeration(message, config) {
-  if (!config.aiModeration || !GROQ_API_KEY) return false;
-  if (!isAIAvailable()) return false;
-  if (message.content.length < 20) return false;
-  
+  if (!config.aiModeration || !GROQ_API_KEY || !isAIAvailable() || message.content.length < 20) return false;
   try {
-    const response = await callAI(
-      `Analyse ce message Discord et dis si c'est du harcèlement, une insulte déguisée, du contenu toxique ou de la discrimination. Réponds UNIQUEMENT par OUI ou NON, rien d'autre.\n\nMessage à analyser: "${message.content.slice(0, 200)}"`
-    );
-    if (!response) return false;
-    return response.trim().toUpperCase().startsWith('OUI');
+    const response = await callAI(`Analyse ce message Discord et dis si c'est du harcèlement, une insulte déguisée, du contenu toxique ou de la discrimination. Réponds UNIQUEMENT par OUI ou NON.\n\nMessage: "${message.content.slice(0, 200)}"`);
+    return response ? response.trim().toUpperCase().startsWith('OUI') : false;
   } catch { return false; }
 }
 
@@ -349,10 +301,10 @@ function generateCaptchaCode() {
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
-// ─── PREMIUM: Welcome messages aléatoires ────────────────────────────────────
+// ─── PREMIUM: Welcome messages ─────────────────────────────────────────────────
 const DEFAULT_WELCOME_MESSAGES = [
   'Bienvenue {user} sur **{server}** ! 🎉 Nous sommes maintenant **{count}** membres !',
-  '✨ {user} vient de rejoindre **{server}** ! Contenu les accueillir chaleureusement !',
+  '✨ {user} vient de rejoindre **{server}** !',
   '🚀 Un nouveau membre est arrivé ! Bienvenue {user} dans **{server}** !',
   '👋 Hey {user} ! Tu rejoins une communauté de **{count}** membres sur **{server}** !',
   '🌟 {user} a rejoint le serveur ! Bienvenue dans **{server}** !'
@@ -383,8 +335,6 @@ async function createTicket(guild, user, config, ticketType = null) {
     .setColor(welcomeColor).setDescription(welcomeMsg.replace('{user}', `<@${user.id}>`)).setTimestamp();
   const row = new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`close_ticket_${ticket.id}`).setLabel('🔒 Fermer le ticket').setStyle(ButtonStyle.Danger));
   await channel.send({ content: `<@${user.id}> <@&${config.ticketStaffRole}>`, embeds: [embed], components: [row] });
-  const dmMsg = typeConfig.dmMessage || config.ticketDmMessage;
-  if (dmMsg) { try { await user.send({ embeds: [new EmbedBuilder().setTitle(`${typeConfig.emoji||'🎫'} Ticket ouvert — ${guild.name}`).setColor(welcomeColor).setDescription(dmMsg.replace('{user}',user.username).replace('{type}',ticketType||'Support').replace('{number}',`#${ticketNumber.toString().padStart(4,'0')}`).replace('{channel}',`<#${channel.id}>`)).setTimestamp()] }); } catch {} }
   return { channel, ticket };
 }
 
@@ -400,16 +350,13 @@ async function closeTicket(guild, channel, closedBy, ticketId) {
     const logChannel = guild.channels.cache.get(config.ticketLogChannel);
     if (logChannel) await logChannel.send({ embeds: [new EmbedBuilder().setTitle(`🔒 Ticket #${ticket.number.toString().padStart(4,'0')} fermé`).setColor(0xED4245).addFields({ name: '👤 Ouvert par', value: `<@${ticket.userId}>`, inline: true }, { name: '🔒 Fermé par', value: `<@${closedBy.id}>`, inline: true }, { name: '📅 Durée', value: formatDuration(Date.now() - new Date(ticket.createdAt).getTime()), inline: true }).setTimestamp()], files: [attachment] });
   }
-  const ticketUser = await guild.members.fetch(ticket.userId).catch(() => null);
-  if (ticketUser) await ticketUser.user.send({ embeds: [new EmbedBuilder().setTitle(`🔒 Votre ticket a été fermé — ${guild.name}`).setColor(0xED4245).setDescription(`Ticket #${ticket.number.toString().padStart(4,'0')} fermé. Merci !`)], files: [attachment] }).catch(() => {});
   await channel.delete().catch(() => {});
 }
 
 // ─── Slash Commands ───────────────────────────────────────────────────────────
 const commands = [
-  // Modération
   new SlashCommandBuilder().setName('warn').setDescription('Avertir un membre').addUserOption(o=>o.setName('membre').setDescription('Membre').setRequired(true)).addStringOption(o=>o.setName('raison').setDescription('Raison')).addStringOption(o=>o.setName('mention').setDescription('Message au membre')),
-  new SlashCommandBuilder().setName('mute').setDescription('Muter un membre').addUserOption(o=>o.setName('membre').setDescription('Membre').setRequired(true)).addStringOption(o=>o.setName('duree').setDescription('Durée (1h, 30min...)')).addStringOption(o=>o.setName('raison').setDescription('Raison')).addStringOption(o=>o.setName('mention').setDescription('Message au membre')),
+  new SlashCommandBuilder().setName('mute').setDescription('Muter un membre').addUserOption(o=>o.setName('membre').setDescription('Membre').setRequired(true)).addStringOption(o=>o.setName('duree').setDescription('Durée')).addStringOption(o=>o.setName('raison').setDescription('Raison')).addStringOption(o=>o.setName('mention').setDescription('Message au membre')),
   new SlashCommandBuilder().setName('unmute').setDescription('Démuter un membre').addUserOption(o=>o.setName('membre').setDescription('Membre').setRequired(true)),
   new SlashCommandBuilder().setName('kick').setDescription('Expulser un membre').addUserOption(o=>o.setName('membre').setDescription('Membre').setRequired(true)).addStringOption(o=>o.setName('raison').setDescription('Raison')).addStringOption(o=>o.setName('mention').setDescription('Message au membre')),
   new SlashCommandBuilder().setName('ban').setDescription('Bannir un membre').addUserOption(o=>o.setName('membre').setDescription('Membre').setRequired(true)).addStringOption(o=>o.setName('raison').setDescription('Raison')).addStringOption(o=>o.setName('mention').setDescription('Message au membre')),
@@ -417,50 +364,46 @@ const commands = [
   new SlashCommandBuilder().setName('casier').setDescription('Casier judiciaire').addUserOption(o=>o.setName('membre').setDescription('Membre')),
   new SlashCommandBuilder().setName('mafiche').setDescription('Votre fiche'),
   new SlashCommandBuilder().setName('clearwarn').setDescription('Effacer warns').addUserOption(o=>o.setName('membre').setDescription('Membre').setRequired(true)).addStringOption(o=>o.setName('id').setDescription('ID warn')),
-  // Config
-  new SlashCommandBuilder().setName('modsetup').setDescription('Configurer le bot')
-    .addChannelOption(o=>o.setName('logs').setDescription('Canal logs mod').setRequired(true))
-    .addChannelOption(o=>o.setName('eventlogs').setDescription('Canal logs événements'))
-    .addRoleOption(o=>o.setName('mute_role').setDescription('Rôle mute'))
-    .addBooleanOption(o=>o.setName('antispam').setDescription('Anti-spam'))
-    .addBooleanOption(o=>o.setName('antilinks').setDescription('Anti-liens'))
-    .addBooleanOption(o=>o.setName('ai_moderation').setDescription('[PREMIUM] Modération IA'))
-    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('modsetup').setDescription('Configurer le bot').addChannelOption(o=>o.setName('logs').setDescription('Canal logs mod').setRequired(true)).addChannelOption(o=>o.setName('eventlogs').setDescription('Canal logs événements')).addRoleOption(o=>o.setName('mute_role').setDescription('Rôle mute')).addBooleanOption(o=>o.setName('antispam').setDescription('Anti-spam')).addBooleanOption(o=>o.setName('antilinks').setDescription('Anti-liens')).addBooleanOption(o=>o.setName('ai_moderation').setDescription('[PREMIUM] Modération IA')).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   new SlashCommandBuilder().setName('modpanel').setDescription('Lien du panel'),
-  // Staff
   new SlashCommandBuilder().setName('staffadd').setDescription('Ajouter un staff').addUserOption(o=>o.setName('membre').setDescription('Membre').setRequired(true)).addIntegerOption(o=>o.setName('niveau').setDescription('Niveau 1-4').setRequired(true).setMinValue(1).setMaxValue(4)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   new SlashCommandBuilder().setName('staffliste').setDescription('Liste du staff'),
-  // Tickets
   new SlashCommandBuilder().setName('ticket').setDescription('Ouvrir un ticket'),
   new SlashCommandBuilder().setName('ticketsetup').setDescription('Configurer tickets').addChannelOption(o=>o.setName('category').setDescription('Catégorie').setRequired(true)).addRoleOption(o=>o.setName('staff_role').setDescription('Rôle staff').setRequired(true)).addChannelOption(o=>o.setName('logs').setDescription('Canal logs')).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   new SlashCommandBuilder().setName('ticketpanel').setDescription('Envoyer panel tickets').addChannelOption(o=>o.setName('salon').setDescription('Salon').setRequired(true)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   new SlashCommandBuilder().setName('fermerticket').setDescription('Fermer ce ticket'),
-  // XP
   new SlashCommandBuilder().setName('niveau').setDescription('Voir niveau XP').addUserOption(o=>o.setName('membre').setDescription('Membre')),
   new SlashCommandBuilder().setName('classement').setDescription('Classement XP'),
   new SlashCommandBuilder().setName('xpsetup').setDescription('Config XP').addBooleanOption(o=>o.setName('actif').setDescription('Activer').setRequired(true)).addChannelOption(o=>o.setName('levelup_channel').setDescription('Canal level up')).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-  // PREMIUM: Security
   new SlashCommandBuilder().setName('captchasetup').setDescription('[PREMIUM] Configurer le captcha').addRoleOption(o=>o.setName('role').setDescription('Rôle donné après vérification').setRequired(true)).addChannelOption(o=>o.setName('salon').setDescription('Salon de vérification').setRequired(true)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-  new SlashCommandBuilder().setName('lockdown').setDescription('[PREMIUM] Verrouiller/déverrouiller les salons').addStringOption(o=>o.setName('action').setDescription('on/off').setRequired(true).addChoices({name:'🔒 Activer',value:'on'},{name:'🔓 Désactiver',value:'off'})).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-  // PREMIUM: Welcome
-  new SlashCommandBuilder().setName('welcomesetup').setDescription('[PREMIUM] Configurer les messages de bienvenue').addChannelOption(o=>o.setName('salon').setDescription('Salon bienvenue').setRequired(true)).addBooleanOption(o=>o.setName('actif').setDescription('Activer').setRequired(true)).addStringOption(o=>o.setName('message').setDescription('Message custom (variables: {user}, {server}, {count})')).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-  new SlashCommandBuilder().setName('leavesetup').setDescription('[PREMIUM] Configurer les messages de départ').addChannelOption(o=>o.setName('salon').setDescription('Salon départ').setRequired(true)).addBooleanOption(o=>o.setName('actif').setDescription('Activer').setRequired(true)).addStringOption(o=>o.setName('message').setDescription('Message custom')).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-  // PREMIUM: IA
-  new SlashCommandBuilder().setName('resume').setDescription('[PREMIUM] Résumer les derniers messages').addIntegerOption(o=>o.setName('nombre').setDescription('Nombre de messages (max 100)').setMinValue(10).setMaxValue(100)),
-  new SlashCommandBuilder().setName('faq').setDescription('[PREMIUM] Configurer la FAQ du serveur pour le support auto').addStringOption(o=>o.setName('question').setDescription('Question').setRequired(true)).addStringOption(o=>o.setName('reponse').setDescription('Réponse').setRequired(true)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-  new SlashCommandBuilder().setName('iastatus').setDescription('[PREMIUM] Vérifier le statut de l\'IA Gemini'),
-  // PREMIUM: Économie
-  new SlashCommandBuilder().setName('solde').setDescription('Voir votre solde de coins').addUserOption(o=>o.setName('membre').setDescription('Membre')),
-  new SlashCommandBuilder().setName('classementcoins').setDescription('[PREMIUM] Classement des coins'),
-  new SlashCommandBuilder().setName('shop').setDescription('[PREMIUM] Boutique du serveur'),
-  new SlashCommandBuilder().setName('acheter').setDescription('[PREMIUM] Acheter un article').addStringOption(o=>o.setName('id').setDescription('ID de l\'article').setRequired(true)),
+  new SlashCommandBuilder().setName('lockdown').setDescription('[PREMIUM] Verrouiller/déverrouiller').addStringOption(o=>o.setName('action').setDescription('on/off').setRequired(true).addChoices({name:'🔒 Activer',value:'on'},{name:'🔓 Désactiver',value:'off'})).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('welcomesetup').setDescription('[PREMIUM] Configurer bienvenue').addChannelOption(o=>o.setName('salon').setDescription('Salon').setRequired(true)).addBooleanOption(o=>o.setName('actif').setDescription('Activer').setRequired(true)).addStringOption(o=>o.setName('message').setDescription('Message custom')).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('leavesetup').setDescription('[PREMIUM] Configurer départ').addChannelOption(o=>o.setName('salon').setDescription('Salon').setRequired(true)).addBooleanOption(o=>o.setName('actif').setDescription('Activer').setRequired(true)).addStringOption(o=>o.setName('message').setDescription('Message custom')).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('resume').setDescription('[PREMIUM] Résumer les derniers messages').addIntegerOption(o=>o.setName('nombre').setDescription('Nombre (max 100)').setMinValue(10).setMaxValue(100)),
+  new SlashCommandBuilder().setName('faq').setDescription('[PREMIUM] Configurer la FAQ').addStringOption(o=>o.setName('question').setDescription('Question').setRequired(true)).addStringOption(o=>o.setName('reponse').setDescription('Réponse').setRequired(true)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('iastatus').setDescription('[PREMIUM] Statut de l\'IA'),
+  new SlashCommandBuilder().setName('solde').setDescription('Voir votre solde').addUserOption(o=>o.setName('membre').setDescription('Membre')),
+  new SlashCommandBuilder().setName('classementcoins').setDescription('[PREMIUM] Classement coins'),
+  new SlashCommandBuilder().setName('shop').setDescription('[PREMIUM] Boutique'),
+  new SlashCommandBuilder().setName('acheter').setDescription('[PREMIUM] Acheter un article').addStringOption(o=>o.setName('id').setDescription('ID article').setRequired(true)),
   new SlashCommandBuilder().setName('donner').setDescription('[PREMIUM] Donner des coins').addUserOption(o=>o.setName('membre').setDescription('Membre').setRequired(true)).addIntegerOption(o=>o.setName('montant').setDescription('Montant').setRequired(true).setMinValue(1)),
-  new SlashCommandBuilder().setName('shopsetup').setDescription('[PREMIUM] Gérer la boutique').addSubcommand(s=>s.setName('ajouter').setDescription('Ajouter un article').addStringOption(o=>o.setName('nom').setDescription('Nom').setRequired(true)).addIntegerOption(o=>o.setName('prix').setDescription('Prix en coins').setRequired(true).setMinValue(1)).addStringOption(o=>o.setName('type').setDescription('Type').setRequired(true).addChoices({name:'Rôle',value:'role'},{name:'Licence Premium',value:'premium'})).addRoleOption(o=>o.setName('role').setDescription('Rôle à donner (si type=rôle)'))).addSubcommand(s=>s.setName('supprimer').setDescription('Supprimer un article').addStringOption(o=>o.setName('id').setDescription('ID article').setRequired(true))).addSubcommand(s=>s.setName('liste').setDescription('Voir les articles')).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
-  // Casino
-  new SlashCommandBuilder().setName('casino').setDescription('[PREMIUM] Jeux de casino'),
-  new SlashCommandBuilder().setName('slots').setDescription('[PREMIUM] Machine à sous').addIntegerOption(o=>o.setName('mise').setDescription('Mise en coins').setRequired(true).setMinValue(10)),
-  new SlashCommandBuilder().setName('blackjack').setDescription('[PREMIUM] Jouer au blackjack').addIntegerOption(o=>o.setName('mise').setDescription('Mise en coins').setRequired(true).setMinValue(10)),
-  new SlashCommandBuilder().setName('coinflip').setDescription('[PREMIUM] Pile ou face').addIntegerOption(o=>o.setName('mise').setDescription('Mise en coins').setRequired(true).setMinValue(10)).addStringOption(o=>o.setName('choix').setDescription('Pile ou Face').setRequired(true).addChoices({name:'🪙 Pile',value:'pile'},{name:'🦅 Face',value:'face'})),
+  new SlashCommandBuilder().setName('shopsetup').setDescription('[PREMIUM] Gérer la boutique').addSubcommand(s=>s.setName('ajouter').setDescription('Ajouter').addStringOption(o=>o.setName('nom').setDescription('Nom').setRequired(true)).addIntegerOption(o=>o.setName('prix').setDescription('Prix').setRequired(true).setMinValue(1)).addStringOption(o=>o.setName('type').setDescription('Type').setRequired(true).addChoices({name:'Rôle',value:'role'},{name:'Licence Premium',value:'premium'})).addRoleOption(o=>o.setName('role').setDescription('Rôle'))).addSubcommand(s=>s.setName('supprimer').setDescription('Supprimer').addStringOption(o=>o.setName('id').setDescription('ID').setRequired(true))).addSubcommand(s=>s.setName('liste').setDescription('Liste')).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('casino').setDescription('[PREMIUM] Casino'),
+  new SlashCommandBuilder().setName('slots').setDescription('[PREMIUM] Machine à sous').addIntegerOption(o=>o.setName('mise').setDescription('Mise').setRequired(true).setMinValue(10)),
+  new SlashCommandBuilder().setName('blackjack').setDescription('[PREMIUM] Blackjack').addIntegerOption(o=>o.setName('mise').setDescription('Mise').setRequired(true).setMinValue(10)),
+  new SlashCommandBuilder().setName('coinflip').setDescription('[PREMIUM] Pile ou face').addIntegerOption(o=>o.setName('mise').setDescription('Mise').setRequired(true).setMinValue(10)).addStringOption(o=>o.setName('choix').setDescription('Pile ou Face').setRequired(true).addChoices({name:'🪙 Pile',value:'pile'},{name:'🦅 Face',value:'face'})),
+  
+  // 🆕 Modules
+  new SlashCommandBuilder().setName('wanted').setDescription('[ADMIN] Avis de recherche')
+    .addSubcommand(s => s.setName('add').setDescription('Ajouter').addUserOption(o => o.setName('membre').setDescription('Membre').setRequired(true)).addStringOption(o => o.setName('raison').setDescription('Raison').setRequired(true)).addStringOption(o => o.setName('danger').setDescription('Danger').setRequired(true).addChoices({name:'🔴 Dangereux',value:'high'},{name:'🟠 Suspect',value:'medium'},{name:'🟡 Surveillance',value:'low'})))
+    .addSubcommand(s => s.setName('remove').setDescription('Retirer').addStringOption(o => o.setName('id').setDescription('ID').setRequired(true)))
+    .addSubcommand(s => s.setName('list').setDescription('Liste'))
+    .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('rep').setDescription('Donner une réputation').addUserOption(o => o.setName('membre').setDescription('Membre').setRequired(true)).addStringOption(o => o.setName('type').setDescription('Type').setRequired(true).addChoices({name:'✅ Positif',value:'pos'},{name:'❌ Négatif',value:'neg'})).addStringOption(o => o.setName('raison').setDescription('Raison').setRequired(false)),
+  new SlashCommandBuilder().setName('toprep').setDescription('Top réputation'),
+  new SlashCommandBuilder().setName('proces').setDescription('[ADMIN] Ouvrir un procès').addUserOption(o => o.setName('accuse').setDescription('Accusé').setRequired(true)).addStringOption(o => o.setName('accusation').setDescription('Accusation').setRequired(true)).addIntegerOption(o => o.setName('duree').setDescription('Durée (heures)').setRequired(true).setMinValue(1).setMaxValue(72)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  new SlashCommandBuilder().setName('statsmod').setDescription('Statistiques de modération').addStringOption(o => o.setName('periode').setDescription('Période').setRequired(false).addChoices({name:'Cette semaine',value:'week'},{name:'Ce mois',value:'month'},{name:'Tout',value:'all'})),
+  new SlashCommandBuilder().setName('statschannel').setDescription('[ADMIN] Configurer les stats').addChannelOption(o => o.setName('salon').setDescription('Salon').setRequired(true)).addBooleanOption(o => o.setName('actif').setDescription('Activer').setRequired(true)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 ];
 
 async function registerCommands() {
@@ -475,7 +418,6 @@ async function registerCommands() {
 client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} connecté !`);
   await registerCommands();
-  // Webhook activité au démarrage
   for (const [, guild] of client.guilds.cache) {
     await sendActivityWebhook(`✅ **ModBot** actif sur **${guild.name}** (\`${guild.id}\`) — ${guild.memberCount} membres`);
   }
@@ -494,27 +436,22 @@ client.on('guildMemberAdd', async member => {
   const licence = await checkLicence(guild.id);
   const config = await col('mod_configs').findOne({ guildId: guild.id }) || {};
 
-  // 🔒 AJOUT : Donner le rôle "Non vérifié" automatiquement
   if (config.unverifiedRole) {
     const unverifiedRole = guild.roles.cache.get(config.unverifiedRole);
     if (unverifiedRole) {
-      await member.roles.add(unverifiedRole).catch(err => {
-        console.error('❌ Erreur rôle Non vérifié:', err.message);
-      });
+      await member.roles.add(unverifiedRole).catch(err => console.error('❌ Erreur rôle Non vérifié:', err.message));
       console.log(`✅ Rôle Non vérifié donné à ${member.user.tag}`);
-    } else {
-      console.error('❌ Rôle Non vérifié introuvable. ID configuré:', config.unverifiedRole);
     }
   }
 
-  // Log de base (tous)
   await logEvent(guild, new EmbedBuilder().setTitle('👋 Nouveau membre').setColor(0x57F287).setThumbnail(member.user.displayAvatarURL()).addFields({ name: '👤 Membre', value: `<@${member.id}> (${member.user.tag})`, inline: true }, { name: '📅 Compte créé', value: `<t:${Math.floor(member.user.createdTimestamp/1000)}:R>`, inline: true }, { name: '👥 Total', value: `${guild.memberCount}`, inline: true }).setTimestamp());
 
+  // 🆕 Wanted System
+  if (wanted) await wanted.monitorNewMember(member);
+
   if (licence.isPremium) {
-    // Auto-lockdown check
     await checkJoinFlood(guild, member);
 
-    // Captcha
     if (config.captchaEnabled && config.captchaChannel && config.captchaRole) {
       const code = generateCaptchaCode();
       captchaMap.set(member.id, { code, guildId: guild.id, roleId: config.captchaRole });
@@ -530,7 +467,6 @@ client.on('guildMemberAdd', async member => {
       return;
     }
 
-    // Welcome message aléatoire
     if (config.welcomeEnabled && config.welcomeChannel) {
       const channel = guild.channels.cache.get(config.welcomeChannel);
       if (channel) {
@@ -543,6 +479,7 @@ client.on('guildMemberAdd', async member => {
     }
   }
 });
+
 // ─── Member Leave ─────────────────────────────────────────────────────────────
 client.on('guildMemberRemove', async member => {
   const { guild } = member;
@@ -559,7 +496,7 @@ client.on('guildMemberRemove', async member => {
   }
 });
 
-// ─── Message Delete (with image - PREMIUM) ───────────────────────────────────
+// ─── Message Delete ──────────────────────────────────────────────────────────
 client.on('messageDelete', async message => {
   if (!message.guild || message.author?.bot) return;
   const licence = await checkLicence(message.guild.id);
@@ -569,37 +506,21 @@ client.on('messageDelete', async message => {
       { name: '📍 Salon', value: `<#${message.channel.id}>`, inline: true },
       { name: '💬 Message', value: message.content?.slice(0, 1024) || '*Contenu inconnu*' }
     ).setTimestamp();
-
-  const files = [];
-
-  // Images (PREMIUM) — affichage en embed + fichier joint
   if (licence.isPremium && message.attachments.size > 0) {
     const images = message.attachments.filter(a => a.contentType?.startsWith('image/'));
-    const others = message.attachments.filter(a => !a.contentType?.startsWith('image/'));
-
     if (images.size > 0) {
-      // Première image en thumbnail dans l'embed
-      const firstImg = images.first();
-      embed.setImage(firstImg.proxyURL || firstImg.url);
-      embed.addFields({ name: '🖼️ Image(s) supprimée(s)', value: images.map(a => `[${a.name}](${a.url})`).join('\n').slice(0, 400) });
-    }
-    if (others.size > 0) {
-      embed.addFields({ name: '📎 Fichier(s)', value: others.map(a => a.name).join(', ').slice(0, 200) });
+      embed.setImage(images.first().proxyURL || images.first().url);
+      embed.addFields({ name: '🖼️ Image(s)', value: images.map(a => `[${a.name}](${a.url})`).join('\n').slice(0, 400) });
     }
   }
-
   const config = await col('mod_configs').findOne({ guildId: message.guild.id }) || {};
-  const channelId = config.eventLogChannel || config.logChannel;
-  if (!channelId) return;
-  const logChannel = message.guild.channels.cache.get(channelId);
-  if (!logChannel) return;
-  await logChannel.send({ embeds: [embed], files }).catch(() => {});
+  const logChannel = message.guild.channels.cache.get(config.eventLogChannel || config.logChannel);
+  if (logChannel) await logChannel.send({ embeds: [embed] }).catch(() => {});
 });
 
-// ─── Message Update ───────────────────────────────────────────────────────────
+// ─── Message Update ──────────────────────────────────────────────────────────
 client.on('messageUpdate', async (oldMessage, newMessage) => {
-  if (!newMessage.guild || newMessage.author?.bot) return;
-  if (oldMessage.content === newMessage.content) return;
+  if (!newMessage.guild || newMessage.author?.bot || oldMessage.content === newMessage.content) return;
   await logEvent(newMessage.guild, new EmbedBuilder().setTitle('✏️ Message modifié').setColor(0xFEE75C).addFields({ name: '👤 Auteur', value: `<@${newMessage.author?.id}>`, inline: true }, { name: '📍 Salon', value: `<#${newMessage.channel.id}>`, inline: true }, { name: '📝 Avant', value: oldMessage.content?.slice(0, 512) || '*Inconnu*' }, { name: '📝 Après', value: newMessage.content?.slice(0, 512) || '*Inconnu*' }).setTimestamp());
 });
 
@@ -616,13 +537,9 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
 client.on('guildMemberUpdate', async (oldMember, newMember) => {
   const licence = await checkLicence(newMember.guild.id);
   if (!licence.isPremium) return;
-
-  // Historique pseudo
   if (oldMember.nickname !== newMember.nickname || oldMember.user.username !== newMember.user.username) {
     await col('nickname_history').insertOne({ guildId: newMember.guild.id, userId: newMember.id, oldName: oldMember.nickname || oldMember.user.username, newName: newMember.nickname || newMember.user.username, changedAt: new Date().toISOString() });
   }
-
-  // Logs de rôles
   const addedRoles = newMember.roles.cache.filter(r => !oldMember.roles.cache.has(r.id));
   const removedRoles = oldMember.roles.cache.filter(r => !newMember.roles.cache.has(r.id));
   if (addedRoles.size > 0 || removedRoles.size > 0) {
@@ -640,35 +557,26 @@ client.on('messageCreate', async message => {
   const config = await col('mod_configs').findOne({ guildId: message.guild.id }) || {};
   const licence = await checkLicence(message.guild.id);
 
-// Captcha check (PREMIUM)
-if (licence.isPremium && captchaMap.has(message.author.id)) {
-  const captcha = captchaMap.get(message.author.id);
-  if (captcha.guildId === message.guild.id) {
-    if (message.content.trim().toUpperCase() === captcha.code) {
-      captchaMap.delete(message.author.id);
-      
-      // ✅ Ajouter le rôle Membre
-      await message.member.roles.add(captcha.roleId).catch(() => {});
-      
-      // 🔓 AJOUT : Retirer le rôle Non vérifié
-      const config = await col('mod_configs').findOne({ guildId: message.guild.id }) || {};
-      if (config.unverifiedRole) {
-        await message.member.roles.remove(config.unverifiedRole).catch(() => {});
+  if (licence.isPremium && captchaMap.has(message.author.id)) {
+    const captcha = captchaMap.get(message.author.id);
+    if (captcha.guildId === message.guild.id) {
+      if (message.content.trim().toUpperCase() === captcha.code) {
+        captchaMap.delete(message.author.id);
+        await message.member.roles.add(captcha.roleId).catch(() => {});
+        const cfg = await col('mod_configs').findOne({ guildId: message.guild.id }) || {};
+        if (cfg.unverifiedRole) await message.member.roles.remove(cfg.unverifiedRole).catch(() => {});
+        const successMsg = await message.reply('✅ Vérification réussie ! Bienvenue !');
+        setTimeout(() => successMsg.delete().catch(() => {}), 5000);
+        await message.delete().catch(() => {});
+      } else {
+        const failMsg = await message.reply('❌ Code incorrect. Réessayez !');
+        setTimeout(() => failMsg.delete().catch(() => {}), 3000);
+        await message.delete().catch(() => {});
       }
-      
-      const successMsg = await message.reply('✅ Vérification réussie ! Bienvenue !');
-      setTimeout(() => successMsg.delete().catch(() => {}), 5000);
-      await message.delete().catch(() => {});
-    } else {
-      const failMsg = await message.reply('❌ Code incorrect. Réessayez !');
-      setTimeout(() => failMsg.delete().catch(() => {}), 3000);
-      await message.delete().catch(() => {});
+      return;
     }
-    return;
   }
-}
 
-  // Self-bot detection (PREMIUM)
   if (licence.isPremium && !message.author.bot) {
     const isSelfBot = await checkSelfBot(message);
     if (isSelfBot) {
@@ -678,7 +586,6 @@ if (licence.isPremium && captchaMap.has(message.author.id)) {
     }
   }
 
-  // Auto-mod IA (PREMIUM)
   if (licence.isPremium && config.aiModeration) {
     const toxic = await checkAIModeration(message, config);
     if (toxic) {
@@ -692,13 +599,9 @@ if (licence.isPremium && captchaMap.has(message.author.id)) {
     }
   }
 
-    // Support Auto FAQ (PREMIUM)
   if (licence.isPremium && config.faqEnabled) {
     const faqs = await col('faq').find({ guildId: message.guild.id }).toArray();
-    if (faqs.length > 0 && GROQ_API_KEY) {  // ← Changé GEMINI_API_KEY → GROQ_API_KEY
-      // Vérifier si l'IA est disponible
-      if (!isAIAvailable()) return; // ← Ajouté
-      
+    if (faqs.length > 0 && GROQ_API_KEY && isAIAvailable()) {
       const faqText = faqs.map(f => `Q: ${f.question}\nR: ${f.answer}`).join('\n\n');
       const answer = await callAI(
         `Tu es un bot de support Discord. Un membre a envoyé ce message: "${message.content.slice(0, 300)}"\n\nVoici la FAQ du serveur:\n${faqText}\n\nSi ce message est une question à laquelle la FAQ répond, donne la réponse de façon naturelle et courte. Sinon, réponds uniquement le mot AUCUNE.`,
@@ -710,8 +613,7 @@ if (licence.isPremium && captchaMap.has(message.author.id)) {
       }
     }
   }
-  
-  // Anti-spam
+
   const spamType = await checkSpam(message);
   if (spamType) {
     const msgs = { spam: '🚫 Stop le spam !', link: '🚫 Liens non autorisés !', mentions: '🚫 Trop de mentions !' };
@@ -723,7 +625,6 @@ if (licence.isPremium && captchaMap.has(message.author.id)) {
     return;
   }
 
-  // XP
   if (config.xpEnabled) {
     const result = await addXP(message.guild.id, message.author.id, message.author.username);
     if (result?.levelUp) {
@@ -732,7 +633,6 @@ if (licence.isPremium && captchaMap.has(message.author.id)) {
     }
   }
 
-  // Coins (PREMIUM)
   if (licence.isPremium) {
     const coinKey = `${message.guild.id}-${message.author.id}`;
     const now = Date.now();
@@ -773,8 +673,8 @@ client.on('interactionCreate', async interaction => {
   const licence = await checkLicence(guildId);
 
   if (!licence.valid) {
-    const reasons = { NO_LICENCE: "Ce serveur n'a pas de licence. Rejoignez notre Discord !", BLOCKED: "La licence de ce serveur a été révoquée.", EXPIRED: "La licence de ce serveur a expiré." };
-    return await interaction.reply({ embeds: [new EmbedBuilder().setTitle('❌ Licence requise').setColor(0xED4245).setDescription(reasons[licence.reason] || 'Licence invalide.').setFooter({ text: "Contactez l'admin pour obtenir un accès." })], ephemeral: true });
+    const reasons = { NO_LICENCE: "Ce serveur n'a pas de licence.", BLOCKED: "La licence de ce serveur a été révoquée.", EXPIRED: "La licence de ce serveur a expiré." };
+    return await interaction.reply({ embeds: [new EmbedBuilder().setTitle('❌ Licence requise').setColor(0xED4245).setDescription(reasons[licence.reason] || 'Licence invalide.')], ephemeral: true });
   }
 
   if (interaction.isButton()) {
@@ -789,28 +689,17 @@ client.on('interactionCreate', async interaction => {
       if (!config.ticketCategory || !config.ticketStaffRole) return interaction.reply({ content: '❌ Tickets non configurés.', ephemeral: true });
       const existing = await col('tickets').findOne({ guildId: interaction.guild.id, userId: interaction.user.id, status: 'open' });
       if (existing) return interaction.reply({ content: `❌ Ticket déjà ouvert : <#${existing.channelId}>`, ephemeral: true });
-      const ticketTypes = config.ticketTypes || [];
-      if (!ticketTypes.length) {
-        await interaction.reply({ content: '🎫 Création...', ephemeral: true });
-        const { channel } = await createTicket(interaction.guild, interaction.user, config, null);
-        return interaction.editReply({ content: `✅ Ticket créé : <#${channel.id}>` });
-      }
-      const select = new StringSelectMenuBuilder().setCustomId('select_ticket_type').setPlaceholder('Choisissez le type...').addOptions(ticketTypes.map(t => ({ label: t.label, description: t.description || `Ouvrir un ticket ${t.label}`, value: t.label, emoji: t.emoji || '🎫' })));
-      return interaction.reply({ content: '📋 **Quel type de ticket ?**', components: [new ActionRowBuilder().addComponents(select)], ephemeral: true });
+      const { channel } = await createTicket(interaction.guild, interaction.user, config);
+      return interaction.reply({ content: `✅ Ticket créé : <#${channel.id}>`, ephemeral: true });
     }
-    // Casino boutons
     if (interaction.customId.startsWith('bj_')) {
       await handleBlackjackButton(interaction);
       return;
     }
-  }
-
-  if (interaction.isStringSelectMenu() && interaction.customId === 'select_ticket_type') {
-    const ticketType = interaction.values[0];
-    const config = await col('mod_configs').findOne({ guildId: interaction.guild.id }) || {};
-    await interaction.update({ content: '🎫 Création...', components: [] });
-    const { channel } = await createTicket(interaction.guild, interaction.user, config, ticketType);
-    return interaction.editReply({ content: `✅ Ticket **${ticketType}** créé : <#${channel.id}>`, components: [] });
+    // 🆕 Tribunal
+    if (interaction.customId.startsWith('trial_')) {
+      if (tribunal) return tribunal.handleButton(interaction);
+    }
   }
 
   if (!interaction.isChatInputCommand()) return;
@@ -826,14 +715,19 @@ client.on('interactionCreate', async interaction => {
 async function handleCommand(interaction, licence) {
   const { commandName, options, guildId, user, guild } = interaction;
 
-  // Helper: vérifier premium
   async function requirePremium() {
     if (!licence.isPremium) {
-      await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('⭐ Fonctionnalité Premium').setColor(0xFFD700).setDescription('Cette fonctionnalité est réservée aux serveurs Premium.\nRejoignez notre Discord pour upgrader !').setFooter({ text: 'NCL Bot Suite' })] });
+      await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('⭐ Fonctionnalité Premium').setColor(0xFFD700).setDescription('Cette fonctionnalité est réservée aux serveurs Premium.')] });
       return false;
     }
     return true;
   }
+
+  // 🆕 Commandes modules
+  if (commandName === 'wanted') return wanted?.handleCommand(interaction);
+  if (commandName === 'rep' || commandName === 'toprep') return reputation?.handleCommand(interaction);
+  if (commandName === 'proces') return tribunal?.handleCommand(interaction);
+  if (commandName === 'statsmod' || commandName === 'statschannel') return stats?.handleCommand(interaction);
 
   // ── modsetup ──
   if (commandName === 'modsetup') {
@@ -850,7 +744,7 @@ async function handleCommand(interaction, licence) {
 
   // ── modpanel ──
   if (commandName === 'modpanel') {
-    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🛡️ Panel de Modération').setColor(0x5865F2).setDescription(`🔗 **[Ouvrir le panel](${PANEL_URL}/?guild=${guildId})**`).addFields({ name: '🔑 Accès', value: 'Connectez-vous avec votre compte staff.' })] });
+    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🛡️ Panel de Modération').setColor(0x5865F2).setDescription(`🔗 **[Ouvrir le panel](${PANEL_URL}/?guild=${guildId})**`)] });
     return;
   }
 
@@ -1065,24 +959,15 @@ async function handleCommand(interaction, licence) {
     const textChannels = guild.channels.cache.filter(c => c.type === ChannelType.GuildText && !c.isThread());
     if (action === 'on') {
       lockdownActive.set(guildId, true);
-      let count = 0;
       for (const [, ch] of textChannels) {
-        try {
-          await ch.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: false });
-          count++;
-        } catch {}
+        await ch.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: false }).catch(() => {});
       }
-      await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🔒 Lockdown activé').setColor(0xED4245).setDescription(`${count} salons verrouillés. Personne ne peut écrire.`).setTimestamp()] });
+      await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🔒 Lockdown activé').setColor(0xED4245).setDescription('Tous les salons sont verrouillés.')] });
     } else {
       lockdownActive.delete(guildId);
-      let count = 0;
       for (const [, ch] of textChannels) {
-        try {
-          // Remove the SendMessages overwrite (reset to default)
-          const existing = ch.permissionOverwrites.cache.get(guild.roles.everyone.id);
-          if (existing) await existing.delete();
-          count++;
-        } catch {}
+        const existing = ch.permissionOverwrites.cache.get(guild.roles.everyone.id);
+        if (existing) await existing.delete().catch(() => {});
       }
       await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🔓 Lockdown désactivé').setColor(0x57F287).setDescription('Tous les salons sont déverrouillés.')] });
     }
@@ -1111,43 +996,20 @@ async function handleCommand(interaction, licence) {
     return;
   }
 
-   // ── PREMIUM: resume ──
+  // ── PREMIUM: resume ──
   if (commandName === 'resume') {
     if (!await requirePremium()) return;
-    if (!GEMINI_API_KEY) { 
-      await interaction.editReply({ content: '❌ Clé API Gemini non configurée. Ajoutez GEMINI_API_KEY dans les variables Render.' }); 
-      return; 
-    }
-    
     if (!isAIAvailable()) {
       const timeLeft = Math.ceil((aiRateLimitMap.get('disabled_until') - Date.now()) / 60000);
-      await interaction.editReply({ 
-        content: `❌ L'IA est temporairement indisponible (quota dépassé). Réessayez dans ${timeLeft} minutes.` 
-      });
-      return;
+      return interaction.editReply({ content: `❌ L'IA est temporairement indisponible. Réessayez dans ${timeLeft} minutes.` });
     }
-    
     const nombre = options.getInteger('nombre') || 50;
     const messages = await interaction.channel.messages.fetch({ limit: nombre });
     const text = messages.reverse().filter(m => !m.author.bot && m.content.length > 5).map(m => `${m.author.username}: ${m.content}`).join('\n');
-    
-    if (!text.trim() || text.length < 50) { 
-      await interaction.editReply({ content: '❌ Pas assez de messages à résumer (minimum 50 caractères de texte).' }); 
-      return; 
-    }
-    
-    const resume = await callAI(
-      `Voici une conversation Discord. Résume les points importants en français, de façon claire et structurée (maximum 600 mots). Mets en avant les sujets discutés, les décisions prises et les points importants.\n\n${text.slice(0, 8000)}`,
-      'Tu es un assistant de modération Discord. Résume les conversations de façon concise et utile pour le staff.'
-    );
-    
-    if (!resume) {
-      await interaction.editReply({ content: '❌ Impossible de générer un résumé. Vérifiez que GEMINI_API_KEY est bien configurée dans Render ou réessayez plus tard (quota peut-être dépassé).' });
-      return;
-    }
-    
-    const desc = resume.length > 4000 ? resume.slice(0, 3997) + '...' : resume;
-    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle(`📋 Résumé — ${nombre} derniers messages`).setColor(0x5352ed).setDescription(desc).setTimestamp().setFooter({ text: `Généré par Gemini AI` })] });
+    if (!text.trim() || text.length < 50) return interaction.editReply({ content: '❌ Pas assez de messages à résumer.' });
+    const resume = await callAI(`Résume les points importants de cette conversation en français.\n\n${text.slice(0, 8000)}`, 'Tu es un assistant de modération Discord.');
+    if (!resume) return interaction.editReply({ content: '❌ Impossible de générer un résumé.' });
+    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle(`📋 Résumé`).setColor(0x5352ed).setDescription(resume.slice(0, 4000)).setTimestamp()] });
     return;
   }
 
@@ -1158,43 +1020,24 @@ async function handleCommand(interaction, licence) {
     const reponse = options.getString('reponse');
     await col('faq').insertOne({ guildId, question, answer: reponse, createdBy: user.id, createdAt: new Date().toISOString() });
     await col('mod_configs').updateOne({ guildId }, { $set: { faqEnabled: true } }, { upsert: true });
-    await interaction.editReply({ content: `✅ FAQ ajoutée ! Q: "${question}"` });
+    await interaction.editReply({ content: `✅ FAQ ajoutée !` });
     return;
   }
 
   // ── PREMIUM: iastatus ──
-if (commandName === 'iastatus') {
-  if (!await requirePremium()) return;
-  
-  const available = isAIAvailable();
-  const disabledUntil = aiRateLimitMap.get('disabled_until');
-  const timeLeft = disabledUntil ? Math.max(0, Math.floor((disabledUntil - Date.now()) / 1000)) : 0;
-  const recentRequests = (aiRateLimitMap.get('groq_requests') || []).filter(t => Date.now() - t < 60000).length;
-  
-  const embed = new EmbedBuilder()
-    .setTitle('🤖 Statut IA (Groq)')
-    .setColor(available ? 0x57F287 : 0xED4245)
-    .addFields(
-      { name: '📊 Status', value: available ? '✅ Disponible' : '❌ Indisponible', inline: true },
-      { name: '🔑 API Key', value: GROQ_API_KEY ? '✅ Configurée' : '❌ Manquante', inline: true },
-      { name: '📈 Requêtes/min', value: `${recentRequests}/30`, inline: true },
-      { name: '🧠 Modèle', value: 'Llama 3.3 70B', inline: true }
-    );
-  
-  if (!available && timeLeft > 0) {
-    embed.addFields({ name: '⏰ Disponible dans', value: `${Math.ceil(timeLeft / 60)} minutes` });
+  if (commandName === 'iastatus') {
+    if (!await requirePremium()) return;
+    const available = isAIAvailable();
+    const recentRequests = (aiRateLimitMap.get('groq_requests') || []).filter(t => Date.now() - t < 60000).length;
+    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🤖 Statut IA (Groq)').setColor(available ? 0x57F287 : 0xED4245).addFields({ name: '📊 Status', value: available ? '✅ Disponible' : '❌ Indisponible', inline: true }, { name: '📈 Requêtes/min', value: `${recentRequests}/30`, inline: true })] });
+    return;
   }
-  
-  await interaction.editReply({ embeds: [embed] });
-  return;
-}
-  
+
   // ── PREMIUM: solde ──
   if (commandName === 'solde') {
     const target = options.getUser('membre') || user;
     const coins = await getCoins(guildId, target.id);
-    const rank = await col('economy').countDocuments({ guildId, coins: { $gt: coins } }) + 1;
-    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle(`🪙 Solde — ${target.username}`).setColor(0xFFD700).addFields({ name: '💰 Coins', value: `**${coins}** 🪙`, inline: true }, { name: '🏅 Rang', value: `#${rank}`, inline: true })] });
+    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle(`🪙 Solde — ${target.username}`).setColor(0xFFD700).addFields({ name: '💰 Coins', value: `**${coins}** 🪙`, inline: true })] });
     return;
   }
 
@@ -1232,12 +1075,11 @@ if (commandName === 'iastatus') {
       await col('shop').insertOne(item);
       await interaction.editReply({ content: `✅ Article **${nom}** ajouté pour **${prix}** 🪙` });
     } else if (sub === 'supprimer') {
-      const id = options.getString('id');
-      await col('shop').deleteOne({ guildId, id });
-      await interaction.editReply({ content: `✅ Article \`${id}\` supprimé.` });
+      await col('shop').deleteOne({ guildId, id: options.getString('id') });
+      await interaction.editReply({ content: `✅ Article supprimé.` });
     } else if (sub === 'liste') {
       const items = await col('shop').find({ guildId }).toArray();
-      await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🏪 Articles de la boutique').setColor(0x5865F2).setDescription(items.length ? items.map(i => `\`${i.id}\` **${i.nom}** — ${i.prix} 🪙 (${i.type})`).join('\n') : 'Aucun article')] });
+      await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🏪 Articles').setColor(0x5865F2).setDescription(items.length ? items.map(i => `\`${i.id}\` **${i.nom}** — ${i.prix} 🪙`).join('\n') : 'Aucun article')] });
     }
     return;
   }
@@ -1247,7 +1089,7 @@ if (commandName === 'iastatus') {
     if (!await requirePremium()) return;
     const items = await col('shop').find({ guildId }).toArray();
     if (!items.length) { await interaction.editReply({ content: '❌ La boutique est vide.' }); return; }
-    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🏪 Boutique').setColor(0xFFD700).setDescription(items.map(i => `**${i.nom}** — ${i.prix} 🪙\n> ID: \`${i.id}\` | Type: ${i.type}`).join('\n\n'))] });
+    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🏪 Boutique').setColor(0xFFD700).setDescription(items.map(i => `**${i.nom}** — ${i.prix} 🪙\n> ID: \`${i.id}\``).join('\n\n'))] });
     return;
   }
 
@@ -1258,15 +1100,8 @@ if (commandName === 'iastatus') {
     const item = await col('shop').findOne({ guildId, id });
     if (!item) { await interaction.editReply({ content: '❌ Article introuvable.' }); return; }
     const success = await removeCoins(guildId, user.id, item.prix);
-    if (!success) { await interaction.editReply({ content: `❌ Solde insuffisant ! Tu as besoin de **${item.prix}** 🪙.` }); return; }
-
-    if (item.type === 'role' && item.roleId) {
-      await interaction.member.roles.add(item.roleId).catch(() => {});
-    } else if (item.type === 'premium') {
-      // Acheter une licence premium avec des coins — contacter le serveur de licences
-      await interaction.editReply({ content: `✅ Achat de **${item.nom}** réussi ! Un admin va activer votre licence premium manuellement. Merci !` });
-      return;
-    }
+    if (!success) { await interaction.editReply({ content: `❌ Solde insuffisant !` }); return; }
+    if (item.type === 'role' && item.roleId) await interaction.member.roles.add(item.roleId).catch(() => {});
     await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('✅ Achat réussi !').setColor(0x57F287).addFields({ name: '🛒 Article', value: item.nom, inline: true }, { name: '💰 Prix', value: `${item.prix} 🪙`, inline: true })] });
     return;
   }
@@ -1276,7 +1111,7 @@ if (commandName === 'iastatus') {
     if (!await requirePremium()) return;
     const mise = options.getInteger('mise');
     const solde = await getCoins(guildId, user.id);
-    if (solde < mise) { await interaction.editReply({ content: `❌ Solde insuffisant ! Tu as **${solde}** 🪙.` }); return; }
+    if (solde < mise) { await interaction.editReply({ content: '❌ Solde insuffisant !' }); return; }
     await removeCoins(guildId, user.id, mise);
     const symboles = ['🍒', '🍋', '🍊', '🍇', '⭐', '💎', '7️⃣'];
     const s1 = symboles[Math.floor(Math.random() * symboles.length)];
@@ -1284,17 +1119,14 @@ if (commandName === 'iastatus') {
     const s3 = symboles[Math.floor(Math.random() * symboles.length)];
     let gain = 0, msg = '';
     if (s1 === s2 && s2 === s3) {
-      if (s1 === '💎') gain = mise * 10;
-      else if (s1 === '7️⃣') gain = mise * 7;
-      else gain = mise * 3;
-      msg = `🎉 JACKPOT ! Vous gagnez **${gain}** 🪙 !`;
+      gain = s1 === '💎' ? mise * 10 : s1 === '7️⃣' ? mise * 7 : mise * 3;
+      msg = `🎉 JACKPOT ! +${gain} 🪙`;
     } else if (s1 === s2 || s2 === s3 || s1 === s3) {
       gain = Math.floor(mise * 1.5);
-      msg = `✨ Deux identiques ! Vous gagnez **${gain}** 🪙 !`;
-    } else { msg = `😔 Perdu ! Vous perdez **${mise}** 🪙.`; }
+      msg = `✨ +${gain} 🪙`;
+    } else { msg = `😔 -${mise} 🪙`; }
     if (gain > 0) await addCoins(guildId, user.id, user.username, gain);
-    const newSolde = await getCoins(guildId, user.id);
-    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🎰 Machine à sous').setColor(gain > 0 ? 0x57F287 : 0xED4245).setDescription(`## ${s1} | ${s2} | ${s3}\n\n${msg}`).addFields({ name: '💰 Nouveau solde', value: `${newSolde} 🪙` }).setTimestamp()] });
+    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🎰 Machine à sous').setColor(gain > 0 ? 0x57F287 : 0xED4245).setDescription(`## ${s1} | ${s2} | ${s3}\n\n${msg}`)] });
     return;
   }
 
@@ -1303,14 +1135,12 @@ if (commandName === 'iastatus') {
     if (!await requirePremium()) return;
     const mise = options.getInteger('mise');
     const choix = options.getString('choix');
-    const solde = await getCoins(guildId, user.id);
-    if (solde < mise) { await interaction.editReply({ content: `❌ Solde insuffisant !` }); return; }
+    if (await getCoins(guildId, user.id) < mise) { await interaction.editReply({ content: '❌ Solde insuffisant !' }); return; }
     await removeCoins(guildId, user.id, mise);
     const resultat = Math.random() < 0.5 ? 'pile' : 'face';
     const win = resultat === choix;
     if (win) await addCoins(guildId, user.id, user.username, mise * 2);
-    const newSolde = await getCoins(guildId, user.id);
-    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🪙 Pile ou Face').setColor(win ? 0x57F287 : 0xED4245).setDescription(`Résultat: **${resultat === 'pile' ? '🪙 Pile' : '🦅 Face'}**\n\n${win ? `🎉 Gagné ! +${mise} 🪙` : `😔 Perdu ! -${mise} 🪙`}`).addFields({ name: '💰 Nouveau solde', value: `${newSolde} 🪙` })] });
+    await interaction.editReply({ embeds: [new EmbedBuilder().setTitle('🪙 Pile ou Face').setColor(win ? 0x57F287 : 0xED4245).setDescription(`Résultat: **${resultat === 'pile' ? '🪙 Pile' : '🦅 Face'}**\n\n${win ? `🎉 Gagné ! +${mise} 🪙` : `😔 Perdu ! -${mise} 🪙`}`)] });
     return;
   }
 
@@ -1318,8 +1148,7 @@ if (commandName === 'iastatus') {
   if (commandName === 'blackjack') {
     if (!await requirePremium()) return;
     const mise = options.getInteger('mise');
-    const solde = await getCoins(guildId, user.id);
-    if (solde < mise) { await interaction.editReply({ content: '❌ Solde insuffisant !' }); return; }
+    if (await getCoins(guildId, user.id) < mise) { await interaction.editReply({ content: '❌ Solde insuffisant !' }); return; }
     await removeCoins(guildId, user.id, mise);
     const deck = ['A','2','3','4','5','6','7','8','9','10','V','D','R'];
     const cardValue = c => c === 'A' ? 11 : ['V','D','R'].includes(c) ? 10 : parseInt(c);
@@ -1327,9 +1156,8 @@ if (commandName === 'iastatus') {
     const draw = () => deck[Math.floor(Math.random() * deck.length)];
     const playerHand = [draw(), draw()];
     const dealerHand = [draw(), draw()];
-    const bjSession = { playerHand, dealerHand, mise, userId: user.id, guildId, ended: false };
     const sessionId = uuidv4().slice(0, 8);
-    await col('bj_sessions').insertOne({ ...bjSession, id: sessionId, createdAt: new Date().toISOString() });
+    await col('bj_sessions').insertOne({ id: sessionId, playerHand, dealerHand, mise, userId: user.id, guildId, ended: false, createdAt: new Date().toISOString() });
     const embed = new EmbedBuilder().setTitle('🃏 Blackjack').setColor(0x2d3436)
       .addFields({ name: '👤 Vos cartes', value: `${playerHand.join(' ')} = **${handValue(playerHand)}**`, inline: true }, { name: '🤖 Dealer', value: `${dealerHand[0]} ?`, inline: true }, { name: '💰 Mise', value: `${mise} 🪙`, inline: true });
     const row = new ActionRowBuilder().addComponents(
@@ -1338,7 +1166,7 @@ if (commandName === 'iastatus') {
     );
     if (handValue(playerHand) === 21) {
       await addCoins(guildId, user.id, user.username, Math.floor(mise * 2.5));
-      embed.setDescription('🎉 **BLACKJACK !** Vous gagnez x2.5 !').setColor(0xFFD700);
+      embed.setDescription('🎉 **BLACKJACK !**').setColor(0xFFD700);
       await interaction.editReply({ embeds: [embed] });
     } else {
       await interaction.editReply({ embeds: [embed], components: [row] });
@@ -1350,7 +1178,7 @@ if (commandName === 'iastatus') {
 // ─── Blackjack Button Handler ─────────────────────────────────────────────────
 async function handleBlackjackButton(interaction) {
   const parts = interaction.customId.split('_');
-  const action = parts[1]; // hit or stand
+  const action = parts[1];
   const sessionId = parts[2];
   const session = await col('bj_sessions').findOne({ id: sessionId });
   if (!session || session.ended || session.userId !== interaction.user.id) {
@@ -1367,7 +1195,7 @@ async function handleBlackjackButton(interaction) {
     const pv = handValue(playerHand);
     if (pv > 21) {
       await col('bj_sessions').updateOne({ id: sessionId }, { $set: { ended: true } });
-      return interaction.update({ embeds: [new EmbedBuilder().setTitle('🃏 Blackjack — Perdu !').setColor(0xED4245).addFields({ name: '👤 Vos cartes', value: `${playerHand.join(' ')} = **${pv}**` }, { name: '💀 Bust !', value: `Vous perdez **${mise}** 🪙.` })], components: [] });
+      return interaction.update({ embeds: [new EmbedBuilder().setTitle('🃏 Blackjack — Perdu !').setColor(0xED4245).addFields({ name: '👤 Vos cartes', value: `${playerHand.join(' ')} = **${pv}**` }, { name: '💀 Bust !', value: `-${mise} 🪙` })], components: [] });
     }
     await col('bj_sessions').updateOne({ id: sessionId }, { $set: { playerHand } });
     const row = new ActionRowBuilder().addComponents(
@@ -1383,11 +1211,10 @@ async function handleBlackjackButton(interaction) {
     await col('bj_sessions').updateOne({ id: sessionId }, { $set: { ended: true } });
     let result, gain = 0, color;
     if (dv > 21 || pv > dv) { result = `🎉 Gagné ! +${mise} 🪙`; gain = mise * 2; color = 0x57F287; }
-    else if (pv === dv) { result = `🤝 Égalité ! Mise remboursée.`; gain = mise; color = 0xFEE75C; }
+    else if (pv === dv) { result = `🤝 Égalité !`; gain = mise; color = 0xFEE75C; }
     else { result = `😔 Perdu ! -${mise} 🪙`; color = 0xED4245; }
     if (gain > 0) await addCoins(session.guildId, session.userId, interaction.user.username, gain);
-    const newSolde = await getCoins(session.guildId, session.userId);
-    return interaction.update({ embeds: [new EmbedBuilder().setTitle('🃏 Blackjack — Résultat').setColor(color).addFields({ name: '👤 Vos cartes', value: `${playerHand.join(' ')} = **${pv}**`, inline: true }, { name: '🤖 Dealer', value: `${dealerHand.join(' ')} = **${dv}**`, inline: true }, { name: '📊 Résultat', value: result }, { name: '💰 Nouveau solde', value: `${newSolde} 🪙` })], components: [] });
+    return interaction.update({ embeds: [new EmbedBuilder().setTitle('🃏 Blackjack — Résultat').setColor(color).addFields({ name: '👤 Vos cartes', value: `${playerHand.join(' ')} = **${pv}**`, inline: true }, { name: '🤖 Dealer', value: `${dealerHand.join(' ')} = **${dv}**`, inline: true }, { name: '📊 Résultat', value: result })], components: [] });
   }
 }
 
@@ -1426,7 +1253,6 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 app.get('/api/cases', authMiddleware, async (req, res) => res.json(await col('mod_cases').find({ guildId: req.user.guildId }).sort({ createdAt: -1 }).toArray()));
-
 app.post('/api/cases', authMiddleware, async (req, res) => {
   const { guildId, username } = req.user;
   const { targetId, targetTag, type, reason } = req.body;
@@ -1435,84 +1261,48 @@ app.post('/api/cases', authMiddleware, async (req, res) => {
   const guild = client.guilds.cache.get(guildId);
   if (guild) {
     await logAction(guild, sanction);
-    try { const member = await guild.members.fetch(targetId).catch(() => null); if (member) { const config = await col('mod_configs').findOne({ guildId }) || {}; if (type === 'mute' && config.muteRole) await member.roles.add(config.muteRole).catch(() => {}); if (type === 'mute' && !config.muteRole) await member.timeout(3600000, reason).catch(() => {}); if (type === 'kick') await member.kick(reason || 'Via panel').catch(() => {}); if (type === 'ban') await member.ban({ reason: reason || 'Via panel' }).catch(() => {}); if (type === 'warn') await checkAutoSanctions(guild, member); } } catch {}
+    try { const member = await guild.members.fetch(targetId).catch(() => null); if (member) { const config = await col('mod_configs').findOne({ guildId }) || {}; if (type === 'mute' && config.muteRole) await member.roles.add(config.muteRole).catch(() => {}); if (type === 'kick') await member.kick(reason || 'Via panel').catch(() => {}); if (type === 'ban') await member.ban({ reason: reason || 'Via panel' }).catch(() => {}); if (type === 'warn') await checkAutoSanctions(guild, member); } } catch {}
   }
   res.json(sanction);
 });
 
 app.get('/api/cases/user/:userId', authMiddleware, async (req, res) => res.json(await col('mod_cases').find({ guildId: req.user.guildId, targetId: req.params.userId }).toArray()));
-app.delete('/api/cases/:id', authMiddleware, async (req, res) => { const result = await col('mod_cases').updateOne({ id: req.params.id, guildId: req.user.guildId }, { $set: { active: false } }); if (result.matchedCount === 0) return res.status(404).json({ error: 'Introuvable' }); res.json({ success: true }); });
+app.delete('/api/cases/:id', authMiddleware, async (req, res) => { await col('mod_cases').updateOne({ id: req.params.id, guildId: req.user.guildId }, { $set: { active: false } }); res.json({ success: true }); });
 app.get('/api/staff', authMiddleware, async (req, res) => res.json(await col('mod_staff').find({ guildId: req.user.guildId }).toArray()));
-app.post('/api/staff', authMiddleware, async (req, res) => { if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' }); const { guildId } = req.user; const { userId, tag, niveau } = req.body; const member = { userId, tag, niveau, guildId, addedBy: req.user.username, addedAt: new Date().toISOString() }; await col('mod_staff').updateOne({ guildId, userId }, { $set: member }, { upsert: true }); res.json(member); });
+app.post('/api/staff', authMiddleware, async (req, res) => { const { guildId } = req.user; const { userId, tag, niveau } = req.body; await col('mod_staff').updateOne({ guildId, userId }, { $set: { userId, tag, niveau, guildId, addedBy: req.user.username, addedAt: new Date().toISOString() } }, { upsert: true }); res.json({ success: true }); });
 app.get('/api/tickets', authMiddleware, async (req, res) => res.json(await col('tickets').find({ guildId: req.user.guildId }).sort({ createdAt: -1 }).toArray()));
 app.get('/api/xp', authMiddleware, async (req, res) => res.json(await col('xp_users').find({ guildId: req.user.guildId }).sort({ xp: -1 }).limit(50).toArray()));
 app.get('/api/economy', authMiddleware, async (req, res) => res.json(await col('economy').find({ guildId: req.user.guildId }).sort({ coins: -1 }).limit(50).toArray()));
 app.get('/api/shop', authMiddleware, async (req, res) => res.json(await col('shop').find({ guildId: req.user.guildId }).toArray()));
 app.get('/api/users', authMiddleware, async (req, res) => { const users = await col('mod_users').find({ guildId: req.user.guildId }).toArray(); res.json(users.map(u => ({ id: u.id, username: u.username, role: u.role, adminLevel: u.adminLevel, createdAt: u.createdAt }))); });
-app.patch('/api/users/:id/level', authMiddleware, async (req, res) => { if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' }); await col('mod_users').updateOne({ id: req.params.id, guildId: req.user.guildId }, { $set: { adminLevel: req.body.adminLevel } }); res.json({ success: true }); });
-app.get('/api/public/fiche/:guildId/:userId', async (req, res) => { const cases = await col('mod_cases').find({ guildId: req.params.guildId, targetId: req.params.userId }).toArray(); const counts = { warn: 0, mute: 0, kick: 0, ban: 0 }; cases.forEach(c => { if (counts[c.type] !== undefined) counts[c.type]++; }); res.json({ cases: cases.filter(c => c.type !== 'unban' && c.type !== 'unmute'), counts }); });
+app.patch('/api/users/:id/level', authMiddleware, async (req, res) => { await col('mod_users').updateOne({ id: req.params.id, guildId: req.user.guildId }, { $set: { adminLevel: req.body.adminLevel } }); res.json({ success: true }); });
+app.get('/api/public/fiche/:guildId/:userId', async (req, res) => { const cases = await col('mod_cases').find({ guildId: req.params.guildId, targetId: req.params.userId }).toArray(); res.json(cases); });
 app.post('/api/config', authMiddleware, async (req, res) => { await col('mod_configs').updateOne({ guildId: req.user.guildId }, { $set: { guildId: req.user.guildId, ...req.body } }, { upsert: true }); res.json({ success: true }); });
-app.get('/api/ticket-config', authMiddleware, async (req, res) => { const config = await col('mod_configs').findOne({ guildId: req.user.guildId }) || {}; res.json({ ticketTypes: config.ticketTypes || [], ticketWelcomeMessage: config.ticketWelcomeMessage || '', ticketDmMessage: config.ticketDmMessage || '' }); });
-app.post('/api/ticket-config', authMiddleware, async (req, res) => { if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' }); const { ticketTypes, ticketWelcomeMessage, ticketDmMessage } = req.body; await col('mod_configs').updateOne({ guildId: req.user.guildId }, { $set: { ticketTypes, ticketWelcomeMessage, ticketDmMessage } }, { upsert: true }); res.json({ success: true }); });
-
-// Shop price update (super admin only)
-app.patch('/api/shop/:id', authMiddleware, async (req, res) => { if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Réservé aux Super Admins' }); await col('shop').updateOne({ id: req.params.id, guildId: req.user.guildId }, { $set: req.body }); res.json({ success: true }); });
-app.delete('/api/shop/:id', authMiddleware, async (req, res) => { if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Réservé aux Super Admins' }); await col('shop').deleteOne({ id: req.params.id, guildId: req.user.guildId }); res.json({ success: true }); });
-
-// Give coins (admin)
-app.post('/api/economy/give', authMiddleware, async (req, res) => { if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' }); const { userId, amount } = req.body; await addCoins(req.user.guildId, userId, '', amount); res.json({ success: true }); });
-
+app.get('/api/ticket-config', authMiddleware, async (req, res) => { const config = await col('mod_configs').findOne({ guildId: req.user.guildId }) || {}; res.json({ ticketTypes: config.ticketTypes || [] }); });
+app.post('/api/ticket-config', authMiddleware, async (req, res) => { const { ticketTypes, ticketWelcomeMessage, ticketDmMessage } = req.body; await col('mod_configs').updateOne({ guildId: req.user.guildId }, { $set: { ticketTypes, ticketWelcomeMessage, ticketDmMessage } }, { upsert: true }); res.json({ success: true }); });
+app.patch('/api/shop/:id', authMiddleware, async (req, res) => { await col('shop').updateOne({ id: req.params.id, guildId: req.user.guildId }, { $set: req.body }); res.json({ success: true }); });
+app.delete('/api/shop/:id', authMiddleware, async (req, res) => { await col('shop').deleteOne({ id: req.params.id, guildId: req.user.guildId }); res.json({ success: true }); });
+app.post('/api/economy/give', authMiddleware, async (req, res) => { const { userId, amount } = req.body; await addCoins(req.user.guildId, userId, '', parseInt(amount)); res.json({ success: true }); });
 app.get('/api/guild/:guildId', (req, res) => { const guild = client.guilds.cache.get(req.params.guildId); if (!guild) return res.status(404).json({ error: 'Serveur introuvable' }); res.json({ id: guild.id, name: guild.name, icon: guild.iconURL(), memberCount: guild.memberCount }); });
-
 app.post('/api/send-credentials', authMiddleware, async (req, res) => {
-  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' });
   const { userId, username, password, level, guildId, panelUrl } = req.body;
-  const NAMES = { 1: 'Modérateur', 2: 'Senior Mod', 3: 'Admin', 4: 'Super Admin' };
   try {
     const discordUser = await client.users.fetch(userId);
-    await discordUser.send({ embeds: [new EmbedBuilder().setTitle('🛡️ Accès au Panel').setColor(0x5865F2).addFields({ name: '👤 Identifiant', value: `\`${username}\``, inline: true }, { name: '🔑 Mot de passe', value: `\`${password}\``, inline: true }, { name: '🏅 Niveau', value: `${level} — ${NAMES[level] || 'Staff'}`, inline: true }, { name: '🔗 Panel', value: `${panelUrl}/?guild=${guildId}` }).setFooter({ text: '⚠️ Ne partagez pas vos identifiants.' }).setTimestamp()] });
+    await discordUser.send({ embeds: [new EmbedBuilder().setTitle('🛡️ Accès au Panel').setColor(0x5865F2).addFields({ name: '👤 Identifiant', value: `\`${username}\``, inline: true }, { name: '🔑 Mot de passe', value: `\`${password}\``, inline: true }, { name: '🔗 Panel', value: `${panelUrl}/?guild=${guildId}` }).setTimestamp()] });
     res.json({ success: true });
-  } catch { res.status(400).json({ error: 'MP impossible (DMs fermés ?)' }); }
+  } catch { res.status(400).json({ error: 'MP impossible' }); }
 });
-
-// Licence check endpoint (pour le panel)
-app.get('/api/licence', authMiddleware, async (req, res) => {
-  const lic = await checkLicence(req.user.guildId);
-  res.json(lic);
-});
-
-
-// ─── Premium Config (Welcome/Leave/FAQ) ──────────────────────────────────────
+app.get('/api/licence', authMiddleware, async (req, res) => res.json(await checkLicence(req.user.guildId)));
 app.get('/api/premium-config', authMiddleware, async (req, res) => {
   const config = await col('mod_configs').findOne({ guildId: req.user.guildId }) || {};
-  res.json({
-    welcomeEnabled: config.welcomeEnabled || false,
-    welcomeChannel: config.welcomeChannel || '',
-    welcomeMessage: config.welcomeMessage || '',
-    welcomeMessages: config.welcomeMessages || [],
-    leaveEnabled: config.leaveEnabled || false,
-    leaveChannel: config.leaveChannel || '',
-    leaveMessage: config.leaveMessage || '',
-    captchaEnabled: config.captchaEnabled || false,
-    captchaChannel: config.captchaChannel || '',
-    captchaRole: config.captchaRole || '',
-    unverifiedRole: config.unverifiedRole || '',
-    aiModeration: config.aiModeration || false,
-    faqEnabled: config.faqEnabled || false,
-  });
+  res.json({ welcomeEnabled: config.welcomeEnabled || false, welcomeChannel: config.welcomeChannel || '', leaveEnabled: config.leaveEnabled || false, leaveChannel: config.leaveChannel || '', captchaEnabled: config.captchaEnabled || false, captchaChannel: config.captchaChannel || '', captchaRole: config.captchaRole || '', unverifiedRole: config.unverifiedRole || '', aiModeration: config.aiModeration || false, faqEnabled: config.faqEnabled || false });
 });
-
 app.post('/api/premium-config', authMiddleware, async (req, res) => {
-  if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' });
   const { guildId } = req.user;
-  const { welcomeEnabled, welcomeChannel, welcomeMessage, welcomeMessages, leaveEnabled, leaveChannel, leaveMessage, unverifiedRole, captchaEnabled, captchaChannel, captchaRole, aiModeration, faqEnabled } = req.body;
-  await col('mod_configs').updateOne({ guildId }, { $set: { welcomeEnabled, welcomeChannel, welcomeMessage, welcomeMessages, leaveEnabled, leaveChannel, leaveMessage, unverifiedRole, captchaEnabled, captchaChannel, captchaRole, aiModeration, faqEnabled } }, { upsert: true });
+  await col('mod_configs').updateOne({ guildId }, { $set: req.body }, { upsert: true });
   res.json({ success: true });
 });
-
-// ─── Bot Identity (PREMIUM) ───────────────────────────────────────────────────
 app.post('/api/bot-identity', authMiddleware, async (req, res) => {
-  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Niveau insuffisant' });
   const { guildId } = req.user;
   const { nickname, avatarUrl, bio } = req.body;
   try {
@@ -1520,118 +1310,57 @@ app.post('/api/bot-identity', authMiddleware, async (req, res) => {
     if (!guild) return res.status(404).json({ error: 'Serveur introuvable' });
     const me = guild.members.me || await guild.members.fetch(client.user.id);
     if (nickname !== undefined) await me.setNickname(nickname || null).catch(() => {});
-    if (avatarUrl) {
-      await client.user.setAvatar(avatarUrl).catch(() => {});
-    }
-    if (bio !== undefined) {
-      await client.user.edit({ bio: bio || '' }).catch(() => {});
-    }
+    if (avatarUrl) await client.user.setAvatar(avatarUrl).catch(() => {});
     res.json({ success: true });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
-
-// ─── FAQ Management ───────────────────────────────────────────────────────────
-app.get('/api/faq', authMiddleware, async (req, res) => {
-  res.json(await col('faq').find({ guildId: req.user.guildId }).toArray());
-});
+app.get('/api/faq', authMiddleware, async (req, res) => res.json(await col('faq').find({ guildId: req.user.guildId }).toArray()));
 app.post('/api/faq', authMiddleware, async (req, res) => {
-  if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' });
   const { question, answer } = req.body;
-  const item = { id: require('uuid').v4().slice(0, 8), guildId: req.user.guildId, question, answer, createdBy: req.user.username, createdAt: new Date().toISOString() };
-  await col('faq').insertOne(item);
+  await col('faq').insertOne({ id: uuidv4().slice(0, 8), guildId: req.user.guildId, question, answer, createdBy: req.user.username, createdAt: new Date().toISOString() });
   await col('mod_configs').updateOne({ guildId: req.user.guildId }, { $set: { faqEnabled: true } }, { upsert: true });
-  res.json(item);
-});
-app.delete('/api/faq/:id', authMiddleware, async (req, res) => {
-  await col('faq').deleteOne({ id: req.params.id, guildId: req.user.guildId });
   res.json({ success: true });
 });
-
-// ─── Economy Admin ────────────────────────────────────────────────────────────
-app.post('/api/economy/give', authMiddleware, async (req, res) => {
-  if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' });
-  const { userId, amount } = req.body;
-  await addCoins(req.user.guildId, userId, '', parseInt(amount));
-  res.json({ success: true });
-});
+app.delete('/api/faq/:id', authMiddleware, async (req, res) => { await col('faq').deleteOne({ id: req.params.id, guildId: req.user.guildId }); res.json({ success: true }); });
 app.post('/api/economy/remove', authMiddleware, async (req, res) => {
-  if (req.user.adminLevel < 3) return res.status(403).json({ error: 'Niveau insuffisant' });
   const { userId, amount } = req.body;
   const ok = await removeCoins(req.user.guildId, userId, parseInt(amount));
-  res.json({ success: ok, error: ok ? null : 'Solde insuffisant' });
+  res.json({ success: ok });
 });
-
-// ─── Shop Management ──────────────────────────────────────────────────────────
-app.post('/api/shop', authMiddleware, async (req, res) => {
-  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Réservé aux Super Admins' });
-  const { nom, prix, type, roleId, description } = req.body;
-  const item = { id: require('uuid').v4().slice(0, 8), guildId: req.user.guildId, nom, prix: parseInt(prix), type, roleId: roleId || null, description: description || '', createdAt: new Date().toISOString() };
-  await col('shop').insertOne(item);
-  res.json(item);
-});
-app.patch('/api/shop/:id', authMiddleware, async (req, res) => {
-  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Réservé aux Super Admins' });
-  await col('shop').updateOne({ id: req.params.id, guildId: req.user.guildId }, { $set: req.body });
-  res.json({ success: true });
-});
-app.delete('/api/shop/:id', authMiddleware, async (req, res) => {
-  if (req.user.adminLevel < 4) return res.status(403).json({ error: 'Réservé aux Super Admins' });
-  await col('shop').deleteOne({ id: req.params.id, guildId: req.user.guildId });
-  res.json({ success: true });
-});
-
-// ─── Licence status ───────────────────────────────────────────────────────────
-app.get('/api/licence', authMiddleware, async (req, res) => {
-  const lic = await checkLicence(req.user.guildId);
-  res.json(lic);
-});
-
-// ─── Nickname history ─────────────────────────────────────────────────────────
-app.get('/api/nickname-history/:userId', authMiddleware, async (req, res) => {
-  res.json(await col('nickname_history').find({ guildId: req.user.guildId, userId: req.params.userId }).sort({ changedAt: -1 }).limit(20).toArray());
-});
-
-// ─── Catch-all → index.html ───────────────────────────────────────────────────
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+app.get('/api/nickname-history/:userId', authMiddleware, async (req, res) => res.json(await col('nickname_history').find({ guildId: req.user.guildId, userId: req.params.userId }).sort({ changedAt: -1 }).limit(20).toArray()));
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 async function start() {
   await connectDB();
   console.log('✅ MongoDB connecté !');
   
+  // Initialisation des modules
+  wanted = wantedModule(client, db);
+  reputation = reputationModule(client, db);
+  tribunal = tribunalModule(client, db);
+  stats = statsModule(client, db);
+  
   app.listen(PORT, () => console.log(`🌐 Panel: http://localhost:${PORT}`));
   
   console.log('🔑 Tentative de connexion à Discord...');
-  console.log('Token présent :', BOT_TOKEN ? '✅ Oui' : '❌ Non');
   
   if (!BOT_TOKEN || BOT_TOKEN === 'YOUR_BOT_TOKEN') {
     console.error('❌ ERREUR FATALE : BOT_TOKEN est la valeur par défaut !');
-    console.error('⚠️ Tu dois définir BOT_TOKEN dans les variables d\'environnement Render.');
     return;
   }
   
-  console.log('Token (premiers caractères) :', BOT_TOKEN.substring(0, 20) + '...');
-  
-  // Ajouter un timeout de sécurité
-  const loginTimeout = setTimeout(() => {
-    console.error('❌ TIMEOUT : La connexion Discord a pris plus de 30 secondes.');
-    console.error('⚠️ Vérifie que le token est valide et que Discord n\'est pas en panne.');
-  }, 30000);
-  
   try {
-    console.log('⏳ Envoi de la requête de login à Discord...');
     await client.login(BOT_TOKEN);
-    clearTimeout(loginTimeout);
     console.log('✅ Connexion Discord réussie !');
+    
+    // 📊 Stats auto hebdomadaires
+    setInterval(() => {
+      if (stats) stats.autoPostWeekly(client);
+    }, 7 * 24 * 60 * 60 * 1000);
+    
   } catch (error) {
-    clearTimeout(loginTimeout);
     console.error('❌ Erreur de connexion Discord :', error.message);
-    console.error('Code d\'erreur :', error.code);
-    console.error('Stack :', error.stack);
   }
 }
 
